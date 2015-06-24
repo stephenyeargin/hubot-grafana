@@ -13,7 +13,7 @@
 #   HUBOT_GRAFANA_API_KEY - API key for a particular user
 #
 # Commands:
-#   hubot graph db <dashboard slug>[:<panel id>][ <from clause>][ <to clause>]
+#   hubot graf db <dashboard slug>[:<panel id>][ <from clause>][ <to clause>] - Show grafana dashboard graphs
 #
 
 module.exports = (robot) ->
