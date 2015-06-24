@@ -13,4 +13,4 @@ describe 'grafana', ->
     require('../src/grafana')(@robot)
 
   it 'registers a dashboard listener', ->
-    expect(@robot.respond).to.have.been.calledWith(/(?:grafana|graph) (?:dash|dashboard|db) (.*)(| .*)/i)
+    expect(@robot.respond).to.have.been.calledWith(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(| [A-Za-z0-9\-\+]+)?(| [A-Za-z0-9\-\+]+)?/i)
