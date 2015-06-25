@@ -21,12 +21,16 @@ module.exports = (robot) ->
   grafana_host = process.env.HUBOT_GRAFANA_HOST
   grafana_api_key = process.env.HUBOT_GRAFANA_API_KEY
 
-  robot.respond /(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(| [A-Za-z0-9\-\+]+)?(| [A-Za-z0-9\-\+]+)?/i, (msg) ->
+  robot.respond /(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) ->
 
     slug = msg.match[1].trim()
-    from = msg.match[2] || 'now-6h'
-    to   = msg.match[3] || 'now'
-    pid  = false
+    remainder = msg.match[2]
+    timespan = {
+      from: 'now-6h'
+      to: 'now'
+    }
+    variables = ""
+    pid = false
 
     # Parse out a specific panel
     if /\:/.test slug
@@ -34,10 +38,25 @@ module.exports = (robot) ->
       slug = parts[0]
       pid = parseInt parts[1], 10
 
+    # Check if we have any extra fields
+    if remainder
+      # The order we apply non-variables in
+      timeFields = ["from", "to"]
+
+      for part in remainder.trim().split " "
+
+        # Check if it's a variable or part of the timespan
+        if part.indexOf("=") >= 0
+          variables = "#{variables}&var-#{part}"
+
+        # Only add to the timespan if we haven't already filled out from and to
+        else if timeFields.length > 0
+          timespan[timeFields.shift()] = part.trim()
+
     robot.logger.debug msg.match
     robot.logger.debug slug
-    robot.logger.debug from
-    robot.logger.debug to
+    robot.logger.debug timespan
+    robot.logger.debug variables
     robot.logger.debug pid
 
     # Call the API to get information about this dashboard
@@ -77,12 +96,8 @@ module.exports = (robot) ->
           if pid && pid != panel.id
             continue
 
-          # Clean up attributes
-          from = from.trim()
-          to = to.trim()
-
-          imageUrl = "#{grafana_host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=1000&height=500&from=#{from}&to=#{to}"
-          link = "#{grafana_host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{from}&to=#{to}"
+          imageUrl = "#{grafana_host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=1000&height=500&from=#{timespan.from}&to=#{timespan.to}#{variables}"
+          link = "#{grafana_host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
           msg.send "#{formatTitleWithTemplate(panel.title, template_map)}: #{imageUrl} - #{link}"
 
   robot.respond /(?:grafana|graph|graf) list/i, (msg) ->
