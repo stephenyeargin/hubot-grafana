@@ -41,7 +41,7 @@ module.exports = (robot) ->
     robot.logger.debug pid
 
     # Call the API to get information about this dashboard
-    getDashboardInformation slug, (dashboard) ->
+    callGrafana "dashboards/db/#{slug}", (dashboard) ->
       robot.logger.debug dashboard
 
       # Check dashboard information
@@ -74,6 +74,15 @@ module.exports = (robot) ->
           link = "#{grafana_host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{from}&to=#{to}"
           msg.send "#{formatTitleWithTemplate(panel.title, template_map)}: #{imageUrl} - #{link}"
 
+  robot.respond /(?:grafana|graph|graf) list/i, (msg) ->
+    callGrafana "search", (dashboards) ->
+      robot.logger.debug dashboards
+      msg.send "Available dashboards:"
+
+      for dashboard in dashboards
+        slug = dashboard.uri.replace /^db\//, ""
+        msg.send "- #{slug}: #{dashboard.title}"
+
   sendError = (message, msg) ->
     robot.logger.error message
     msg.send message
@@ -85,7 +94,7 @@ module.exports = (robot) ->
       else
         return match
 
-  getDashboardInformation = (slug, callback) ->
+  callGrafana = (url, callback) ->
     if grafana_api_key
       authHeader = {
         'Accept': 'application/json',
@@ -95,9 +104,9 @@ module.exports = (robot) ->
       authHeader = {
         'Accept': 'application/json'
       }
-    robot.http("#{grafana_host}/api/dashboards/db/#{slug}").headers(authHeader).get() (err, res, body) ->
+    robot.http("#{grafana_host}/api/#{url}").headers(authHeader).get() (err, res, body) ->
       if (err)
         robot.logger.error err
         return callback(false)
-      dashboard = JSON.parse(body)
-      return callback(dashboard)
+      data = JSON.parse(body)
+      return callback(data)
