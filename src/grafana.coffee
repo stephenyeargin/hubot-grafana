@@ -54,9 +54,11 @@ module.exports = (robot) ->
       if dashboard.dashboard
         # 2.0.2+: Changed in https://github.com/grafana/grafana/commit/e5c11691203fe68958e66693e429f6f5a3c77200
         data = dashboard.dashboard
+        dashboardSoloSplit = "-"
       else
         # 2.0.2 and older
         data = dashboard.model
+        dashboardSoloSplit = "/"
 
       # Support for templated dashboards
       robot.logger.debug data.templating.list
@@ -78,7 +80,7 @@ module.exports = (robot) ->
           from = from.trim()
           to = to.trim()
 
-          imageUrl = "#{grafana_host}/render/dashboard/solo/db/#{slug}/?panelId=#{panel.id}&width=1000&height=500&from=#{from}&to=#{to}"
+          imageUrl = "#{grafana_host}/render/dashboard#{dashboardSoloSplit}solo/db/#{slug}/?panelId=#{panel.id}&width=1000&height=500&from=#{from}&to=#{to}"
           link = "#{grafana_host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{from}&to=#{to}"
           msg.send "#{formatTitleWithTemplate(panel.title, template_map)}: #{imageUrl} - #{link}"
 
