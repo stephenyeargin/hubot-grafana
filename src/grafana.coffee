@@ -50,15 +50,23 @@ module.exports = (robot) ->
       if dashboard.message
         return sendError dashboard.message, msg
 
+      # Handle refactor done for version 2.0.2+
+      if dashboard.dashboard
+        # 2.0.2+: Changed in https://github.com/grafana/grafana/commit/e5c11691203fe68958e66693e429f6f5a3c77200
+        data = dashboard.dashboard
+      else
+        # 2.0.2 and older
+        data = dashboard.model
+
       # Support for templated dashboards
-      robot.logger.debug dashboard.model.templating.list
-      if dashboard.model.templating.list
+      robot.logger.debug data.templating.list
+      if data.templating.list
         template_map = []
-        for template in dashboard.model.templating.list
+        for template in data.templating.list
           template_map['$' + template.name] = template.current.text
 
       # Return dashboard rows
-      for row in dashboard.model.rows
+      for row in data.rows
         for panel in row.panels
           robot.logger.debug panel
 
