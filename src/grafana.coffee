@@ -74,6 +74,15 @@ module.exports = (robot) ->
           link = "#{grafana_host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{from}&to=#{to}"
           msg.send "#{formatTitleWithTemplate(panel.title, template_map)}: #{imageUrl} - #{link}"
 
+  robot.respond /(?:grafana|graph|graf) list/i, (msg) ->
+    callGrafana "search", (dashboards) ->
+      robot.logger.debug dashboards
+      msg.send "Available dashboards:"
+
+      for dashboard in dashboards
+        slug = dashboard.uri.replace /^db\//, ""
+        msg.send "- #{slug}: #{dashboard.title}"
+
   sendError = (message, msg) ->
     robot.logger.error message
     msg.send message
