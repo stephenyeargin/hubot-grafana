@@ -13,7 +13,8 @@
 #   HUBOT_GRAFANA_API_KEY - API key for a particular user
 #
 # Commands:
-#   hubot graf db <dashboard slug>[:<panel id>][ <from clause>][ <to clause>] - Show grafana dashboard graphs
+#   hubot graf db <dashboard slug>[:<panel id>][ <template variables>][ <from clause>][ <to clause>] - Show grafana dashboard graphs
+#   hubot graf list - Lists all dashboards available
 #
 
 module.exports = (robot) ->
@@ -100,13 +101,25 @@ module.exports = (robot) ->
           link = "#{grafana_host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
           msg.send "#{formatTitleWithTemplate(panel.title, template_map)}: #{imageUrl} - #{link}"
 
-  robot.respond /(?:grafana|graph|graf) list/i, (msg) ->
+  robot.respond /(?:grafana|graph|graf) list$/i, (msg) ->
     callGrafana "search", (dashboards) ->
       robot.logger.debug dashboards
       response = "Available dashboards:\n"
 
-      for dashboard in dashboards
-        slug = dashboard.uri.replace /^db\//, ""
+      # Handle refactor done for version 2.0.2+
+      if dashboards.dashboards
+        list = dashboards.dashboards
+      else
+        list = dashboards
+
+      robot.logger.debug list
+
+      for dashboard in list
+        # Handle refactor done for version 2.0.2+
+        if dashboard.uri
+          slug = dashboard.uri.replace /^db\//, ""
+        else
+          slug = dashboard.slug
         response = response + "- #{slug}: #{dashboard.title}\n"
 
       # Remove trailing newline
