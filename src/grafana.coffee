@@ -103,11 +103,16 @@ module.exports = (robot) ->
   robot.respond /(?:grafana|graph|graf) list/i, (msg) ->
     callGrafana "search", (dashboards) ->
       robot.logger.debug dashboards
-      msg.send "Available dashboards:"
+      response = "Available dashboards:\n"
 
       for dashboard in dashboards
         slug = dashboard.uri.replace /^db\//, ""
-        msg.send "- #{slug}: #{dashboard.title}"
+        response = response + "- #{slug}: #{dashboard.title}\n"
+
+      # Remove trailing newline
+      response.trim()
+
+      msg.send response
 
   sendError = (message, msg) ->
     robot.logger.error message
