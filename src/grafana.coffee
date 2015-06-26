@@ -104,7 +104,7 @@ module.exports = (robot) ->
   robot.respond /(?:grafana|graph|graf) list$/i, (msg) ->
     callGrafana "search", (dashboards) ->
       robot.logger.debug dashboards
-      msg.send "Available dashboards:"
+      response = "Available dashboards:\n"
 
       # Handle refactor done for version 2.0.2+
       if dashboards.dashboards
@@ -112,17 +112,20 @@ module.exports = (robot) ->
       else
         list = dashboards
 
+      robot.logger.debug list
+
       for dashboard in list
-
-        robot.logger.debug dashboard
-
         # Handle refactor done for version 2.0.2+
         if dashboard.uri
           slug = dashboard.uri.replace /^db\//, ""
         else
           slug = dashboard.slug
+        response = response + "- #{slug}: #{dashboard.title}\n"
 
-        msg.send "- #{slug}: #{dashboard.title}"
+      # Remove trailing newline
+      response.trim()
+
+      msg.send response
 
   sendError = (message, msg) ->
     robot.logger.error message
