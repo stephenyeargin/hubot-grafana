@@ -12,7 +12,10 @@
   "bugs": {
     "url": "https://github.com/stephenyeargin/hubot-grafana/issues"
   },
-  "dependencies": {},
+  "dependencies": {
+    "knox": "^0.9.2",
+    "request": "^2.58.0"
+  },
   "peerDependencies": {
     "hubot": "2.x"
   },

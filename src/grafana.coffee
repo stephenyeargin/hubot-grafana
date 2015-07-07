@@ -10,20 +10,36 @@
 #
 # Configuration:
 #   HUBOT_GRAFANA_HOST - Host for your Grafana 2.0 install, e.g. 'http://play.grafana.org'
-#   HUBOT_GRAFANA_API_KEY - API key for a particular user
+#   HUBOT_GRAFANA_API_KEY - API key for a particular user (leave unset if unauthenticated)
+#   HUBOT_GRAFANA_S3_BUCKET - Optional; Name of the S3 bucket to copy the graph into
+#   HUBOT_GRAFANA_S3_ACCESS_KEY_ID - Optional; Access key ID for S3
+#   HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY - Optional; Secret access key for S3
+#   HUBOT_GRAFANA_S3_PREFIX - Optional; Bucket prefix (useful for shared buckets)
+#
+# Dependencies:
+#   "knox": "^0.9.2"
+#   "request": "~2"
 #
 # Commands:
 #   hubot graf db <dashboard slug>[:<panel id>][ <template variables>][ <from clause>][ <to clause>] - Show grafana dashboard graphs
 #   hubot graf list - Lists all dashboards available
 #
 
-module.exports = (robot) ->
+crypto  = require "crypto"
+knox    = require "knox"
+request = require "request"
 
+module.exports = (robot) ->
+  # Various configuration options stored in environment variables
   grafana_host = process.env.HUBOT_GRAFANA_HOST
   grafana_api_key = process.env.HUBOT_GRAFANA_API_KEY
+  s3_bucket = process.env.HUBOT_GRAFANA_S3_BUCKET
+  s3_access_key = process.env.HUBOT_GRAFANA_S3_ACCESS_KEY_ID
+  s3_secret_key = process.env.HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY
+  s3_prefix = process.env.HUBOT_GRAFANA_S3_PREFIX
 
+  # Get a specific dashboard with options
   robot.respond /(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) ->
-
     slug = msg.match[1].trim()
     remainder = msg.match[2]
     timespan = {
@@ -45,7 +61,6 @@ module.exports = (robot) ->
       timeFields = ["from", "to"]
 
       for part in remainder.trim().split " "
-
         # Check if it's a variable or part of the timespan
         if part.indexOf("=") >= 0
           variables = "#{variables}&var-#{part}"
@@ -97,10 +112,18 @@ module.exports = (robot) ->
           if pid && pid != panel.id
             continue
 
+          # Build links for message sending
+          title = formatTitleWithTemplate(panel.title, template_map)
           imageUrl = "#{grafana_host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=1000&height=500&from=#{timespan.from}&to=#{timespan.to}#{variables}"
           link = "#{grafana_host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
-          msg.send "#{formatTitleWithTemplate(panel.title, template_map)}: #{imageUrl} - #{link}"
 
+          # Fork here for S3-based upload and non-S3
+          if (s3_bucket && s3_access_key && s3_secret_key)
+            fetchAndUpload msg, title, imageUrl, link, (s3ImageUrl) ->     
+          else
+            sendRobotResponse msg, title, imageUrl, link
+
+  # Get a list of available dashboards
   robot.respond /(?:grafana|graph|graf) list$/i, (msg) ->
     callGrafana "search", (dashboards) ->
       robot.logger.debug dashboards
@@ -127,10 +150,12 @@ module.exports = (robot) ->
 
       msg.send response
 
+  # Handle generic errors
   sendError = (message, msg) ->
     robot.logger.error message
     msg.send message
 
+  # Format the title with template vars
   formatTitleWithTemplate = (title, template_map) ->
     title.replace /\$\w+/g, (match) ->
       if template_map[match]
@@ -138,6 +163,11 @@ module.exports = (robot) ->
       else
         return match
 
+  # Send robot response
+  sendRobotResponse = (msg, title, image, link) ->
+    msg.send "#{title}: #{image} - #{link}"
+
+  # Call off to Grafana
   callGrafana = (url, callback) ->
     if grafana_api_key
       authHeader = {
@@ -154,3 +184,49 @@ module.exports = (robot) ->
         return callback(false)
       data = JSON.parse(body)
       return callback(data)
+
+  # Pick a random filename
+  uploadPath = () ->
+    prefix = s3_prefix || 'grafana'
+    "#{prefix}/#{crypto.randomBytes(20).toString('hex')}.png"
+
+  # Fetch an image from provided URL, upload it to S3, returning the resulting URL
+  fetchAndUpload = (msg, title, url, link, callback) ->
+    if grafana_api_key
+        requestHeaders =
+          encoding: null,
+          auth:
+            bearer: grafana_api_key
+      else
+        requestHeaders =
+          encoding: null
+
+    request url, requestHeaders, (err, res, body) ->
+      robot.logger.debug "Uploading file: #{body.length} bytes, content-type[#{res.headers['content-type']}]"
+      uploadToS3(msg, title, link, body, body.length, res.headers['content-type'])
+
+  # Upload image to S3
+  uploadToS3 = (msg, title, link, content, length, content_type) ->
+    client = knox.createClient {
+      key    : s3_access_key
+      secret : s3_secret_key,
+      bucket : s3_bucket
+    }
+
+    headers = {
+      'Content-Length' : length,
+      'Content-Type'   : content_type,
+      'x-amz-acl'      : 'public-read',
+      "encoding"       : null
+    }
+
+    filename = uploadPath()
+
+    req = client.put(filename, headers)
+    req.on 'response', (res) ->
+      if (200 == res.statusCode)
+        image = "https://s3.amazonaws.com/#{s3_bucket}/#{filename}"
+        sendRobotResponse msg, title, image, link
+      else
+        msg.send "#{title} - [Upload Error] - #{link}"
+    req.end(content);
