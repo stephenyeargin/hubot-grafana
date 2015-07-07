@@ -15,6 +15,7 @@
 #   HUBOT_GRAFANA_S3_ACCESS_KEY_ID - Optional; Access key ID for S3
 #   HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY - Optional; Secret access key for S3
 #   HUBOT_GRAFANA_S3_PREFIX - Optional; Bucket prefix (useful for shared buckets)
+#   HUBOT_GRAFANA_S3_REGION - Optional; Bucket region (defaults to us-standard)
 #
 # Dependencies:
 #   "knox": "^0.9.2"
@@ -37,6 +38,8 @@ module.exports = (robot) ->
   s3_access_key = process.env.HUBOT_GRAFANA_S3_ACCESS_KEY_ID
   s3_secret_key = process.env.HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY
   s3_prefix = process.env.HUBOT_GRAFANA_S3_PREFIX
+  s3_region = 'us-standard'
+  s3_region = process.env.HUBOT_GRAFANA_S3_REGION if process.env.HUBOT_GRAFANA_S3_REGION
 
   # Get a specific dashboard with options
   robot.respond /(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) ->
@@ -210,7 +213,8 @@ module.exports = (robot) ->
     client = knox.createClient {
       key    : s3_access_key
       secret : s3_secret_key,
-      bucket : s3_bucket
+      bucket : s3_bucket,
+      region : s3_region
     }
 
     headers = {
@@ -225,8 +229,7 @@ module.exports = (robot) ->
     req = client.put(filename, headers)
     req.on 'response', (res) ->
       if (200 == res.statusCode)
-        image = "https://s3.amazonaws.com/#{s3_bucket}/#{filename}"
-        sendRobotResponse msg, title, image, link
+        sendRobotResponse msg, title, client.https(filename), link
       else
         msg.send "#{title} - [Upload Error] - #{link}"
     req.end(content);
