@@ -26,9 +26,9 @@
 #   hubot graf list - Lists all dashboards available
 #
 
-crypto  = require "crypto"
-knox    = require "knox"
-request = require "request"
+crypto  = require 'crypto'
+knox    = require 'knox'
+request = require 'request'
 
 module.exports = (robot) ->
   # Various configuration options stored in environment variables
@@ -49,7 +49,7 @@ module.exports = (robot) ->
       from: 'now-6h'
       to: 'now'
     }
-    variables = ""
+    variables = ''
     pid = false
 
     # Parse out a specific panel
@@ -61,11 +61,11 @@ module.exports = (robot) ->
     # Check if we have any extra fields
     if remainder
       # The order we apply non-variables in
-      timeFields = ["from", "to"]
+      timeFields = ['from', 'to']
 
-      for part in remainder.trim().split " "
+      for part in remainder.trim().split ' '
         # Check if it's a variable or part of the timespan
-        if part.indexOf("=") >= 0
+        if part.indexOf('=') >= 0
           variables = "#{variables}&var-#{part}"
 
         # Only add to the timespan if we haven't already filled out from and to
@@ -84,7 +84,7 @@ module.exports = (robot) ->
 
       # Check dashboard information
       if !dashboard
-        return sendError "An error ocurred. Check your logs for more details.", msg
+        return sendError 'An error ocurred. Check your logs for more details.', msg
       if dashboard.message
         return sendError dashboard.message, msg
 
@@ -93,11 +93,11 @@ module.exports = (robot) ->
         # 2.0.2+: Changed in https://github.com/grafana/grafana/commit/e5c11691203fe68958e66693e429f6f5a3c77200
         data = dashboard.dashboard
         # The URL was changed in https://github.com/grafana/grafana/commit/35cc0a1cc0bca453ce789056f6fbd2fcb13f74cb
-        apiEndpoint = "dashboard-solo"
+        apiEndpoint = 'dashboard-solo'
       else
         # 2.0.2 and older
         data = dashboard.model
-        apiEndpoint = "dashboard/solo"
+        apiEndpoint = 'dashboard/solo'
 
       # Support for templated dashboards
       robot.logger.debug data.templating.list
@@ -128,7 +128,7 @@ module.exports = (robot) ->
 
   # Get a list of available dashboards
   robot.respond /(?:grafana|graph|graf) list$/i, (msg) ->
-    callGrafana "search", (dashboards) ->
+    callGrafana 'search', (dashboards) ->
       robot.logger.debug dashboards
       response = "Available dashboards:\n"
 
@@ -143,7 +143,7 @@ module.exports = (robot) ->
       for dashboard in list
         # Handle refactor done for version 2.0.2+
         if dashboard.uri
-          slug = dashboard.uri.replace /^db\//, ""
+          slug = dashboard.uri.replace /^db\//, ''
         else
           slug = dashboard.slug
         response = response + "- #{slug}: #{dashboard.title}\n"
@@ -221,7 +221,7 @@ module.exports = (robot) ->
       'Content-Length' : length,
       'Content-Type'   : content_type,
       'x-amz-acl'      : 'public-read',
-      "encoding"       : null
+      'encoding'       : null
     }
 
     filename = uploadPath()
