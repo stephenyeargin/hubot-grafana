@@ -122,7 +122,7 @@ module.exports = (robot) ->
 
           # Fork here for S3-based upload and non-S3
           if (s3_bucket && s3_access_key && s3_secret_key)
-            fetchAndUpload msg, title, imageUrl, link, (s3ImageUrl) ->     
+            fetchAndUpload msg, title, imageUrl, link  
           else
             sendRobotResponse msg, title, imageUrl, link
 
@@ -194,7 +194,7 @@ module.exports = (robot) ->
     "#{prefix}/#{crypto.randomBytes(20).toString('hex')}.png"
 
   # Fetch an image from provided URL, upload it to S3, returning the resulting URL
-  fetchAndUpload = (msg, title, url, link, callback) ->
+  fetchAndUpload = (msg, title, url, link) ->
     if grafana_api_key
         requestHeaders =
           encoding: null,
