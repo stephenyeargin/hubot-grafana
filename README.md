@@ -28,6 +28,7 @@ Then add **hubot-grafana** to your `external-scripts.json`:
 - `HUBOT_GRAFANA_S3_ACCESS_KEY_ID` - Optional; Access key ID for S3
 - `HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY` - Optional; Secret access key for S3
 - `HUBOT_GRAFANA_S3_PREFIX` - Optional; Bucket prefix (useful for shared buckets)
+- `HUBOT_GRAFANA_S3_REGION` - Optional; Bucket region (defaults to us-standard)
 
 Example:
 
