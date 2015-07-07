@@ -231,5 +231,7 @@ module.exports = (robot) ->
       if (200 == res.statusCode)
         sendRobotResponse msg, title, client.https(filename), link
       else
+        robot.logger.debug res
+        robot.logger.error "Upload Error Code: #{res.statusCode}"
         msg.send "#{title} - [Upload Error] - #{link}"
     req.end(content);
