@@ -4,6 +4,7 @@
 #   Examples:
 #   - `hubot graf db graphite-carbon-metrics` - Get all panels in the dashboard
 #   - `hubot graf db graphite-carbon-metrics:3` - Get only the third panel of a particular dashboard
+#   - `hubot graf db graphite-carbon-metrics:cpu` - Get only the panels containing "cpu" (case insensitive) in the title
 #   - `hubot graf db graphite-carbon-metrics now-12hr` - Get a dashboard with a window of 12 hours ago to now
 #   - `hubot graf db graphite-carbon-metrics now-24hr now-12hr` - Get a dashboard with a window of 24 hours ago to 12 hours ago
 #   - `hubot graf db graphite-carbon-metrics:3 now-8d now-1d` - Get only the third panel of a particular dashboard with a window of 8 days ago to yesterday
@@ -51,12 +52,16 @@ module.exports = (robot) ->
     }
     variables = ''
     pid = false
+    pname = false
 
     # Parse out a specific panel
     if /\:/.test slug
       parts = slug.split(':')
       slug = parts[0]
       pid = parseInt parts[1], 10
+      if isNaN pid
+        pid = false
+        pname = parts[1].toLowerCase()
 
     # Check if we have any extra fields
     if remainder
@@ -77,6 +82,7 @@ module.exports = (robot) ->
     robot.logger.debug timespan
     robot.logger.debug variables
     robot.logger.debug pid
+    robot.logger.debug pname
 
     # Call the API to get information about this dashboard
     callGrafana "dashboards/db/#{slug}", (dashboard) ->
@@ -113,6 +119,10 @@ module.exports = (robot) ->
 
           # Skip if panel ID was specified and didn't match
           if pid && pid != panel.id
+            continue
+
+          # Skip if panel name was specified any didn't match
+          if pname && panel.title.toLowerCase().indexOf(pname) is -1
             continue
 
           # Build links for message sending
