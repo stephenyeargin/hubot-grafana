@@ -53,6 +53,7 @@ hubot>> Graphite Carbon Metrics: http://play.grafana.org/render/dashboard/solo/g
 
 - `hubot graf db graphite-carbon-metrics` - Get all panels in the dashboard
 - `hubot graf db graphite-carbon-metrics:3` - Get only the third panel of a particular dashboard
+- `hubot graf db graphite-carbon-metrics:cpu` - Get only the panels containing "cpu" (case insensitive) in the title
 - `hubot graf db graphite-carbon-metrics now-12hr` - Get a dashboard with a window of 12 hours ago to now
 - `hubot graf db graphite-carbon-metrics now-24hr now-12hr` - Get a dashboard with a window of 24 hours ago to 12 hours ago
 - `hubot graf db graphite-carbon-metrics:3 now-8d now-1d` - Get only the third panel of a particular dashboard with a window of 8 days ago to yesterday
