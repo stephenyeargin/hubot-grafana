@@ -113,12 +113,15 @@ module.exports = (robot) ->
           template_map['$' + template.name] = template.current.text
 
       # Return dashboard rows
+      panelNumber = 0
       for row in data.rows
         for panel in row.panels
           robot.logger.debug panel
 
+          panelNumber += 1
+
           # Skip if panel ID was specified and didn't match
-          if pid && pid != panel.id
+          if pid && pid != panelNumber
             continue
 
           # Skip if panel name was specified any didn't match
