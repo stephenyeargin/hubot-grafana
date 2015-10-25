@@ -110,6 +110,8 @@ module.exports = (robot) ->
       if data.templating.list
         template_map = []
         for template in data.templating.list
+          robot.logger.debug template
+          next unless template.current
           template_map['$' + template.name] = template.current.text
 
       # Return dashboard rows
@@ -135,7 +137,7 @@ module.exports = (robot) ->
 
           # Fork here for S3-based upload and non-S3
           if (s3_bucket && s3_access_key && s3_secret_key)
-            fetchAndUpload msg, title, imageUrl, link  
+            fetchAndUpload msg, title, imageUrl, link
           else
             sendRobotResponse msg, title, imageUrl, link
 
