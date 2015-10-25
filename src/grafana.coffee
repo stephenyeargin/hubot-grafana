@@ -111,7 +111,7 @@ module.exports = (robot) ->
         template_map = []
         for template in data.templating.list
           robot.logger.debug template
-          next unless template.current
+          continue unless template.current
           template_map['$' + template.name] = template.current.text
 
       # Return dashboard rows
