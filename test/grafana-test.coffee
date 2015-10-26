@@ -16,4 +16,4 @@ describe 'grafana', ->
     expect(@robot.respond).to.have.been.calledWith(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i)
 
   it 'registers a list listener', ->
-    expect(@robot.respond).to.have.been.calledWith(/(?:grafana|graph|graf) list$/i)
+    expect(@robot.respond).to.have.been.calledWith(/(?:grafana|graph|graf) list\s?(.*)?/i)
