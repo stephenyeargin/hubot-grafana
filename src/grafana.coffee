@@ -143,7 +143,7 @@ module.exports = (robot) ->
             sendRobotResponse msg, title, imageUrl, link
 
   # Get a list of available dashboards
-  robot.respond /(?:grafana|graph|graf) list\s?(.*)?/i, (msg) ->
+  robot.respond /(?:grafana|graph|graf) list\s?(.+)?/i, (msg) ->
     if msg.match[1]
       tag = msg.match[1].trim()
       callGrafana "search?tag=#{tag}", (dashboards) ->
@@ -157,7 +157,7 @@ module.exports = (robot) ->
         sendDashboardList dashboards, response, msg
 
   # Search dashboards
-  robot.respond /(?:grafana|graph|graf) search (.*)/i, (msg) ->
+  robot.respond /(?:grafana|graph|graf) search (.+)/i, (msg) ->
     query = msg.match[2].trim()
     robot.logger.debug query
     callGrafana "search?query=#{query}", (dashboards) ->

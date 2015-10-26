@@ -57,7 +57,7 @@ hubot>> Graphite Carbon Metrics: http://play.grafana.org/render/dashboard/solo/g
 - `hubot graf db graphite-carbon-metrics now-12hr` - Get a dashboard with a window of 12 hours ago to now
 - `hubot graf db graphite-carbon-metrics now-24hr now-12hr` - Get a dashboard with a window of 24 hours ago to 12 hours ago
 - `hubot graf db graphite-carbon-metrics:3 now-8d now-1d` - Get only the third panel of a particular dashboard with a window of 8 days ago to yesterday
-- `hubot graf db graphite-carbon-metrics host=carbon-a` - Get a templated dashboard with the `$host` parameter set to `carbon-a`j
+- `hubot graf db graphite-carbon-metrics host=carbon-a` - Get a templated dashboard with the `$host` parameter set to `carbon-a`
 - `hubot graf list` - Lists the available dashboards
 - `hubot graf list production` - Lists all dashboards tagged `production`
 - `hubot graf search elb` - Search for dashboards that match `elb`
