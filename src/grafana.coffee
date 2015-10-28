@@ -24,7 +24,8 @@
 #
 # Commands:
 #   hubot graf db <dashboard slug>[:<panel id>][ <template variables>][ <from clause>][ <to clause>] - Show grafana dashboard graphs
-#   hubot graf list - Lists all dashboards available
+#   hubot graf list <tag> - Lists all dashboards available (optional: <tag>)
+#   hubot graf search <keyword> - Search available dashboards by <keyword>
 #
 
 crypto  = require 'crypto'
@@ -142,31 +143,52 @@ module.exports = (robot) ->
             sendRobotResponse msg, title, imageUrl, link
 
   # Get a list of available dashboards
-  robot.respond /(?:grafana|graph|graf) list$/i, (msg) ->
-    callGrafana 'search', (dashboards) ->
+  robot.respond /(?:grafana|graph|graf) list\s?(.+)?/i, (msg) ->
+    if msg.match[1]
+      tag = msg.match[1].trim()
+      callGrafana "search?tag=#{tag}", (dashboards) ->
+        robot.logger.debug dashboards
+        response = "Dashboards tagged `#{tag}`:\n"
+        sendDashboardList dashboards, response, msg
+    else
+      callGrafana 'search', (dashboards) ->
+        robot.logger.debug dashboards
+        response = "Available dashboards:\n"
+        sendDashboardList dashboards, response, msg
+
+  # Search dashboards
+  robot.respond /(?:grafana|graph|graf) search (.+)/i, (msg) ->
+    query = msg.match[2].trim()
+    robot.logger.debug query
+    callGrafana "search?query=#{query}", (dashboards) ->
       robot.logger.debug dashboards
-      response = "Available dashboards:\n"
+      response = "Dashboards matching `#{query}`:\n"
+      sendDashboardList dashboards, response, msg
 
+  # Send Dashboard list
+  sendDashboardList = (dashboards, response, msg) ->
+    # Handle refactor done for version 2.0.2+
+    if dashboards.dashboards
+      list = dashboards.dashboards
+    else
+      list = dashboards
+
+    robot.logger.debug list
+    unless list.length > 0
+      return
+
+    for dashboard in list
       # Handle refactor done for version 2.0.2+
-      if dashboards.dashboards
-        list = dashboards.dashboards
+      if dashboard.uri
+        slug = dashboard.uri.replace /^db\//, ''
       else
-        list = dashboards
+        slug = dashboard.slug
+      response = response + "- #{slug}: #{dashboard.title}\n"
 
-      robot.logger.debug list
+    # Remove trailing newline
+    response.trim()
 
-      for dashboard in list
-        # Handle refactor done for version 2.0.2+
-        if dashboard.uri
-          slug = dashboard.uri.replace /^db\//, ''
-        else
-          slug = dashboard.slug
-        response = response + "- #{slug}: #{dashboard.title}\n"
-
-      # Remove trailing newline
-      response.trim()
-
-      msg.send response
+    msg.send response
 
   # Handle generic errors
   sendError = (message, msg) ->
