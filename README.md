@@ -24,6 +24,7 @@ Then add **hubot-grafana** to your `external-scripts.json`:
 
 - `HUBOT_GRAFANA_HOST` - Host for your Grafana 2.0 install, e.g. 'http://play.grafana.org'
 - `HUBOT_GRAFANA_API_KEY` - API key for a particular user
+- `HUBOT_GRAFANA_QUERY_TIME_RANGE` - Optional; Default time range for queries (defaults to 6h)
 - `HUBOT_GRAFANA_S3_BUCKET` - Optional; Name of the S3 bucket to copy the graph into
 - `HUBOT_GRAFANA_S3_ACCESS_KEY_ID` - Optional; Access key ID for S3
 - `HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY` - Optional; Secret access key for S3
@@ -35,6 +36,7 @@ Example:
 ```
 export HUBOT_GRAFANA_HOST=http://play.grafana.org
 export HUBOT_GRAFANA_API_KEY=abcd01234deadbeef01234
+export HUBOT_GRAFANA_QUERY_TIME_RANGE=1h
 export HUBOT_GRAFANA_S3_BUCKET=mybucket
 export HUBOT_GRAFANA_S3_ACCESS_KEY_ID=ABCDEF123456XYZ
 export HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY=aBcD01234dEaDbEef01234
