@@ -12,6 +12,7 @@
 # Configuration:
 #   HUBOT_GRAFANA_HOST - Host for your Grafana 2.0 install, e.g. 'http://play.grafana.org'
 #   HUBOT_GRAFANA_API_KEY - API key for a particular user (leave unset if unauthenticated)
+#   HUBOT_GRAFANA_QUERY_TIME_RANGE - Optional; Default time range for queries (defaults to 6h)
 #   HUBOT_GRAFANA_S3_BUCKET - Optional; Name of the S3 bucket to copy the graph into
 #   HUBOT_GRAFANA_S3_ACCESS_KEY_ID - Optional; Access key ID for S3
 #   HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY - Optional; Secret access key for S3
@@ -36,6 +37,7 @@ module.exports = (robot) ->
   # Various configuration options stored in environment variables
   grafana_host = process.env.HUBOT_GRAFANA_HOST
   grafana_api_key = process.env.HUBOT_GRAFANA_API_KEY
+  grafana_query_time_range = process.env.HUBOT_GRAFANA_QUERY_TIME_RANGE or '6h'
   s3_bucket = process.env.HUBOT_GRAFANA_S3_BUCKET
   s3_access_key = process.env.HUBOT_GRAFANA_S3_ACCESS_KEY_ID
   s3_secret_key = process.env.HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY
@@ -48,7 +50,7 @@ module.exports = (robot) ->
     slug = msg.match[1].trim()
     remainder = msg.match[2]
     timespan = {
-      from: 'now-6h'
+      from: "now-#{grafana_query_time_range}"
       to: 'now'
     }
     variables = ''
