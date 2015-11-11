@@ -158,7 +158,7 @@ module.exports = (robot) ->
 
   # Search dashboards
   robot.respond /(?:grafana|graph|graf) search (.+)/i, (msg) ->
-    query = msg.match[2].trim()
+    query = msg.match[1].trim()
     robot.logger.debug query
     callGrafana "search?query=#{query}", (dashboards) ->
       robot.logger.debug dashboards
