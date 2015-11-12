@@ -205,7 +205,13 @@ module.exports = (robot) ->
 
   # Send robot response
   sendRobotResponse = (msg, title, image, link) ->
-    msg.send "#{title}: #{image} - #{link}"
+    robot.logger.debug link
+    robot.emit 'slack-attachment',
+      channel: msg.message.room
+      content:
+        image_url: image
+        title: title
+        title_link: link
 
   # Call off to Grafana
   callGrafana = (url, callback) ->
