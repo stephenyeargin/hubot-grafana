@@ -63,9 +63,9 @@ Get all panels in a dashboard. In this example, `graphite-carbon-metrics` is the
 hubot graf db graphite-carbon-metrics
 ```
 
-Get a single panel of a dashboard. In this example, only the the third panel would be returned. Note that this is the _visual_ panel ID, counted from left to right, rather than the unique identifier stored with the panel itself.
-
 ### Retrieve Specific Panels
+
+Get a single panel of a dashboard. In this example, only the the third panel would be returned. Note that this is the _visual_ panel ID, counted from left to right, rather than the unique identifier stored with the panel itself.
 
 ```
 hubot graf db graphite-carbon-metrics:3
