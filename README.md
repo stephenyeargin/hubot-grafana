@@ -4,7 +4,7 @@
 
 ![Screenshot](http://docs.grafana.org/img/tutorials/hubot_grafana.png)
 
-Use Hubot to query Grafana dashboards. Inspired by the work of `[hubot-graphite](https://github.com/github/hubot-scripts/blob/master/src/scripts/graphite.coffee)` and `[hubot-graphme](https://github.com/rick/hubot-graphme)`. Check out the [HOWTO](http://docs.grafana.org/tutorials/hubot_howto/) to get started with the bot.
+Use Hubot to query Grafana dashboards. Inspired by the work of [`hubot-graphite`](https://github.com/github/hubot-scripts/blob/master/src/scripts/graphite.coffee) and [`hubot-graphme`](https://github.com/rick/hubot-graphme). Check out the [HOWTO](http://docs.grafana.org/tutorials/hubot_howto/) to get started with the bot.
 
 **Note:** This package requires Grafana 2.x or higher.
 
