@@ -2,7 +2,9 @@
 
 [![npm version](https://badge.fury.io/js/hubot-grafana.svg)](http://badge.fury.io/js/hubot-grafana) [![Build Status](https://travis-ci.org/stephenyeargin/hubot-grafana.png)](https://travis-ci.org/stephenyeargin/hubot-grafana)
 
-Query Grafana dashboards.
+![Screenshot](http://docs.grafana.org/img/tutorials/hubot_grafana.png)
+
+Use Hubot to query Grafana dashboards. Inspired by the work of [`hubot-graphite`](https://github.com/github/hubot-scripts/blob/master/src/scripts/graphite.coffee) and [`hubot-graphme`](https://github.com/rick/hubot-graphme). Check out the [HOWTO](http://docs.grafana.org/tutorials/hubot_howto/) to get started with the bot.
 
 **Note:** This package requires Grafana 2.x or higher.
 
@@ -51,15 +53,74 @@ user1>> hubot graf db graphite-carbon-metrics
 hubot>> Graphite Carbon Metrics: http://play.grafana.org/render/dashboard/solo/graphite-carbon-metrics/?panelId=1&width=1000&height=500&from=now-6h - http://play.grafana.org/dashboard/db/graphite-carbon-metrics/?panelId=1&fullscreen&from=now-6h
 ```
 
-## All Commands
+## Grafana Commands
 
-- `hubot graf db graphite-carbon-metrics` - Get all panels in the dashboard
-- `hubot graf db graphite-carbon-metrics:3` - Get only the third panel of a particular dashboard
-- `hubot graf db graphite-carbon-metrics:cpu` - Get only the panels containing "cpu" (case insensitive) in the title
-- `hubot graf db graphite-carbon-metrics now-12hr` - Get a dashboard with a window of 12 hours ago to now
-- `hubot graf db graphite-carbon-metrics now-24hr now-12hr` - Get a dashboard with a window of 24 hours ago to 12 hours ago
-- `hubot graf db graphite-carbon-metrics:3 now-8d now-1d` - Get only the third panel of a particular dashboard with a window of 8 days ago to yesterday
-- `hubot graf db graphite-carbon-metrics host=carbon-a` - Get a templated dashboard with the `$host` parameter set to `carbon-a`
-- `hubot graf list` - Lists the available dashboards
-- `hubot graf list production` - Lists all dashboards tagged `production`
-- `hubot graf search elb` - Search for dashboards that match `elb`
+### Retrieve a Dashboard
+
+Get all panels in a dashboard. In this example, `graphite-carbon-metrics` is the slug for the given dashboard.
+
+```
+hubot graf db graphite-carbon-metrics
+```
+
+### Retrieve Specific Panels
+
+Get a single panel of a dashboard. In this example, only the the third panel would be returned. Note that this is the _visual_ panel ID, counted from left to right, rather than the unique identifier stored with the panel itself.
+
+```
+hubot graf db graphite-carbon-metrics:3
+```
+
+Get all panels matching a particular title (case insensitive) in a dashboard. In this case, only panels containing `cpu` would be returned.
+
+```
+hubot graf db graphite-carbon-metrics:cpu
+```
+
+### Retrieve Dashboards in a Time Window
+
+Specify a time range for the dashboard. In this example, the dashboard would be set to display data from 12 hours ago to now.
+
+```
+hubot graf db graphite-carbon-metrics now-12hr
+```
+
+Another way to specify a time range for the dashboard. In this example, the dashboard would be set to display data from 24 hours ago to 12 hours ago.
+
+```
+hubot graf db graphite-carbon-metrics now-24hr now-12hr
+```
+
+You can combine multiple commands in this format as well. In this example, retrieve only the third panel of the `graphite-carbon-metrics` dashboard with a window of eight days ago to yesterday.
+
+```
+hubot graf db graphite-carbon-metrics:3 now-8d now-1d
+```
+
+### Templated Dashboards
+
+Grafana allows Dashboards to be set up as templates and accept arguments to generate them through the API. In this example, get a templated dashboard with the `$host` parameter set to `carbon-a`
+
+```
+hubot graf db graphite-carbon-metrics host=carbon-a
+```
+
+### Utility Commands
+
+This command retrieves all dashboards and their slugs so they can be used in other commands.
+
+```
+hubot graf list
+```
+
+Dashbaords can be tagged for easier reference. In this example, return all dashboards tagged with `production`.
+
+```
+hubot graf list production
+```
+
+Similarly, you can search the list of dashboards. In this example, return all dashboards that contain the phrase `elb`.
+
+```
+hubot graf search elb
+```
