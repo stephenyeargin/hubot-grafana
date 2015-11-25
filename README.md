@@ -10,7 +10,7 @@ Use Hubot to query Grafana dashboards. Inspired by the work of [`hubot-graphite`
 
 ## Installation
 
-In hubot project repo, run:
+In the Hubot project repo, run:
 
 `npm install hubot-grafana --save`
 
@@ -24,7 +24,7 @@ Then add **hubot-grafana** to your `external-scripts.json`:
 
 ## Configuration Variables
 
-- `HUBOT_GRAFANA_HOST` - Host for your Grafana 2.0 install, e.g. 'http://play.grafana.org'
+- `HUBOT_GRAFANA_HOST` - Host for your Grafana 2.x install, e.g. 'http://play.grafana.org'
 - `HUBOT_GRAFANA_API_KEY` - API key for a particular user
 - `HUBOT_GRAFANA_QUERY_TIME_RANGE` - Optional; Default time range for queries (defaults to 6h)
 - `HUBOT_GRAFANA_S3_BUCKET` - Optional; Name of the S3 bucket to copy the graph into
@@ -65,7 +65,7 @@ hubot graf db graphite-carbon-metrics
 
 ### Retrieve Specific Panels
 
-Get a single panel of a dashboard. In this example, only the the third panel would be returned. Note that this is the _visual_ panel ID, counted from left to right, rather than the unique identifier stored with the panel itself.
+Get a single panel of a dashboard. In this example, only the third panel would be returned. Note that this is the _visual_ panel ID, counted from top to bottom, left to right, rather than the unique identifier stored with the panel itself.
 
 ```
 hubot graf db graphite-carbon-metrics:3
@@ -85,7 +85,7 @@ Specify a time range for the dashboard. In this example, the dashboard would be 
 hubot graf db graphite-carbon-metrics now-12hr
 ```
 
-Another way to specify a time range for the dashboard. In this example, the dashboard would be set to display data from 24 hours ago to 12 hours ago.
+If you don't want to show the dashboard uptil now, you can add an extra time specification, which will be the `to` time slot. In this example, the dashboard would be set to display data from 24 hours ago to 12 hours ago.
 
 ```
 hubot graf db graphite-carbon-metrics now-24hr now-12hr
@@ -99,7 +99,7 @@ hubot graf db graphite-carbon-metrics:3 now-8d now-1d
 
 ### Templated Dashboards
 
-Grafana allows Dashboards to be set up as templates and accept arguments to generate them through the API. In this example, get a templated dashboard with the `$host` parameter set to `carbon-a`
+Grafana allows dashboards to be set up as templates and accept arguments to generate them through the API. In this example, we get a templated dashboard with the `$host` parameter set to `carbon-a`
 
 ```
 hubot graf db graphite-carbon-metrics host=carbon-a
@@ -113,13 +113,13 @@ This command retrieves all dashboards and their slugs so they can be used in oth
 hubot graf list
 ```
 
-Dashbaords can be tagged for easier reference. In this example, return all dashboards tagged with `production`.
+Dashboards can be tagged for easier reference. In this example, return all dashboards tagged with `production`.
 
 ```
 hubot graf list production
 ```
 
-Similarly, you can search the list of dashboards. In this example, return all dashboards that contain the phrase `elb`.
+Similarly, you can search the list of dashboards. In this example, return all dashboards that contain the word `elb`.
 
 ```
 hubot graf search elb
