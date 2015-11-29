@@ -54,6 +54,7 @@ module.exports = (robot) ->
       to: 'now'
     }
     variables = ''
+    template_params = []
     pid = false
     pname = false
 
@@ -75,6 +76,7 @@ module.exports = (robot) ->
         # Check if it's a variable or part of the timespan
         if part.indexOf('=') >= 0
           variables = "#{variables}&var-#{part}"
+          template_params.push { "name": part.split('=')[0], "value": part.split('=')[1] }
 
         # Only add to the timespan if we haven't already filled out from and to
         else if timeFields.length > 0
@@ -84,6 +86,7 @@ module.exports = (robot) ->
     robot.logger.debug slug
     robot.logger.debug timespan
     robot.logger.debug variables
+    robot.logger.debug template_params
     robot.logger.debug pid
     robot.logger.debug pname
 
@@ -115,7 +118,11 @@ module.exports = (robot) ->
         for template in data.templating.list
           robot.logger.debug template
           continue unless template.current
-          template_map['$' + template.name] = template.current.text
+          for _param in template_params
+            if template.name == _param.name
+              template_map['$' + template.name] = _param.value
+            else
+              template_map['$' + template.name] = template.current.text
 
       # Return dashboard rows
       panelNumber = 0

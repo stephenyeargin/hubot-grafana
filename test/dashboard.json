@@ -1,0 +1,1002 @@
+{
+  "meta": {
+    "type": "db",
+    "slug": "monitoring-default"
+  },
+  "dashboard": {
+    "annotations": {
+      "list": []
+    },
+    "editable": true,
+    "id": null,
+    "links": [],
+    "nav": [
+      {
+        "enable": true,
+        "now": true,
+        "refresh_intervals": [
+          "10s",
+          "1m",
+          "1d"
+        ],
+        "status": "Stable",
+        "time_options": [
+          "5m",
+          "1h",
+          "24h",
+          "30d"
+        ],
+        "type": "timepicker"
+      }
+    ],
+    "originalTitle": "Monitoring Default",
+    "refresh": "10s",
+    "rows": [
+      {
+        "collapse": false,
+        "editable": true,
+        "height": "250px",
+        "panels": [
+          {
+            "aliasColors": {},
+            "bars": false,
+            "datasource": "influxdb",
+            "decimals": null,
+            "editable": true,
+            "error": false,
+            "fill": 0,
+            "grid": {
+              "leftLogBase": 1,
+              "leftMax": null,
+              "leftMin": null,
+              "rightLogBase": 1,
+              "rightMax": null,
+              "rightMin": null,
+              "threshold1": 5,
+              "threshold1Color": "rgba(216, 200, 27, 0.27)",
+              "threshold2": 10,
+              "threshold2Color": "rgba(234, 112, 112, 0.22)"
+            },
+            "id": 2,
+            "legend": {
+              "avg": false,
+              "current": false,
+              "max": false,
+              "min": false,
+              "show": true,
+              "total": false,
+              "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [],
+            "nullPointMode": "connected",
+            "percentage": false,
+            "pointradius": 5,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "span": 3,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+              {
+                "alias": "shortterm load avg",
+                "fields": [
+                  {
+                    "func": "mean",
+                    "name": "value"
+                  }
+                ],
+                "groupByTags": [],
+                "measurement": "load_shortterm",
+                "query": "SELECT mean(value) FROM \"load_shortterm\" WHERE \"host\" = '$server' AND $timeFilter GROUP BY time($interval)",
+                "tags": [
+                  {
+                    "key": "host",
+                    "operator": "=",
+                    "value": "$server"
+                  }
+                ]
+              }
+            ],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "$server load",
+            "tooltip": {
+              "shared": true,
+              "value_type": "cumulative"
+            },
+            "type": "graph",
+            "x-axis": true,
+            "y-axis": true,
+            "y_formats": [
+              "short",
+              "short"
+            ]
+          },
+          {
+            "aliasColors": {},
+            "bars": false,
+            "datasource": "influxdb",
+            "editable": true,
+            "error": false,
+            "fill": 0,
+            "grid": {
+              "leftLogBase": 1,
+              "leftMax": null,
+              "leftMin": null,
+              "rightLogBase": 1,
+              "rightMax": null,
+              "rightMin": null,
+              "threshold1": null,
+              "threshold1Color": "rgba(216, 200, 27, 0.27)",
+              "threshold2": null,
+              "threshold2Color": "rgba(234, 112, 112, 0.22)"
+            },
+            "id": 3,
+            "legend": {
+              "avg": false,
+              "current": false,
+              "max": false,
+              "min": false,
+              "show": true,
+              "total": false,
+              "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [],
+            "nullPointMode": "connected",
+            "percentage": false,
+            "pointradius": 5,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "span": 3,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+              {
+                "alias": "context switches",
+                "fields": [
+                  {
+                    "func": "non_negative_derivative",
+                    "name": "last(value)"
+                  }
+                ],
+                "fill": "none",
+                "groupByTags": [],
+                "measurement": "contextswitch_value",
+                "query": "SELECT non_negative_derivative(last(value)) FROM \"contextswitch_value\" WHERE \"host\" =~ /$server/ AND $timeFilter GROUP BY time($interval) fill(none)",
+                "tags": [
+                  {
+                    "key": "host",
+                    "operator": "=~",
+                    "value": "/$server/"
+                  }
+                ]
+              }
+            ],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "$server context switches",
+            "tooltip": {
+              "shared": true,
+              "value_type": "cumulative"
+            },
+            "type": "graph",
+            "x-axis": true,
+            "y-axis": true,
+            "y_formats": [
+              "short",
+              "short"
+            ]
+          },
+          {
+            "aliasColors": {},
+            "bars": false,
+            "datasource": "influxdb",
+            "editable": true,
+            "error": false,
+            "fill": 4,
+            "grid": {
+              "leftLogBase": 1,
+              "leftMax": null,
+              "leftMin": 0,
+              "rightLogBase": 1,
+              "rightMax": null,
+              "rightMin": null,
+              "threshold1": null,
+              "threshold1Color": "rgba(216, 200, 27, 0.27)",
+              "threshold2": null,
+              "threshold2Color": "rgba(234, 112, 112, 0.22)"
+            },
+            "id": 5,
+            "legend": {
+              "avg": false,
+              "current": false,
+              "max": false,
+              "min": false,
+              "show": true,
+              "total": false,
+              "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [],
+            "nullPointMode": "connected",
+            "percentage": false,
+            "pointradius": 5,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "span": 3,
+            "stack": true,
+            "steppedLine": false,
+            "targets": [
+              {
+                "alias": "$tag_instance $tag_type_instance",
+                "fields": [
+                  {
+                    "func": "mean",
+                    "name": "value"
+                  }
+                ],
+                "fill": "",
+                "groupByTags": [
+                  "type_instance",
+                  "instance"
+                ],
+                "measurement": "df_value",
+                "query": "SELECT mean(value) FROM \"df_value\" WHERE \"instance\" = 'root' AND \"host\" =~ /$server/ AND \"type\" = 'df_complex' AND \"type_instance\" = 'reserved' AND $timeFilter GROUP BY time($interval), \"type_instance\", \"instance\"",
+                "tags": [
+                  {
+                    "key": "instance",
+                    "operator": "=",
+                    "value": "root"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "host",
+                    "operator": "=~",
+                    "value": "/$server/"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "type",
+                    "operator": "=",
+                    "value": "df_complex"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "type_instance",
+                    "operator": "=",
+                    "value": "reserved"
+                  }
+                ]
+              },
+              {
+                "alias": "$tag_instance $tag_type_instance",
+                "fields": [
+                  {
+                    "func": "mean",
+                    "name": "value"
+                  }
+                ],
+                "fill": "",
+                "groupByTags": [
+                  "type_instance",
+                  "instance"
+                ],
+                "measurement": "df_value",
+                "query": "SELECT mean(value) FROM \"df_value\" WHERE \"instance\" = 'root' AND \"host\" =~ /$server/ AND \"type\" = 'df_complex' AND \"type_instance\" = 'used' AND $timeFilter GROUP BY time($interval), \"type_instance\", \"instance\"",
+                "tags": [
+                  {
+                    "key": "instance",
+                    "operator": "=",
+                    "value": "root"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "host",
+                    "operator": "=~",
+                    "value": "/$server/"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "type",
+                    "operator": "=",
+                    "value": "df_complex"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "type_instance",
+                    "operator": "=",
+                    "value": "used"
+                  }
+                ]
+              },
+              {
+                "alias": "$tag_instance $tag_type_instance",
+                "fields": [
+                  {
+                    "func": "mean",
+                    "name": "value"
+                  }
+                ],
+                "fill": "",
+                "groupByTags": [
+                  "type_instance",
+                  "instance"
+                ],
+                "measurement": "df_value",
+                "query": "SELECT mean(value) FROM \"df_value\" WHERE \"instance\" = 'root' AND \"host\" =~ /$server/ AND \"type\" = 'df_complex' AND \"type_instance\" = 'free' AND $timeFilter GROUP BY time($interval), \"type_instance\", \"instance\"",
+                "tags": [
+                  {
+                    "key": "instance",
+                    "operator": "=",
+                    "value": "root"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "host",
+                    "operator": "=~",
+                    "value": "/$server/"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "type",
+                    "operator": "=",
+                    "value": "df_complex"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "type_instance",
+                    "operator": "=",
+                    "value": "free"
+                  }
+                ]
+              }
+            ],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "$server disk utilization",
+            "tooltip": {
+              "shared": true,
+              "value_type": "individual"
+            },
+            "type": "graph",
+            "x-axis": true,
+            "y-axis": true,
+            "y_formats": [
+              "bytes",
+              "short"
+            ]
+          },
+          {
+            "aliasColors": {},
+            "bars": false,
+            "datasource": "influxdb",
+            "editable": true,
+            "error": false,
+            "fill": 0,
+            "grid": {
+              "leftLogBase": 1,
+              "leftMax": null,
+              "leftMin": null,
+              "rightLogBase": 1,
+              "rightMax": null,
+              "rightMin": null,
+              "threshold1": null,
+              "threshold1Color": "rgba(216, 200, 27, 0.27)",
+              "threshold2": null,
+              "threshold2Color": "rgba(234, 112, 112, 0.22)"
+            },
+            "id": 6,
+            "legend": {
+              "avg": false,
+              "current": false,
+              "max": false,
+              "min": false,
+              "show": true,
+              "total": false,
+              "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [],
+            "nullPointMode": "connected",
+            "percentage": false,
+            "pointradius": 5,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "span": 3,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+              {
+                "alias": "$tag_instance read",
+                "fields": [
+                  {
+                    "func": "non_negative_derivative",
+                    "name": "last(value)"
+                  }
+                ],
+                "fill": "none",
+                "groupByTags": [
+                  "instance"
+                ],
+                "measurement": "disk_read",
+                "query": "SELECT non_negative_derivative(last(value)) FROM \"disk_read\" WHERE \"instance\" = 'sda' AND \"type\" = 'disk_octets' AND \"host\" =~ /$server/ AND $timeFilter GROUP BY time($interval), \"instance\" fill(none)",
+                "tags": [
+                  {
+                    "key": "instance",
+                    "operator": "=",
+                    "value": "sda"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "type",
+                    "operator": "=",
+                    "value": "disk_octets"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "host",
+                    "operator": "=~",
+                    "value": "/$server/"
+                  }
+                ]
+              },
+              {
+                "alias": "$tag_instance write",
+                "fields": [
+                  {
+                    "func": "non_negative_derivative",
+                    "name": "last(value)"
+                  }
+                ],
+                "fill": "none",
+                "groupByTags": [
+                  "instance"
+                ],
+                "measurement": "disk_write",
+                "query": "SELECT non_negative_derivative(last(value)) FROM \"disk_write\" WHERE \"instance\" = 'sda' AND \"type\" = 'disk_octets' AND \"host\" =~ /$server/ AND $timeFilter GROUP BY time($interval), \"instance\" fill(none)",
+                "tags": [
+                  {
+                    "key": "instance",
+                    "operator": "=",
+                    "value": "sda"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "type",
+                    "operator": "=",
+                    "value": "disk_octets"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "host",
+                    "operator": "=~",
+                    "value": "/$server/"
+                  }
+                ]
+              }
+            ],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "$server disk saturation",
+            "tooltip": {
+              "shared": true,
+              "value_type": "cumulative"
+            },
+            "type": "graph",
+            "x-axis": true,
+            "y-axis": true,
+            "y_formats": [
+              "bytes",
+              "short"
+            ]
+          }
+        ],
+        "title": "commodity stats one"
+      },
+      {
+        "collapse": false,
+        "editable": true,
+        "height": "250px",
+        "panels": [
+          {
+            "aliasColors": {
+              "free": "#6ED0E0",
+              "used": "#EF843C"
+            },
+            "bars": false,
+            "datasource": "influxdb",
+            "editable": true,
+            "error": false,
+            "fill": 2,
+            "grid": {
+              "leftLogBase": 1,
+              "leftMax": null,
+              "leftMin": null,
+              "rightLogBase": 1,
+              "rightMax": null,
+              "rightMin": null,
+              "threshold1": null,
+              "threshold1Color": "rgba(216, 200, 27, 0.27)",
+              "threshold2": null,
+              "threshold2Color": "rgba(234, 112, 112, 0.22)"
+            },
+            "id": 1,
+            "legend": {
+              "avg": false,
+              "current": false,
+              "max": false,
+              "min": false,
+              "show": true,
+              "total": false,
+              "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [],
+            "nullPointMode": "connected",
+            "percentage": false,
+            "pointradius": 5,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "span": 4,
+            "stack": true,
+            "steppedLine": false,
+            "targets": [
+              {
+                "alias": "$tag_type_instance",
+                "fields": [
+                  {
+                    "func": "mean",
+                    "name": "value"
+                  }
+                ],
+                "groupByTags": [
+                  "type_instance"
+                ],
+                "measurement": "memory_value",
+                "query": "SELECT mean(value) FROM \"memory_value\" WHERE \"host\" =~ /$server/ AND \"type_instance\" = 'buffered' AND $timeFilter GROUP BY time($interval), \"type_instance\"",
+                "tags": [
+                  {
+                    "key": "host",
+                    "operator": "=~",
+                    "value": "/$server/"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "type_instance",
+                    "operator": "=",
+                    "value": "buffered"
+                  }
+                ]
+              },
+              {
+                "alias": "$tag_type_instance",
+                "fields": [
+                  {
+                    "func": "mean",
+                    "name": "value"
+                  }
+                ],
+                "groupByTags": [
+                  "type_instance"
+                ],
+                "measurement": "memory_value",
+                "query": "SELECT mean(value) FROM \"memory_value\" WHERE \"host\" =~ /$server/ AND \"type_instance\" = 'cached' AND $timeFilter GROUP BY time($interval), \"type_instance\"",
+                "tags": [
+                  {
+                    "key": "host",
+                    "operator": "=~",
+                    "value": "/$server/"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "type_instance",
+                    "operator": "=",
+                    "value": "cached"
+                  }
+                ]
+              },
+              {
+                "alias": "$tag_type_instance",
+                "fields": [
+                  {
+                    "func": "mean",
+                    "name": "value"
+                  }
+                ],
+                "groupByTags": [
+                  "type_instance"
+                ],
+                "measurement": "memory_value",
+                "query": "SELECT mean(value) FROM \"memory_value\" WHERE \"host\" =~ /$server/ AND \"type_instance\" = 'used' AND $timeFilter GROUP BY time($interval), \"type_instance\"",
+                "tags": [
+                  {
+                    "key": "host",
+                    "operator": "=~",
+                    "value": "/$server/"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "type_instance",
+                    "operator": "=",
+                    "value": "used"
+                  }
+                ]
+              },
+              {
+                "alias": "$tag_type_instance",
+                "fields": [
+                  {
+                    "func": "mean",
+                    "name": "value"
+                  }
+                ],
+                "groupByTags": [
+                  "type_instance"
+                ],
+                "measurement": "memory_value",
+                "query": "SELECT mean(value) FROM \"memory_value\" WHERE \"host\" =~ /$server/ AND \"type_instance\" = 'free' AND $timeFilter GROUP BY time($interval), \"type_instance\"",
+                "tags": [
+                  {
+                    "key": "host",
+                    "operator": "=~",
+                    "value": "/$server/"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "type_instance",
+                    "operator": "=",
+                    "value": "free"
+                  }
+                ]
+              }
+            ],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "$server memory",
+            "tooltip": {
+              "shared": true,
+              "value_type": "individual"
+            },
+            "type": "graph",
+            "x-axis": true,
+            "y-axis": true,
+            "y_formats": [
+              "bytes",
+              "short"
+            ]
+          },
+          {
+            "aliasColors": {},
+            "bars": false,
+            "datasource": "influxdb",
+            "editable": true,
+            "error": false,
+            "fill": 4,
+            "grid": {
+              "leftLogBase": 1,
+              "leftMax": null,
+              "leftMin": null,
+              "rightLogBase": 1,
+              "rightMax": null,
+              "rightMin": null,
+              "threshold1": null,
+              "threshold1Color": "rgba(216, 200, 27, 0.27)",
+              "threshold2": null,
+              "threshold2Color": "rgba(234, 112, 112, 0.22)"
+            },
+            "id": 4,
+            "legend": {
+              "avg": false,
+              "current": false,
+              "max": false,
+              "min": false,
+              "show": true,
+              "total": false,
+              "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [],
+            "nullPointMode": "connected",
+            "percentage": false,
+            "pointradius": 5,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "span": 4,
+            "stack": true,
+            "steppedLine": false,
+            "targets": [
+              {
+                "alias": "$tag_type_instance",
+                "fields": [
+                  {
+                    "func": "mean",
+                    "name": "value"
+                  }
+                ],
+                "groupByTags": [
+                  "type_instance"
+                ],
+                "measurement": "swap_value",
+                "query": "SELECT mean(value) FROM \"swap_value\" WHERE \"type\" = 'swap' AND \"host\" =~ /$server/ AND \"type_instance\" = 'cached' AND $timeFilter GROUP BY time($interval), \"type_instance\"",
+                "tags": [
+                  {
+                    "key": "type",
+                    "operator": "=",
+                    "value": "swap"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "host",
+                    "operator": "=~",
+                    "value": "/$server/"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "type_instance",
+                    "operator": "=",
+                    "value": "cached"
+                  }
+                ]
+              },
+              {
+                "alias": "$tag_type_instance",
+                "fields": [
+                  {
+                    "func": "mean",
+                    "name": "value"
+                  }
+                ],
+                "groupByTags": [
+                  "type_instance"
+                ],
+                "measurement": "swap_value",
+                "query": "SELECT mean(value) FROM \"swap_value\" WHERE \"type\" = 'swap' AND \"host\" =~ /$server/ AND \"type_instance\" = 'used' AND $timeFilter GROUP BY time($interval), \"type_instance\"",
+                "tags": [
+                  {
+                    "key": "type",
+                    "operator": "=",
+                    "value": "swap"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "host",
+                    "operator": "=~",
+                    "value": "/$server/"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "type_instance",
+                    "operator": "=",
+                    "value": "used"
+                  }
+                ]
+              },
+              {
+                "alias": "$tag_type_instance",
+                "fields": [
+                  {
+                    "func": "mean",
+                    "name": "value"
+                  }
+                ],
+                "groupByTags": [
+                  "type_instance"
+                ],
+                "measurement": "swap_value",
+                "query": "SELECT mean(value) FROM \"swap_value\" WHERE \"type\" = 'swap' AND \"host\" =~ /$server/ AND \"type_instance\" = 'free' AND $timeFilter GROUP BY time($interval), \"type_instance\"",
+                "tags": [
+                  {
+                    "key": "type",
+                    "operator": "=",
+                    "value": "swap"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "host",
+                    "operator": "=~",
+                    "value": "/$server/"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "type_instance",
+                    "operator": "=",
+                    "value": "free"
+                  }
+                ]
+              }
+            ],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "$server swap",
+            "tooltip": {
+              "shared": true,
+              "value_type": "cumulative"
+            },
+            "type": "graph",
+            "x-axis": true,
+            "y-axis": true,
+            "y_formats": [
+              "bytes",
+              "short"
+            ]
+          },
+          {
+            "aliasColors": {},
+            "bars": false,
+            "datasource": "influxdb",
+            "editable": true,
+            "error": false,
+            "fill": 0,
+            "grid": {
+              "leftLogBase": 1,
+              "leftMax": null,
+              "leftMin": null,
+              "rightLogBase": 1,
+              "rightMax": null,
+              "rightMin": null,
+              "threshold1": null,
+              "threshold1Color": "rgba(216, 200, 27, 0.27)",
+              "threshold2": null,
+              "threshold2Color": "rgba(234, 112, 112, 0.22)"
+            },
+            "id": 7,
+            "legend": {
+              "avg": false,
+              "current": false,
+              "max": false,
+              "min": false,
+              "show": true,
+              "total": false,
+              "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [],
+            "nullPointMode": "connected",
+            "percentage": false,
+            "pointradius": 5,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "span": 4,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+              {
+                "alias": "$tag_instance rx",
+                "fields": [
+                  {
+                    "func": "non_negative_derivative",
+                    "name": "last(value)"
+                  }
+                ],
+                "fill": "none",
+                "groupByTags": [
+                  "instance"
+                ],
+                "measurement": "interface_rx",
+                "query": "SELECT non_negative_derivative(last(value)) FROM \"interface_rx\" WHERE \"type\" = 'if_octets' AND \"host\" =~ /$server/ AND $timeFilter GROUP BY time($interval), \"instance\" fill(none)",
+                "tags": [
+                  {
+                    "key": "type",
+                    "operator": "=",
+                    "value": "if_octets"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "host",
+                    "operator": "=~",
+                    "value": "/$server/"
+                  }
+                ],
+                "target": ""
+              },
+              {
+                "alias": "$tag_instance tx",
+                "fields": [
+                  {
+                    "func": "non_negative_derivative",
+                    "name": "last(value)"
+                  }
+                ],
+                "fill": "none",
+                "groupByTags": [
+                  "instance"
+                ],
+                "measurement": "interface_tx",
+                "query": "SELECT non_negative_derivative(last(value)) FROM \"interface_tx\" WHERE \"type\" = 'if_octets' AND \"host\" =~ /$server/ AND $timeFilter GROUP BY time($interval), \"instance\" fill(none)",
+                "tags": [
+                  {
+                    "key": "type",
+                    "operator": "=",
+                    "value": "if_octets"
+                  },
+                  {
+                    "condition": "AND",
+                    "key": "host",
+                    "operator": "=~",
+                    "value": "/$server/"
+                  }
+                ],
+                "target": ""
+              }
+            ],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "$server network",
+            "tooltip": {
+              "shared": true,
+              "value_type": "individual"
+            },
+            "type": "graph",
+            "x-axis": true,
+            "y-axis": true,
+            "y_formats": [
+              "bytes",
+              "short"
+            ]
+          }
+        ],
+        "title": "commodity stats two"
+      }
+    ],
+    "schemaVersion": 6,
+    "sharedCrosshair": true,
+    "style": "dark",
+    "tags": [
+      "templated"
+    ],
+    "templating": {
+      "list": [
+        {
+          "current": {
+            "tags": [],
+            "text": "ww1.example.com",
+            "value": "ww1.example.com"
+          },
+          "name": "server",
+          "options": [
+            {
+              "selected": true,
+              "text": "ww1.example.com",
+              "value": "ww1.example.com"
+            },
+            {
+              "selected": false,
+              "text": "ww2.example.com",
+              "value": "ww2.example.com"
+            },
+            {
+              "selected": false,
+              "text": "ww3.example.com",
+              "value": "ww3.example.com"
+            }
+          ],
+          "query": "SHOW TAG VALUES WITH KEY = \"host\"",
+          "type": "query"
+        }
+      ]
+    },
+    "time": {
+      "from": "now-2d",
+      "to": "now"
+    },
+    "timezone": "browser",
+    "title": "Monitoring Default",
+    "version": 1
+  }
+}
