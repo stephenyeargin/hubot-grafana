@@ -42,8 +42,7 @@ module.exports = (robot) ->
   s3_access_key = process.env.HUBOT_GRAFANA_S3_ACCESS_KEY_ID
   s3_secret_key = process.env.HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY
   s3_prefix = process.env.HUBOT_GRAFANA_S3_PREFIX
-  s3_region = 'us-standard'
-  s3_region = process.env.HUBOT_GRAFANA_S3_REGION if process.env.HUBOT_GRAFANA_S3_REGION
+  s3_region = process.env.HUBOT_GRAFANA_S3_REGION or 'us-standard'
 
   # Get a specific dashboard with options
   robot.respond /(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) ->
