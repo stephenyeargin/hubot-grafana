@@ -21,7 +21,16 @@ module.exports = function (grunt) {
     watch: {
       files: ['Gruntfile.js', 'src/**/*.coffee', 'test/**/*.coffee'],
       tasks: ['test']
-    }
+    },
+    coveralls: {
+        // Options relevant to all targets
+        options: {
+          // When true, grunt-coveralls will only print a warning rather than
+          // an error, to prevent CI builds from failing unnecessarily (e.g. if
+          // coveralls.io is down). Optional, defaults to false.
+          force: false
+        }
+      }
   });
 
   // load all grunt tasks

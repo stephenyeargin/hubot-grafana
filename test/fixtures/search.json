@@ -1,0 +1,351 @@
+[
+  {
+    "id":1,
+    "title":"Annotations",
+    "uri":"db/annotations",
+    "type":"dash-db",
+    "tags":[
+      "annotations",
+      "demo"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":62,
+    "title":"Big Dashboard",
+    "uri":"db/big-dashboard",
+    "type":"dash-db",
+    "tags":[
+      "home",
+      "startpage"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":66,
+    "title":"Big Dashboard2",
+    "uri":"db/big-dashboard2",
+    "type":"dash-db",
+    "tags":[
+      "home",
+      "startpage"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":65,
+    "title":"Elasticsearch Metrics",
+    "uri":"db/elasticsearch-metrics",
+    "type":"dash-db",
+    "tags":[
+      "elasticsearch",
+      "misc"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":36,
+    "title":"Grafana Play Home",
+    "uri":"db/grafana-play-home",
+    "type":"dash-db",
+    "tags":[
+      "home",
+      "startpage"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":37,
+    "title":"Graph styles",
+    "uri":"db/graph-styles",
+    "type":"dash-db",
+    "tags":[
+      "annotations",
+      "demo"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":5,
+    "title":"Graphite Carbon Metrics",
+    "uri":"db/graphite-carbon-metrics",
+    "type":"dash-db",
+    "tags":[
+      "carbon",
+      "graphite"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":6,
+    "title":"Graphite Template Screencast",
+    "uri":"db/graphite-template-screencast",
+    "type":"dash-db",
+    "tags":[
+      "templated"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":7,
+    "title":"InfluxDB",
+    "uri":"db/influxdb",
+    "type":"dash-db",
+    "tags":[
+      "influxdb",
+      "misc"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":8,
+    "title":"InfluxDB Templated Queries",
+    "uri":"db/influxdb-templated-queries",
+    "type":"dash-db",
+    "tags":[
+      "influxdb",
+      "misc",
+      "templated"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":56,
+    "title":"Issue 3275",
+    "uri":"db/issue-3275",
+    "type":"dash-db",
+    "tags":[
+
+    ],
+    "isStarred":false
+  },
+  {
+    "id":61,
+    "title":"Light theme",
+    "uri":"db/light-theme",
+    "type":"dash-db",
+    "tags":[
+      "home",
+      "startpage"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":67,
+    "title":"Litmus Endpoint: |--- Web",
+    "uri":"db/litmus-endpoint-web",
+    "type":"dash-db",
+    "tags":[
+      "Endpoints",
+      "raintank"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":63,
+    "title":"Matt_Test_Instance",
+    "uri":"db/matt_test_instance",
+    "type":"dash-db",
+    "tags":[
+
+    ],
+    "isStarred":false
+  },
+  {
+    "id":41,
+    "title":"My First Dashboard",
+    "uri":"db/my-first-dashboard",
+    "type":"dash-db",
+    "tags":[
+      "first"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":52,
+    "title":"New dashboard",
+    "uri":"db/new-dashboard",
+    "type":"dash-db",
+    "tags":[
+
+    ],
+    "isStarred":false
+  },
+  {
+    "id":9,
+    "title":"New features in v1.8",
+    "uri":"db/new-features-in-v1-8",
+    "type":"dash-db",
+    "tags":[
+      "v1.8"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":10,
+    "title":"New features in v1.9",
+    "uri":"db/new-features-in-v19",
+    "type":"dash-db",
+    "tags":[
+      "demo",
+      "v1.8"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":39,
+    "title":"New features in v2.0",
+    "uri":"db/new-features-in-v20",
+    "type":"dash-db",
+    "tags":[
+      "demo",
+      "v1.8"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":55,
+    "title":"New features in v2.1",
+    "uri":"db/new-features-in-v2-1",
+    "type":"dash-db",
+    "tags":[
+      "demo",
+      "v1.8"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":59,
+    "title":"PerfTest",
+    "uri":"db/perftest",
+    "type":"dash-db",
+    "tags":[
+      "home",
+      "startpage"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":51,
+    "title":"Rogue",
+    "uri":"db/rogue",
+    "type":"dash-db",
+    "tags":[
+
+    ],
+    "isStarred":false
+  },
+  {
+    "id":35,
+    "title":"Stats",
+    "uri":"db/stats",
+    "type":"dash-db",
+    "tags":[
+
+    ],
+    "isStarred":false
+  },
+  {
+    "id":60,
+    "title":"Stats DS",
+    "uri":"db/stats-ds",
+    "type":"dash-db",
+    "tags":[
+
+    ],
+    "isStarred":false
+  },
+  {
+    "id":44,
+    "title":"Stats trends",
+    "uri":"db/stats-trends",
+    "type":"dash-db",
+    "tags":[
+
+    ],
+    "isStarred":false
+  },
+  {
+    "id":53,
+    "title":"Temp dashboard graphite threshold func",
+    "uri":"db/temp-dashboard-graphite-threshold-func",
+    "type":"dash-db",
+    "tags":[
+
+    ],
+    "isStarred":false
+  },
+  {
+    "id":11,
+    "title":"Templated Graphs",
+    "uri":"db/templated-graphs",
+    "type":"dash-db",
+    "tags":[
+      "example",
+      "templated"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":12,
+    "title":"Templated Graphs Nested",
+    "uri":"db/templated-graphs-nested",
+    "type":"dash-db",
+    "tags":[
+      "graphite",
+      "templated"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":45,
+    "title":"Test",
+    "uri":"db/test",
+    "type":"dash-db",
+    "tags":[
+
+    ],
+    "isStarred":false
+  },
+  {
+    "id":64,
+    "title":"Test Slides",
+    "uri":"db/test-slides",
+    "type":"dash-db",
+    "tags":[
+
+    ],
+    "isStarred":false
+  },
+  {
+    "id":58,
+    "title":"Ultimate Graphite Query Guide",
+    "uri":"db/ultimate-graphite-query-guide",
+    "type":"dash-db",
+    "tags":[
+      "graphite"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":57,
+    "title":"loadbalancers",
+    "uri":"db/loadbalancers",
+    "type":"dash-db",
+    "tags":[
+      "home",
+      "startpage"
+    ],
+    "isStarred":false
+  },
+  {
+    "id":46,
+    "title":"singlestat rounding threshold",
+    "uri":"db/singlestat-rounding-threshold",
+    "type":"dash-db",
+    "tags":[
+
+    ],
+    "isStarred":false
+  }
+]

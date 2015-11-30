@@ -1,0 +1,13 @@
+[
+  {
+    "id":65,
+    "title":"Elasticsearch Metrics",
+    "uri":"db/elasticsearch-metrics",
+    "type":"dash-db",
+    "tags":[
+      "elasticsearch",
+      "misc"
+    ],
+    "isStarred":false
+  }
+]
