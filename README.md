@@ -46,6 +46,8 @@ Recommended if you use a service such as Slack or HipChat. You can omit all of t
 | `HUBOT_GRAFANA_S3_PREFIX`            | No       | Bucket prefix (useful for shared buckets) |
 | `HUBOT_GRAFANA_S3_REGION`            | No       | Bucket region (defaults to us-standard) |
 | `HUBOT_GRAFANA_S3_ENDPOINT`          | No       | Endpoint of the S3 API (useful for S3 compatible API, defaults to s3.amazonaws.com) |
+| `HUBOT_GRAFANA_S3_PORT`              | No       | Port of the S3 endpoint
+| `HUBOT_GRAFANA_S3_STYLE`             | No       | Bucket style of the S3 endpoing 'virtualHosted' or 'path' defaults to 'virtualHosted' |
 
 ### Example Configuration
 

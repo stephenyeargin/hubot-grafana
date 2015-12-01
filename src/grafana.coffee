@@ -44,7 +44,9 @@ module.exports = (robot) ->
   s3_access_key = process.env.HUBOT_GRAFANA_S3_ACCESS_KEY_ID
   s3_secret_key = process.env.HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY
   s3_prefix = process.env.HUBOT_GRAFANA_S3_PREFIX
+  s3_style = process.env.HUBOT_GRAFANA_S3_STYLE if process.env.HUBOT_GRAFANA_S3_STYLE
   s3_region = process.env.HUBOT_GRAFANA_S3_REGION or 'us-standard'
+  s3_port = process.env.HUBOT_GRAFANA_S3_PORT if process.env.HUBOT_GRAFANA_S3_PORT
 
   # Get a specific dashboard with options
   robot.respond /(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) ->
@@ -258,12 +260,15 @@ module.exports = (robot) ->
   # Upload image to S3
   uploadToS3 = (msg, title, link, content, length, content_type) ->
     client = knox.createClient {
-      endpoint : s3_endpoint,
-      key      : s3_access_key
-      secret   : s3_secret_key,
-      bucket   : s3_bucket,
-      region   : s3_region
-    }
+        key      : s3_access_key
+        secret   : s3_secret_key,
+        bucket   : s3_bucket,
+        region   : s3_region,
+        endpoint : s3_endpoint,
+        port     : s3_port,
+        style    : s3_style,
+      }
+
 
     headers = {
       'Content-Length' : length,
@@ -274,10 +279,17 @@ module.exports = (robot) ->
 
     filename = uploadPath()
 
+    if s3_port
+      image_url = client.http(filename)
+    else
+      image_url = client.https(filename)
+
     req = client.put(filename, headers)
+
     req.on 'response', (res) ->
+
       if (200 == res.statusCode)
-        sendRobotResponse msg, title, client.https(filename), link
+        sendRobotResponse msg, title, image_url, link
       else
         robot.logger.debug res
         robot.logger.error "Upload Error Code: #{res.statusCode}"
