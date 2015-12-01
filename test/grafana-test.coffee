@@ -25,6 +25,7 @@ describe 'grafana', ->
   afterEach ->
     room.destroy()
     nock.cleanAll()
+    delete process.env.HUBOT_GRAFANA_HOST
 
   context 'ensure all listeners are registered', ->
     it 'registers a dashboard listener', ->
