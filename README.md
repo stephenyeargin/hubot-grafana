@@ -24,17 +24,30 @@ Then add **hubot-grafana** to your `external-scripts.json`:
 
 ## Configuration Variables
 
-- `HUBOT_GRAFANA_HOST` - Host for your Grafana 2.x install, e.g. 'http://play.grafana.org'
-- `HUBOT_GRAFANA_API_KEY` - API key for a particular user
-- `HUBOT_GRAFANA_QUERY_TIME_RANGE` - Optional; Default time range for queries (defaults to 6h)
-- `HUBOT_GRAFANA_S3_ENDPOINT` - Optional; Endpoint of the S3 API (useful for S3 compatible API, defaults to s3.amazonaws.com)
-- `HUBOT_GRAFANA_S3_BUCKET` - Optional; Name of the S3 bucket to copy the graph into
-- `HUBOT_GRAFANA_S3_ACCESS_KEY_ID` - Optional; Access key ID for S3
-- `HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY` - Optional; Secret access key for S3
-- `HUBOT_GRAFANA_S3_PREFIX` - Optional; Bucket prefix (useful for shared buckets)
-- `HUBOT_GRAFANA_S3_REGION` - Optional; Bucket region (defaults to us-standard)
+### General Settings
 
-Example:
+| Configuration Variable           | Required | Description                    |
+| -------------------------------- | -------- | ------------------------------ |
+| `HUBOT_GRAFANA_HOST`             | **Yes**  | Host for your Grafana 2.x install, e.g. `http://play.grafana.org` |
+| `HUBOT_GRAFANA_API_KEY`          | _Yes^_   | API key for a particular user |
+| `HUBOT_GRAFANA_QUERY_TIME_RANGE` | No       | Default time range for queries (defaults to 6h) |
+
+^ _Not required for `auth.anonymous` Grafana configurations. All other authentication models will require a user-specific API key._
+
+### Amazon S3 Image Hosting
+
+Recommended if you use a service such as Slack or HipChat. You can omit all of these settings if you do not plan to use S3.
+
+| Configuration Variable               | Required | Description                |
+| ------------------------------------ | -------- | -------------------------- |
+| `HUBOT_GRAFANA_S3_BUCKET`            | **Yes**  | Name of the S3 bucket to copy the graph into |
+| `HUBOT_GRAFANA_S3_ACCESS_KEY_ID`     | **Yes**  | Access key ID for S3 |
+| `HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY` | **Yes**  | Secret access key for S3 |
+| `HUBOT_GRAFANA_S3_PREFIX`            | No       | Bucket prefix (useful for shared buckets) |
+| `HUBOT_GRAFANA_S3_REGION`            | No       | Bucket region (defaults to us-standard) |
+| `HUBOT_GRAFANA_S3_ENDPOINT`          | No       | Endpoint of the S3 API (useful for S3 compatible API, defaults to s3.amazonaws.com) |
+
+### Example Configuration
 
 ```
 export HUBOT_GRAFANA_HOST=http://play.grafana.org
@@ -44,7 +57,6 @@ export HUBOT_GRAFANA_S3_BUCKET=mybucket
 export HUBOT_GRAFANA_S3_ACCESS_KEY_ID=ABCDEF123456XYZ
 export HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY=aBcD01234dEaDbEef01234
 export HUBOT_GRAFANA_S3_PREFIX=graphs
-export HUBOT_GRAFANA_S3_REGION=us-standard
 ```
 
 ## Sample Interaction
