@@ -41,14 +41,14 @@
   },
   "config": {
     "blanket": {
-      "pattern": [
-        "/src/"
-      ],
-      "data-cover-never": [
-        "node_modules",
-        "tests"
-      ],
-      "loader": "./node-loaders/coffee-script"
+      "pattern": "test",
+      "data-cover-flags": {
+        "debug": false
+      },
+      "loader": "./node-loaders/coffee-script",
+      "data-cover-reporter-options": {
+        "shortnames": true
+      }
     }
   },
   "main": "index.coffee",
