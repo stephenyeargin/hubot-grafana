@@ -10,7 +10,8 @@ module.exports = function (grunt) {
           require: [
             'coffee-script',
             'blanket',
-          ]
+          ],
+          compilers: 'coffee:coffee-script/register'
         },
         src: ['test/**/*.coffee']
       }
