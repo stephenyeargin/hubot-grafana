@@ -7,7 +7,10 @@ module.exports = function (grunt) {
       test: {
         options: {
           reporter: 'spec',
-          require: 'coffee-script'
+          require: [
+            'coffee-script',
+            'blanket',
+          ]
         },
         src: ['test/**/*.coffee']
       }
