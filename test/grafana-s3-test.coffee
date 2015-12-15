@@ -10,6 +10,12 @@ expect = chai.expect
 
 room = null
 
+before ->
+  matchesBlanket = (path) -> path.match /node_modules\/blanket/
+  runningTestCoverage = Object.keys(require.cache).filter(matchesBlanket).length > 0
+  if runningTestCoverage
+    require('require-dir')("#{__dirname}/../src", {recurse: true, duplicates: true})
+
 setupRoomAndRequestGraph = (done) ->
   room = helper.createRoom()
 
