@@ -42,14 +42,9 @@
   },
   "config": {
     "blanket": {
-      "pattern": "test",
-      "data-cover-flags": {
-        "debug": false
-      },
-      "loader": "./node-loaders/coffee-script",
-      "data-cover-reporter-options": {
-        "shortnames": true
-      }
+      "pattern": "src",
+      "data-cover-never": "node_modules",
+      "loader": "./node-loaders/coffee-script"
     }
   },
   "main": "index.coffee",

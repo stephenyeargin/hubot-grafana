@@ -38,6 +38,7 @@ node_modules
 
 # Code coverage
 coverage.json
+.coveralls.yml
 
 # Node versions (nodenv)
 .node-version
