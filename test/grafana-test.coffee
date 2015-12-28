@@ -85,6 +85,20 @@ describe 'grafana', ->
         [ 'hubot', "Dashboards matching `elasticsearch`:\n- elasticsearch-metrics: Elasticsearch Metrics\n"]
       ]
 
+  context 'ask hubot to return a specific panel by API ID', ->
+    beforeEach (done) ->
+      nock('http://play.grafana.org')
+        .get('/api/dashboards/db/grafana-play-home')
+        .replyWithFile(200, __dirname + '/fixtures/dashboard-grafana-play-home.json')
+      room.user.say 'alice', 'hubot graf db grafana-play-home:panel-8'
+      setTimeout done, 100
+
+    it 'hubot should respond with a matching dashboard', ->
+      expect(room.messages).to.eql [
+        [ 'alice', 'hubot graf db grafana-play-home:panel-8' ]
+        [ 'hubot', "Graphite examples: http://play.grafana.org/render/dashboard-solo/db/grafana-play-home/?panelId=8&width=1000&height=500&from=now-6h&to=now - http://play.grafana.org/dashboard/db/grafana-play-home/?panelId=8&fullscreen&from=now-6h&to=now"]
+      ]
+
   context 'ask hubot to return a specific panel by visual ID', ->
     beforeEach (done) ->
       nock('http://play.grafana.org')

@@ -86,6 +86,12 @@ Get a single panel of a dashboard. In this example, only the third panel would b
 hubot graf db graphite-carbon-metrics:3
 ```
 
+If you want to refer to the API Panel ID, use the `:panel-<identifier>` format to retrieve it. These will not change when the dashboard is re-arranged.
+
+```
+hubot graf db graphite-carbon-metrics:panel-8
+```
+
 Get all panels matching a particular title (case insensitive) in a dashboard. In this case, only panels containing `cpu` would be returned.
 
 ```
