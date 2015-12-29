@@ -3,7 +3,7 @@
 #
 #   Examples:
 #   - `hubot graf db graphite-carbon-metrics` - Get all panels in the dashboard
-#   - `hubot graf db graphite-carbon-metrics:3` - Get only the third panel, from right to left, of a particular dashboard
+#   - `hubot graf db graphite-carbon-metrics:3` - Get only the third panel, from left to right, of a particular dashboard
 #   - `hubot graf db graphite-carbon-metrics:panel-8` - Get only the panel of a particular dashboard with the ID of 8
 #   - `hubot graf db graphite-carbon-metrics:cpu` - Get only the panels containing "cpu" (case insensitive) in the title
 #   - `hubot graf db graphite-carbon-metrics now-12hr` - Get a dashboard with a window of 12 hours ago to now
