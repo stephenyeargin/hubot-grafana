@@ -3,7 +3,8 @@
 #
 #   Examples:
 #   - `hubot graf db graphite-carbon-metrics` - Get all panels in the dashboard
-#   - `hubot graf db graphite-carbon-metrics:3` - Get only the third panel of a particular dashboard
+#   - `hubot graf db graphite-carbon-metrics:3` - Get only the third panel, from left to right, of a particular dashboard
+#   - `hubot graf db graphite-carbon-metrics:panel-8` - Get only the panel of a particular dashboard with the ID of 8
 #   - `hubot graf db graphite-carbon-metrics:cpu` - Get only the panels containing "cpu" (case insensitive) in the title
 #   - `hubot graf db graphite-carbon-metrics now-12hr` - Get a dashboard with a window of 12 hours ago to now
 #   - `hubot graf db graphite-carbon-metrics now-24hr now-12hr` - Get a dashboard with a window of 24 hours ago to 12 hours ago
@@ -58,17 +59,22 @@ module.exports = (robot) ->
     }
     variables = ''
     template_params = []
-    pid = false
+    visualPanelId = false
+    apiPanelId = false
     pname = false
 
     # Parse out a specific panel
     if /\:/.test slug
       parts = slug.split(':')
       slug = parts[0]
-      pid = parseInt parts[1], 10
-      if isNaN pid
-        pid = false
+      visualPanelId = parseInt parts[1], 10
+      if isNaN visualPanelId
+        visualPanelId = false
         pname = parts[1].toLowerCase()
+      if /panel-[0-9]+/.test pname
+        parts = pname.split('panel-')
+        apiPanelId = parseInt parts[1], 10
+        pname = false
 
     # Check if we have any extra fields
     if remainder
@@ -90,7 +96,8 @@ module.exports = (robot) ->
     robot.logger.debug timespan
     robot.logger.debug variables
     robot.logger.debug template_params
-    robot.logger.debug pid
+    robot.logger.debug visualPanelId
+    robot.logger.debug apiPanelId
     robot.logger.debug pname
 
     # Call the API to get information about this dashboard
@@ -135,8 +142,12 @@ module.exports = (robot) ->
 
           panelNumber += 1
 
-          # Skip if panel ID was specified and didn't match
-          if pid && pid != panelNumber
+          # Skip if visual panel ID was specified and didn't match
+          if visualPanelId && visualPanelId != panelNumber
+            continue
+
+          # Skip if API panel ID was specified and didn't match
+          if apiPanelId && apiPanelId != panel.id
             continue
 
           # Skip if panel name was specified any didn't match
