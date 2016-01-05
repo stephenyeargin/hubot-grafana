@@ -1,7 +1,7 @@
 {
   "name": "hubot-grafana",
   "description": "Query Grafana dashboards",
-  "version": "1.4.8",
+  "version": "1.4.9",
   "author": "Stephen Yeargin <stephen@yearg.in>",
   "license": "MIT",
   "keywords": "hubot, hubot-scripts, grafana, graphs",
