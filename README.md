@@ -29,7 +29,7 @@ Then add **hubot-grafana** to your `external-scripts.json`:
 | Configuration Variable           | Required | Description                    |
 | -------------------------------- | -------- | ------------------------------ |
 | `HUBOT_GRAFANA_HOST`             | **Yes**  | Host for your Grafana 2.x install, e.g. `http://play.grafana.org` |
-| `HUBOT_GRAFANA_API_KEY`          | _Yes^_   | API key for a particular user |
+| `HUBOT_GRAFANA_API_KEY`          | _Yes^_   | Grafana API key (This can be "Viewer" role.) |
 | `HUBOT_GRAFANA_QUERY_TIME_RANGE` | No       | Default time range for queries (defaults to 6h) |
 
 ^ _Not required for `auth.anonymous` Grafana configurations. All other authentication models will require a user-specific API key._
@@ -37,6 +37,9 @@ Then add **hubot-grafana** to your `external-scripts.json`:
 ### Amazon S3 Image Hosting
 
 Recommended if you use a service such as Slack or HipChat. You can omit all of these settings if you do not plan to use S3.
+
+Graphs are downloaded to the box running **hubot-grafana** and then uploaded to S3 with world-readable rights, so you do not have to do anything special to your S3 bucket in order to serve the graph images suitable for Slack or HipChat.  E.g., you do not have to set up web hosting for your S3 bucket.
+
 
 | Configuration Variable               | Required | Description                |
 | ------------------------------------ | -------- | -------------------------- |
@@ -47,7 +50,44 @@ Recommended if you use a service such as Slack or HipChat. You can omit all of t
 | `HUBOT_GRAFANA_S3_REGION`            | No       | Bucket region (defaults to us-standard) |
 | `HUBOT_GRAFANA_S3_ENDPOINT`          | No       | Endpoint of the S3 API (useful for S3 compatible API, defaults to s3.amazonaws.com) |
 | `HUBOT_GRAFANA_S3_PORT`              | No       | Port of the S3 endpoint
-| `HUBOT_GRAFANA_S3_STYLE`             | No       | Bucket style of the S3 endpoing 'virtualHosted' or 'path' defaults to 'virtualHosted' |
+| `HUBOT_GRAFANA_S3_STYLE`             | No       | Bucket style of the S3 endpoint 'virtualHosted' or 'path' defaults to 'virtualHosted' |
+
+
+You most likely want to add an S3 Life Cycle Configuration that will "Permanently Delete" the graphs after 1 hour or 1 day, as appropriate for your organization.
+
+#### Hosting **hubot-grafana** _within_ AWS.
+
+EC2 IAM Roles will _not_ be used.  In order for your **hubot-grafana** to be allowed to store graphs in S3 that can be referenced via Slack or HipChat, the IAM user with the credentials you run **hubot-grafana** as should have an IAM user policy such as:
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::YOUR-BUCKET-NAME"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject",
+                "s3:PutObjectAcl"
+            ],
+            "Resource": [
+                "arn:aws:s3:::YOUR-BUCKET-NAME/*"
+            ]
+        }
+    ]
+}
+```
+
 
 ### Example Configuration
 
