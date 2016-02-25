@@ -34,6 +34,7 @@
 crypto  = require 'crypto'
 knox    = require 'knox'
 request = require 'request'
+url     = require 'url'
 
 module.exports = (robot) ->
   # Various configuration options stored in environment variables
@@ -48,6 +49,52 @@ module.exports = (robot) ->
   s3_style = process.env.HUBOT_GRAFANA_S3_STYLE if process.env.HUBOT_GRAFANA_S3_STYLE
   s3_region = process.env.HUBOT_GRAFANA_S3_REGION or 'us-standard'
   s3_port = process.env.HUBOT_GRAFANA_S3_PORT if process.env.HUBOT_GRAFANA_S3_PORT
+
+  # Convert dashboard panel url to a graph
+  robot.respond ///.*(#{grafana_host}/dashboard/db/(\S+)/?\?(\S+)).*///i, (msg) ->
+    link = msg.match[1]
+    slug = msg.match[2]
+    params = msg.match[3]
+    uri = url.parse(link, true)
+    robot.logger.debug msg.match
+    robot.logger.debug uri
+    robot.logger.debug slug
+
+    # Call the API to get information about this dashboard
+    callGrafana "dashboards/db/#{slug}", (dashboard) ->
+      robot.logger.debug dashboard
+
+      # Check dashboard information
+      if !dashboard
+        return sendError 'An error ocurred. Check your logs for more details.', msg
+      if dashboard.message
+        return sendError dashboard.message, msg
+
+      # Handle refactor done for version 2.0.2+
+      if dashboard.dashboard
+        # 2.0.2+: Changed in https://github.com/grafana/grafana/commit/e5c11691203fe68958e66693e429f6f5a3c77200
+        data = dashboard.dashboard
+        # The URL was changed in https://github.com/grafana/grafana/commit/35cc0a1cc0bca453ce789056f6fbd2fcb13f74cb
+        apiEndpoint = 'dashboard-solo'
+      else
+        # 2.0.2 and older
+        data = dashboard.model
+        apiEndpoint = 'dashboard/solo'
+
+      title = link
+      panelId = parseInt(uri.query.panelId)
+      for row in data.rows
+        for panel in row.panels
+          robot.logger.debug "panel #{panel.id} #{uri.query.panelId}"
+          if panel.id == panelId
+            title = formatTitleWithTemplate(panel.title, uri.query)
+            break
+
+      # Build links for message sending
+      imageUrl = "#{grafana_host}/render/#{apiEndpoint}/db/#{slug}/?width=1000&height=500&#{params}"
+
+      if (s3_bucket && s3_access_key && s3_secret_key)
+        fetchAndUpload msg, title, imageUrl, link
 
   # Get a specific dashboard with options
   robot.respond /(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) ->
@@ -228,7 +275,13 @@ module.exports = (robot) ->
 
   # Send robot response
   sendRobotResponse = (msg, title, image, link) ->
-    msg.send "#{title}: #{image} - #{link}"
+    robot.logger.debug link
+    robot.emit 'slack-attachment',
+      channel: msg.message.room
+      content:
+        image_url: image
+        title: title
+        title_link: link
 
   # Call off to Grafana
   callGrafana = (url, callback) ->
