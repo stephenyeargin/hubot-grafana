@@ -40,7 +40,6 @@ Recommended if you use a service such as Slack or HipChat. You can omit all of t
 
 Graphs are downloaded to the box running **hubot-grafana** and then uploaded to S3 with world-readable rights, so you do not have to do anything special to your S3 bucket in order to serve the graph images suitable for Slack or HipChat.  E.g., you do not have to set up web hosting for your S3 bucket.
 
-
 | Configuration Variable               | Required | Description                |
 | ------------------------------------ | -------- | -------------------------- |
 | `HUBOT_GRAFANA_S3_BUCKET`            | **Yes**  | Name of the S3 bucket to copy the graph into |
@@ -51,7 +50,6 @@ Graphs are downloaded to the box running **hubot-grafana** and then uploaded to 
 | `HUBOT_GRAFANA_S3_ENDPOINT`          | No       | Endpoint of the S3 API (useful for S3 compatible API, defaults to s3.amazonaws.com) |
 | `HUBOT_GRAFANA_S3_PORT`              | No       | Port of the S3 endpoint
 | `HUBOT_GRAFANA_S3_STYLE`             | No       | Bucket style of the S3 endpoint 'virtualHosted' or 'path' defaults to 'virtualHosted' |
-
 
 You most likely want to add an S3 Life Cycle Configuration that will "Permanently Delete" the graphs after 1 hour or 1 day, as appropriate for your organization.
 
@@ -87,7 +85,6 @@ EC2 IAM Roles will _not_ be used.  In order for your **hubot-grafana** to be all
     ]
 }
 ```
-
 
 ### Example Configuration
 
