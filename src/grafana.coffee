@@ -25,6 +25,11 @@
 #   "knox": "^0.9.2"
 #   "request": "~2"
 #
+# Notes:
+#   If you want to use the Slack adapter's "attachment" formatting:
+#     hubot: v2.7.2+
+#     hubot-slack: 4.0+
+#
 # Commands:
 #   hubot graf db <dashboard slug>[:<panel id>][ <template variables>][ <from clause>][ <to clause>] - Show grafana dashboard graphs
 #   hubot graf list <tag> - Lists all dashboards available (optional: <tag>)
@@ -228,7 +233,26 @@ module.exports = (robot) ->
 
   # Send robot response
   sendRobotResponse = (msg, title, image, link) ->
-    msg.send "#{title}: #{image} - #{link}"
+    switch robot.adapterName
+      # Slack
+      when 'slack'
+        msg.send {
+          attachments: [
+            {
+              fallback: "#{title}: #{image} - #{link}",
+              title: title,
+              title_link: link,
+              image_url: image
+            }
+          ],
+          unfurl_links: false
+        }
+      # Hipchat
+      when 'hipchat'
+        msg.send "#{title}: #{link} - #{image}"
+      # Everything else
+      else
+        msg.send "#{title}: #{image} - #{link}"
 
   # Call off to Grafana
   callGrafana = (url, callback) ->
