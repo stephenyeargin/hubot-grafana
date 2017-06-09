@@ -20,6 +20,7 @@
 #   HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY - Optional; Secret access key for S3
 #   HUBOT_GRAFANA_S3_PREFIX - Optional; Bucket prefix (useful for shared buckets)
 #   HUBOT_GRAFANA_S3_REGION - Optional; Bucket region (defaults to us-standard)
+#   HUBOT_SLACK_URL - Optional; You should use this if you are using slack adapter and you don't own an S3 account.
 #
 # Dependencies:
 #   "knox": "^0.9.2"
@@ -53,6 +54,9 @@ module.exports = (robot) ->
   s3_style = process.env.HUBOT_GRAFANA_S3_STYLE if process.env.HUBOT_GRAFANA_S3_STYLE
   s3_region = process.env.HUBOT_GRAFANA_S3_REGION or 'us-standard'
   s3_port = process.env.HUBOT_GRAFANA_S3_PORT if process.env.HUBOT_GRAFANA_S3_PORT
+  slack_url = process.env.HUBOT_SLACK_URL
+  site = 's3' if (s3_bucket && s3_access_key && s3_secret_key) else if (slack_url && robot.adapterName == 'slack') else ''
+  isUploadSupported = site != ''
 
   # Get a specific dashboard with options
   robot.respond /(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) ->
@@ -164,11 +168,14 @@ module.exports = (robot) ->
           imageUrl = "#{grafana_host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=1000&height=500&from=#{timespan.from}&to=#{timespan.to}#{variables}"
           link = "#{grafana_host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
 
-          # Fork here for S3-based upload and non-S3
-          if (s3_bucket && s3_access_key && s3_secret_key)
-            fetchAndUpload msg, title, imageUrl, link
-          else
-            sendRobotResponse msg, title, imageUrl, link
+          sendDashboardChart msg, title, imageUrl, link
+
+  # Process the bot response
+  sendDashboardChart = (msg, title, imageUrl, link) ->
+    if (isUploadSupported)
+      uploadChart msg, title, imageUrl, link, site
+    else
+      sendRobotResponse msg, title, imageUrl, link
 
   # Get a list of available dashboards
   robot.respond /(?:grafana|graph|graf) list\s?(.+)?/i, (msg) ->
@@ -278,7 +285,7 @@ module.exports = (robot) ->
     "#{prefix}/#{crypto.randomBytes(20).toString('hex')}.png"
 
   # Fetch an image from provided URL, upload it to S3, returning the resulting URL
-  fetchAndUpload = (msg, title, url, link) ->
+  uploadChart = (msg, title, url, link, site) ->
     if grafana_api_key
         requestHeaders =
           encoding: null,
@@ -290,11 +297,11 @@ module.exports = (robot) ->
 
     request url, requestHeaders, (err, res, body) ->
       robot.logger.debug "Uploading file: #{body.length} bytes, content-type[#{res.headers['content-type']}]"
-      uploadToS3(msg, title, link, body, body.length, res.headers['content-type'])
+      uploadTo[site](msg, title, link, body, res)
 
-  # Upload image to S3
-  uploadToS3 = (msg, title, link, content, length, content_type) ->
-    client = knox.createClient {
+  uploadTo =
+    's3': (msg, title, link, body, res) ->
+      client = knox.createClient {
         key      : s3_access_key
         secret   : s3_secret_key,
         bucket   : s3_bucket,
@@ -304,29 +311,46 @@ module.exports = (robot) ->
         style    : s3_style,
       }
 
+      headers = {
+        'Content-Length' : body.length,
+        'Content-Type'   : res.headers['content_type'],
+        'x-amz-acl'      : 'public-read',
+        'encoding'       : null
+      }
 
-    headers = {
-      'Content-Length' : length,
-      'Content-Type'   : content_type,
-      'x-amz-acl'      : 'public-read',
-      'encoding'       : null
-    }
+      filename = uploadPath()
 
-    filename = uploadPath()
-
-    if s3_port
-      image_url = client.http(filename)
-    else
-      image_url = client.https(filename)
-
-    req = client.put(filename, headers)
-
-    req.on 'response', (res) ->
-
-      if (200 == res.statusCode)
-        sendRobotResponse msg, title, image_url, link
+      if s3_port
+        image_url = client.http(filename)
       else
-        robot.logger.debug res
-        robot.logger.error "Upload Error Code: #{res.statusCode}"
-        msg.send "#{title} - [Upload Error] - #{link}"
-    req.end(content);
+        image_url = client.https(filename)
+
+        req = client.put(filename, headers)
+
+        req.on 'response', (res) ->
+
+          if (200 == res.statusCode)
+            sendRobotResponse msg, title, image_url, link
+          else
+            robot.logger.debug res
+            robot.logger.error "Upload Error Code: #{res.statusCode}"
+            msg.send "#{title} - [Upload Error] - #{link}"
+            req.end(body);
+    'slack': (msg, title, link, body, res) ->
+      # TODO: try to avoid fs. I'm not familiar with streams in nodejs.
+      # I couldn't find a way to upload the .png from the body response.
+      fs = require 'fs'
+      tempFile = "/tmp/#{crypto.randomBytes(20).toString('hex')}.png"
+      fs.writeFileSync tempFile , body
+      request.post({
+        url: slack_url + '/api/files.upload'
+        formData:
+          channels: msg.envelope.room
+          token: hubot_slack_token
+          # How could I use a readable stream directly from body?
+          file: fs.createReadStream tempFile         
+          }, (err, httpResponse, body) ->
+            if err
+              robot.logger.error err
+              msg.send "#{title} - [Upload Error] - #{link}"
+          )
