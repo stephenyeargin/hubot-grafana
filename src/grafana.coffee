@@ -95,6 +95,7 @@ module.exports = (robot) ->
           #put imagesize stuff into its own dict
           if part.split('=')[0] of imagesize
             imagesize[part.split('=')[0]] = part.split('=')[1]
+            continue
             
           variables = "#{variables}&var-#{part}"
           template_params.push { "name": part.split('=')[0], "value": part.split('=')[1] }
