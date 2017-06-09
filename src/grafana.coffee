@@ -4,6 +4,8 @@
 #   Examples:
 #   - `hubot graf db graphite-carbon-metrics` - Get all panels in the dashboard
 #   - `hubot graf db graphite-carbon-metrics:3` - Get only the third panel, from left to right, of a particular dashboard
+#   - `hubot graf db graphite-carbon-metrics:3 width=1000` - Get only the third panel, from left to right, of a particular dashboard. Set the image width to 1000px
+#   - `hubot graf db graphite-carbon-metrics:3 height=2000` - Get only the third panel, from left to right, of a particular dashboard. Set the image height to 2000px
 #   - `hubot graf db graphite-carbon-metrics:panel-8` - Get only the panel of a particular dashboard with the ID of 8
 #   - `hubot graf db graphite-carbon-metrics:cpu` - Get only the panels containing "cpu" (case insensitive) in the title
 #   - `hubot graf db graphite-carbon-metrics now-12hr` - Get a dashboard with a window of 12 hours ago to now
@@ -67,6 +69,7 @@ module.exports = (robot) ->
     visualPanelId = false
     apiPanelId = false
     pname = false
+    imagesize = { "width": 1000, "height": 500 }
 
     # Parse out a specific panel
     if /\:/.test slug
@@ -89,6 +92,10 @@ module.exports = (robot) ->
       for part in remainder.trim().split ' '
         # Check if it's a variable or part of the timespan
         if part.indexOf('=') >= 0
+          #put imagesize stuff into its own dict
+          if part.split('=')[0] of imagesize
+            imagesize[part.split('=')[0]] = part.split('=')[1]
+            
           variables = "#{variables}&var-#{part}"
           template_params.push { "name": part.split('=')[0], "value": part.split('=')[1] }
 
@@ -161,7 +168,7 @@ module.exports = (robot) ->
 
           # Build links for message sending
           title = formatTitleWithTemplate(panel.title, template_map)
-          imageUrl = "#{grafana_host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=1000&height=500&from=#{timespan.from}&to=#{timespan.to}#{variables}"
+          imageUrl = "#{grafana_host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=#{imagesize.width}&height=#{imagesize.height}&from=#{timespan.from}&to=#{timespan.to}#{variables}"
           link = "#{grafana_host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
 
           # Fork here for S3-based upload and non-S3
