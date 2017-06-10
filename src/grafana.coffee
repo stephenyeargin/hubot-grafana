@@ -55,7 +55,13 @@ module.exports = (robot) ->
   s3_region = process.env.HUBOT_GRAFANA_S3_REGION or 'us-standard'
   s3_port = process.env.HUBOT_GRAFANA_S3_PORT if process.env.HUBOT_GRAFANA_S3_PORT
   slack_url = process.env.HUBOT_SLACK_URL
-  site = 's3' if (s3_bucket && s3_access_key && s3_secret_key) else if (slack_url && robot.adapterName == 'slack') else ''
+  site = () ->
+    if (s3_bucket && s3_access_key && s3_secret_key)
+      's3'
+    else if (slack_url && robot.adapterName == 'slack') 
+      'slack'
+    else
+      ''
   isUploadSupported = site != ''
 
   # Get a specific dashboard with options
@@ -297,7 +303,7 @@ module.exports = (robot) ->
 
     request url, requestHeaders, (err, res, body) ->
       robot.logger.debug "Uploading file: #{body.length} bytes, content-type[#{res.headers['content-type']}]"
-      uploadTo[site](msg, title, link, body, res)
+      uploadTo[site()](msg, title, link, body, res)
 
   uploadTo =
     's3': (msg, title, link, body, res) ->
