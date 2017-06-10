@@ -289,22 +289,7 @@ module.exports = (robot) ->
   uploadPath = () ->
     prefix = s3_prefix || 'grafana'
     "#{prefix}/#{crypto.randomBytes(20).toString('hex')}.png"
-
-  # Fetch an image from provided URL, upload it to S3, returning the resulting URL
-  uploadChart = (msg, title, url, link, site) ->
-    if grafana_api_key
-        requestHeaders =
-          encoding: null,
-          auth:
-            bearer: grafana_api_key
-      else
-        requestHeaders =
-          encoding: null
-
-    request url, requestHeaders, (err, res, body) ->
-      robot.logger.debug "Uploading file: #{body.length} bytes, content-type[#{res.headers['content-type']}]"
-      uploadTo[site()](msg, title, link, body, res)
-
+  
   uploadTo =
     's3': (msg, title, link, body, res) ->
       client = knox.createClient {
@@ -360,3 +345,18 @@ module.exports = (robot) ->
               robot.logger.error err
               msg.send "#{title} - [Upload Error] - #{link}"
           )
+      
+  # Fetch an image from provided URL, upload it to S3, returning the resulting URL
+  uploadChart = (msg, title, url, link, site) ->
+    if grafana_api_key
+        requestHeaders =
+          encoding: null,
+          auth:
+            bearer: grafana_api_key
+      else
+        requestHeaders =
+          encoding: null
+
+    request url, requestHeaders, (err, res, body) ->
+      robot.logger.debug "Uploading file: #{body.length} bytes, content-type[#{res.headers['content-type']}]"
+      uploadTo[site()](msg, title, link, body, res)
