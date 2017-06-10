@@ -55,14 +55,15 @@ module.exports = (robot) ->
   s3_region = process.env.HUBOT_GRAFANA_S3_REGION or 'us-standard'
   s3_port = process.env.HUBOT_GRAFANA_S3_PORT if process.env.HUBOT_GRAFANA_S3_PORT
   slack_url = process.env.HUBOT_SLACK_URL
+  slack_token = process.env.HUBOT_SLACK_TOKEN
   site = () ->
     if (s3_bucket && s3_access_key && s3_secret_key)
       's3'
-    else if (slack_url && robot.adapterName == 'slack') 
+    else if (slack_url && slack_token && robot.adapterName == 'slack') 
       'slack'
     else
       ''
-  isUploadSupported = site != ''
+  isUploadSupported = site() != ''
 
   # Get a specific dashboard with options
   robot.respond /(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) ->
@@ -337,7 +338,7 @@ module.exports = (robot) ->
         url: slack_url + '/api/files.upload'
         formData:
           channels: msg.envelope.room
-          token: hubot_slack_token
+          token: slack_token
           # How could I use a readable stream directly from body?
           file: fs.createReadStream tempFile         
           }, (err, httpResponse, body) ->
@@ -345,7 +346,7 @@ module.exports = (robot) ->
               robot.logger.error err
               msg.send "#{title} - [Upload Error] - #{link}"
           )
-      
+
   # Fetch an image from provided URL, upload it to S3, returning the resulting URL
   uploadChart = (msg, title, url, link, site) ->
     if grafana_api_key
