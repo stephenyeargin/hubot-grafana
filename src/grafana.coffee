@@ -54,12 +54,12 @@ module.exports = (robot) ->
   s3_style = process.env.HUBOT_GRAFANA_S3_STYLE if process.env.HUBOT_GRAFANA_S3_STYLE
   s3_region = process.env.HUBOT_GRAFANA_S3_REGION or 'us-standard'
   s3_port = process.env.HUBOT_GRAFANA_S3_PORT if process.env.HUBOT_GRAFANA_S3_PORT
-  slack_url = process.env.HUBOT_SLACK_URL
   slack_token = process.env.HUBOT_SLACK_TOKEN
   site = () ->
+    # prioritize S3 no matter if adpater is slack
     if (s3_bucket && s3_access_key && s3_secret_key)
       's3'
-    else if (slack_url && slack_token && robot.adapterName == 'slack') 
+    else if (robot.adapterName == 'slack') 
       'slack'
     else
       ''
@@ -329,23 +329,35 @@ module.exports = (robot) ->
             msg.send "#{title} - [Upload Error] - #{link}"
             req.end(body);
     'slack': (msg, title, link, body, res) ->
-      # TODO: try to avoid fs. I'm not familiar with streams in nodejs.
-      # I couldn't find a way to upload the .png from the body response.
-      fs = require 'fs'
-      tempFile = "/tmp/#{crypto.randomBytes(20).toString('hex')}.png"
-      fs.writeFileSync tempFile , body
+      # Obtain slack team URL
       request.post({
-        url: slack_url + '/api/files.upload'
+        url: 'https://slack.com/api/auth.test'
         formData:
-          channels: msg.envelope.room
           token: slack_token
-          # How could I use a readable stream directly from body?
-          file: fs.createReadStream tempFile         
-          }, (err, httpResponse, body) ->
-            if err
-              robot.logger.error err
-              msg.send "#{title} - [Upload Error] - #{link}"
-          )
+        }, (err, httpResponse, slackResBody) ->
+          if err
+            robot.logger.error err
+            msg.send "#{title} - [Upload Error - invalid token/can't fetch team url] - #{link}"
+          else
+            slack_url = JSON.parse(slackResBody)["url"]
+            # TODO: try to avoid fs. I'm not familiar with streams in nodejs.
+            # I couldn't find a way to upload the .png from the body response.
+            fs = require 'fs'
+            tempFile = "/tmp/#{crypto.randomBytes(20).toString('hex')}.png"
+            fs.writeFileSync tempFile , body
+            request.post({
+              url: slack_url + '/api/files.upload'
+              formData:
+                channels: msg.envelope.room
+                token: slack_token
+                # How could I use a readable stream directly from body?
+                file: fs.createReadStream tempFile         
+                }, (err, httpResponse, body) ->
+                  if err
+                    robot.logger.error err
+                    msg.send "#{title} - [Upload Error] - #{link}"
+                    )
+            )
 
   # Fetch an image from provided URL, upload it to S3, returning the resulting URL
   uploadChart = (msg, title, url, link, site) ->
