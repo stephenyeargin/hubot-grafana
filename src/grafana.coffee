@@ -20,7 +20,6 @@
 #   HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY - Optional; Secret access key for S3
 #   HUBOT_GRAFANA_S3_PREFIX - Optional; Bucket prefix (useful for shared buckets)
 #   HUBOT_GRAFANA_S3_REGION - Optional; Bucket region (defaults to us-standard)
-#   HUBOT_SLACK_URL - Optional; You should use this if you are using slack adapter and you don't own an S3 account.
 #
 # Dependencies:
 #   "knox": "^0.9.2"
@@ -292,30 +291,31 @@ module.exports = (robot) ->
     "#{prefix}/#{crypto.randomBytes(20).toString('hex')}.png"
   
   uploadTo =
-    's3': (msg, title, link, body, res) ->
-      client = knox.createClient {
-        key      : s3_access_key
-        secret   : s3_secret_key,
-        bucket   : s3_bucket,
-        region   : s3_region,
-        endpoint : s3_endpoint,
-        port     : s3_port,
-        style    : s3_style,
-      }
+    's3': (msg, title, grafanaDashboardRequest, link) ->
+      grafanaDashboardRequest (err, res, body) ->
+        client = knox.createClient {
+          key      : s3_access_key
+          secret   : s3_secret_key,
+          bucket   : s3_bucket,
+          region   : s3_region,
+          endpoint : s3_endpoint,
+          port     : s3_port,
+          style    : s3_style,
+        }
 
-      headers = {
-        'Content-Length' : body.length,
-        'Content-Type'   : res.headers['content_type'],
-        'x-amz-acl'      : 'public-read',
-        'encoding'       : null
-      }
+        headers = {
+          'Content-Length' : body.length,
+          'Content-Type'   : res.headers['content_type'],
+          'x-amz-acl'      : 'public-read',
+          'encoding'       : null
+        }
 
-      filename = uploadPath()
+        filename = uploadPath()
 
-      if s3_port
-        image_url = client.http(filename)
-      else
-        image_url = client.https(filename)
+        if s3_port
+          image_url = client.http(filename)
+        else
+          image_url = client.https(filename)
 
         req = client.put(filename, headers)
 
@@ -327,49 +327,63 @@ module.exports = (robot) ->
             robot.logger.debug res
             robot.logger.error "Upload Error Code: #{res.statusCode}"
             msg.send "#{title} - [Upload Error] - #{link}"
-            req.end(body);
-    'slack': (msg, title, link, body, res) ->
-      # Obtain slack team URL
-      request.post({
+        req.end(body);
+
+    'slack': (msg, title, grafanaDashboardRequest, link) ->
+      testAuthData = 
         url: 'https://slack.com/api/auth.test'
         formData:
           token: slack_token
-        }, (err, httpResponse, slackResBody) ->
+
+      # We test auth against slack to obtain the team URL
+      request.post testAuthData, (err, httpResponse, slackResBody) ->
           if err
             robot.logger.error err
-            msg.send "#{title} - [Upload Error - invalid token/can't fetch team url] - #{link}"
+            msg.send "#{title} - [Slak auth.test Error - invalid token/can't fetch team url] - #{link}"
           else
             slack_url = JSON.parse(slackResBody)["url"]
-            # TODO: try to avoid fs. I'm not familiar with streams in nodejs.
-            # I couldn't find a way to upload the .png from the body response.
-            fs = require 'fs'
-            tempFile = "/tmp/#{crypto.randomBytes(20).toString('hex')}.png"
-            fs.writeFileSync tempFile , body
-            request.post({
+
+            # fill in the POST request. This must be www-form/multipart
+            uploadData =
               url: slack_url + '/api/files.upload'
               formData:
                 channels: msg.envelope.room
                 token: slack_token
-                # How could I use a readable stream directly from body?
-                file: fs.createReadStream tempFile         
-                }, (err, httpResponse, body) ->
-                  if err
-                    robot.logger.error err
-                    msg.send "#{title} - [Upload Error] - #{link}"
-                    )
-            )
+                # grafanaDashboardRequest() is the method that downloads the .png
+                file: grafanaDashboardRequest()
+
+            # Try to upload the image to slack else pass the link over
+            request.post uploadData, (err, httpResponse, body) ->
+              res = JSON.parse(body)
+
+              # Error logging, we must also check the body response.
+              # It will be something like: { "ok": <boolean>, "error": <error message> }
+              if err
+                robot.logger.error err
+                msg.send "#{title} - [Upload Error] - #{link}"
+              else if !res["ok"]
+                robot.logger.error "Slack service error while posting data:" +res["error"]
+                msg.send "#{title} - [Form Error: can't upload file] - #{link}"
+
 
   # Fetch an image from provided URL, upload it to S3, returning the resulting URL
   uploadChart = (msg, title, url, link, site) ->
     if grafana_api_key
-        requestHeaders =
-          encoding: null,
-          auth:
-            bearer: grafana_api_key
-      else
-        requestHeaders =
-          encoding: null
+      requestHeaders =
+        encoding: null,
+        auth:
+          bearer: grafana_api_key
+    else
+      requestHeaders =
+        encoding: null
 
-    request url, requestHeaders, (err, res, body) ->
-      robot.logger.debug "Uploading file: #{body.length} bytes, content-type[#{res.headers['content-type']}]"
-      uploadTo[site()](msg, title, link, body, res)
+    # Pass this function along to the "registered" services that uploads the image.
+    # The function will donwload the .png image(s) dashboard. You must pass this
+    # function and use it inside your service upload implementation.
+    grafanaDashboardRequest = (callback) ->
+      request url, requestHeaders, (err, res, body) ->
+        robot.logger.debug "Uploading file: #{body.length} bytes, content-type[#{res.headers['content-type']}]"
+        if callback
+          callback(err, res, body)
+
+    uploadTo[site()](msg, title, grafanaDashboardRequest, link)
