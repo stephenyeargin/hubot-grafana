@@ -327,7 +327,8 @@ module.exports = (robot) ->
             robot.logger.debug res
             robot.logger.error "Upload Error Code: #{res.statusCode}"
             msg.send "#{title} - [Upload Error] - #{link}"
-        req.end(body);
+
+        req.end body
 
     'slack': (msg, title, grafanaDashboardRequest, link) ->
       testAuthData = 
