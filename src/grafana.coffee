@@ -53,6 +53,16 @@ module.exports = (robot) ->
   s3_style = process.env.HUBOT_GRAFANA_S3_STYLE if process.env.HUBOT_GRAFANA_S3_STYLE
   s3_region = process.env.HUBOT_GRAFANA_S3_REGION or 'us-standard'
   s3_port = process.env.HUBOT_GRAFANA_S3_PORT if process.env.HUBOT_GRAFANA_S3_PORT
+  slack_token = process.env.HUBOT_SLACK_TOKEN
+  site = () ->
+    # prioritize S3 no matter if adpater is slack
+    if (s3_bucket && s3_access_key && s3_secret_key)
+      's3'
+    else if (robot.adapterName == 'slack') 
+      'slack'
+    else
+      ''
+  isUploadSupported = site() != ''
 
   # Get a specific dashboard with options
   robot.respond /(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) ->
@@ -164,11 +174,14 @@ module.exports = (robot) ->
           imageUrl = "#{grafana_host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=1000&height=500&from=#{timespan.from}&to=#{timespan.to}#{variables}"
           link = "#{grafana_host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
 
-          # Fork here for S3-based upload and non-S3
-          if (s3_bucket && s3_access_key && s3_secret_key)
-            fetchAndUpload msg, title, imageUrl, link
-          else
-            sendRobotResponse msg, title, imageUrl, link
+          sendDashboardChart msg, title, imageUrl, link
+
+  # Process the bot response
+  sendDashboardChart = (msg, title, imageUrl, link) ->
+    if (isUploadSupported)
+      uploadChart msg, title, imageUrl, link, site
+    else
+      sendRobotResponse msg, title, imageUrl, link
 
   # Get a list of available dashboards
   robot.respond /(?:grafana|graph|graf) list\s?(.+)?/i, (msg) ->
@@ -276,57 +289,102 @@ module.exports = (robot) ->
   uploadPath = () ->
     prefix = s3_prefix || 'grafana'
     "#{prefix}/#{crypto.randomBytes(20).toString('hex')}.png"
+  
+  uploadTo =
+    's3': (msg, title, grafanaDashboardRequest, link) ->
+      grafanaDashboardRequest (err, res, body) ->
+        client = knox.createClient {
+          key      : s3_access_key
+          secret   : s3_secret_key,
+          bucket   : s3_bucket,
+          region   : s3_region,
+          endpoint : s3_endpoint,
+          port     : s3_port,
+          style    : s3_style,
+        }
+
+        headers = {
+          'Content-Length' : body.length,
+          'Content-Type'   : res.headers['content-type'],
+          'x-amz-acl'      : 'public-read',
+          'encoding'       : null
+        }
+
+        filename = uploadPath()
+
+        if s3_port
+          image_url = client.http(filename)
+        else
+          image_url = client.https(filename)
+
+        req = client.put(filename, headers)
+
+        req.on 'response', (res) ->
+
+          if (200 == res.statusCode)
+            sendRobotResponse msg, title, image_url, link
+          else
+            robot.logger.debug res
+            robot.logger.error "Upload Error Code: #{res.statusCode}"
+            msg.send "#{title} - [Upload Error] - #{link}"
+
+        req.end body
+
+    'slack': (msg, title, grafanaDashboardRequest, link) ->
+      testAuthData = 
+        url: 'https://slack.com/api/auth.test'
+        formData:
+          token: slack_token
+
+      # We test auth against slack to obtain the team URL
+      request.post testAuthData, (err, httpResponse, slackResBody) ->
+          if err
+            robot.logger.error err
+            msg.send "#{title} - [Slak auth.test Error - invalid token/can't fetch team url] - #{link}"
+          else
+            slack_url = JSON.parse(slackResBody)["url"]
+
+            # fill in the POST request. This must be www-form/multipart
+            uploadData =
+              url: slack_url + '/api/files.upload'
+              formData:
+                channels: msg.envelope.room
+                token: slack_token
+                # grafanaDashboardRequest() is the method that downloads the .png
+                file: grafanaDashboardRequest()
+
+            # Try to upload the image to slack else pass the link over
+            request.post uploadData, (err, httpResponse, body) ->
+              res = JSON.parse(body)
+
+              # Error logging, we must also check the body response.
+              # It will be something like: { "ok": <boolean>, "error": <error message> }
+              if err
+                robot.logger.error err
+                msg.send "#{title} - [Upload Error] - #{link}"
+              else if !res["ok"]
+                robot.logger.error "Slack service error while posting data:" +res["error"]
+                msg.send "#{title} - [Form Error: can't upload file] - #{link}"
+
 
   # Fetch an image from provided URL, upload it to S3, returning the resulting URL
-  fetchAndUpload = (msg, title, url, link) ->
+  uploadChart = (msg, title, url, link, site) ->
     if grafana_api_key
-        requestHeaders =
-          encoding: null,
-          auth:
-            bearer: grafana_api_key
-      else
-        requestHeaders =
-          encoding: null
-
-    request url, requestHeaders, (err, res, body) ->
-      robot.logger.debug "Uploading file: #{body.length} bytes, content-type[#{res.headers['content-type']}]"
-      uploadToS3(msg, title, link, body, body.length, res.headers['content-type'])
-
-  # Upload image to S3
-  uploadToS3 = (msg, title, link, content, length, content_type) ->
-    client = knox.createClient {
-        key      : s3_access_key
-        secret   : s3_secret_key,
-        bucket   : s3_bucket,
-        region   : s3_region,
-        endpoint : s3_endpoint,
-        port     : s3_port,
-        style    : s3_style,
-      }
-
-
-    headers = {
-      'Content-Length' : length,
-      'Content-Type'   : content_type,
-      'x-amz-acl'      : 'public-read',
-      'encoding'       : null
-    }
-
-    filename = uploadPath()
-
-    if s3_port
-      image_url = client.http(filename)
+      requestHeaders =
+        encoding: null,
+        auth:
+          bearer: grafana_api_key
     else
-      image_url = client.https(filename)
+      requestHeaders =
+        encoding: null
 
-    req = client.put(filename, headers)
+    # Pass this function along to the "registered" services that uploads the image.
+    # The function will donwload the .png image(s) dashboard. You must pass this
+    # function and use it inside your service upload implementation.
+    grafanaDashboardRequest = (callback) ->
+      request url, requestHeaders, (err, res, body) ->
+        robot.logger.debug "Uploading file: #{body.length} bytes, content-type[#{res.headers['content-type']}]"
+        if callback
+          callback(err, res, body)
 
-    req.on 'response', (res) ->
-
-      if (200 == res.statusCode)
-        sendRobotResponse msg, title, image_url, link
-      else
-        robot.logger.debug res
-        robot.logger.error "Upload Error Code: #{res.statusCode}"
-        msg.send "#{title} - [Upload Error] - #{link}"
-    req.end(content);
+    uploadTo[site()](msg, title, grafanaDashboardRequest, link)
