@@ -267,6 +267,24 @@ module.exports = (robot) ->
       else
         msg.send "#{title}: #{image} - #{link}"
 
+      else    
+        @exec = require('child_process').exec
+        parameter1 = "\x22Accept:application/json\x22"
+        parameter2 = "\x22Authorization: Bearer #{grafana_api_key}\x22"
+        #datei_name = "$(date +%s%N).png"
+
+
+        dt = new Date()
+        datei_name = dt.getTime() + ".png"
+        curl_aufruf = "curl -s -L -o /var/www/html/#{datei_name} -H #{parameter1} -H #{parameter2}"
+
+        cmd = "#{curl_aufruf} #{image}"
+        @exec cmd, (error, stdout, stderr) -> 
+          #msg.send error
+          #msg.send stderr
+          #msg.send stdout
+        msg.send "#{title} http://localhost/#{datei_name}"
+        
   # Call off to Grafana
   callGrafana = (url, callback) ->
     if grafana_api_key
