@@ -14,31 +14,22 @@
 #   HUBOT_GRAFANA_HOST - Host for your Grafana 2.0 install, e.g. 'http://play.grafana.org'
 #   HUBOT_GRAFANA_API_KEY - API key for a particular user (leave unset if unauthenticated)
 #   HUBOT_GRAFANA_QUERY_TIME_RANGE - Optional; Default time range for queries (defaults to 6h)
-#   HUBOT_GRAFANA_S3_ENDPOINT - Optional; Endpoint of the S3 API (useful for S3 compatible API, defaults to s3.amazonaws.com)
-#   HUBOT_GRAFANA_S3_BUCKET - Optional; Name of the S3 bucket to copy the graph into
-#   HUBOT_GRAFANA_S3_ACCESS_KEY_ID - Optional; Access key ID for S3
-#   HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY - Optional; Secret access key for S3
-#   HUBOT_GRAFANA_S3_PREFIX - Optional; Bucket prefix (useful for shared buckets)
-#   HUBOT_GRAFANA_S3_REGION - Optional; Bucket region (defaults to us-standard)
 #
 # Dependencies:
 #   "knox": "^0.9.2"
 #   "request": "~2"
 #
-# Notes:
-#   If you want to use the Slack adapter's "attachment" formatting:
-#     hubot: v2.7.2+
-#     hubot-slack: 4.0+
 #
 # Commands:
-#   hubot graf db <dashboard slug>[:<panel id>][ <template variables>][ <from clause>][ <to clause>] - Show grafana dashboard graphs
-#   hubot graf list <tag> - Lists all dashboards available (optional: <tag>)
-#   hubot graf search <keyword> - Search available dashboards by <keyword>
+#   hubot grafana dashboard <Name des Dashboards> - Zeigt alle Graphen des Dashboards an
+#   hubot grafana liste - Listet alle Dashboards auf
+#   hubot grafana suche <Name> - Sucht Dashboards mit dem <Name>
 #
 
 crypto  = require 'crypto'
 knox    = require 'knox'
 request = require 'request'
+
 
 module.exports = (robot) ->
   # Various configuration options stored in environment variables
@@ -62,6 +53,7 @@ module.exports = (robot) ->
       'slack'
     else
       ''
+
   isUploadSupported = site() != ''
 
   # Get a specific dashboard with options
@@ -184,7 +176,7 @@ module.exports = (robot) ->
       sendRobotResponse msg, title, imageUrl, link
 
   # Get a list of available dashboards
-  robot.respond /(?:grafana|graph|graf) list\s?(.+)?/i, (msg) ->
+  robot.respond /(?:grafana|graph|graf) liste\s?(.+)?/i, (msg) ->
     if msg.match[1]
       tag = msg.match[1].trim()
       callGrafana "search?tag=#{tag}", (dashboards) ->
@@ -198,7 +190,7 @@ module.exports = (robot) ->
         sendDashboardList dashboards, response, msg
 
   # Search dashboards
-  robot.respond /(?:grafana|graph|graf) search (.+)/i, (msg) ->
+  robot.respond /(?:grafana|graph|graf) suche (.+)/i, (msg) ->
     query = msg.match[1].trim()
     robot.logger.debug query
     callGrafana "search?query=#{query}", (dashboards) ->
@@ -264,9 +256,23 @@ module.exports = (robot) ->
       when 'hipchat'
         msg.send "#{title}: #{link} - #{image}"
       # Everything else
-      else
-        msg.send "#{title}: #{image} - #{link}"
+      else    
+        @exec = require('child_process').exec
+        parameter1 = "\x22Accept:application/json\x22"
+        parameter2 = "\x22Authorization: Bearer #{grafana_api_key}\x22"
 
+        dt = new Date()
+        datei_name = dt.getTime() + ".png"
+        curl_aufruf = "curl -s -L -o /var/www/html/#{datei_name} -H #{parameter1} -H #{parameter2}"   
+
+        cmd = "#{curl_aufruf} #{image}"
+        @exec cmd, (error, stdout, stderr) -> 
+          msg.send error
+          msg.send stderr
+          msg.send stdout
+        setTimeout (-> msg.send "#{title} http://172.16.77.1/#{datei_name}"), 1000
+        #msg.send "#{title} http://172.16.77.1/#{datei_name}"
+        
   # Call off to Grafana
   callGrafana = (url, callback) ->
     if grafana_api_key
