@@ -58,7 +58,7 @@ module.exports = (robot) ->
     # prioritize S3 no matter if adpater is slack
     if (s3_bucket && s3_access_key && s3_secret_key)
       's3'
-    else if (robot.adapterName == 'slack') 
+    else if (robot.adapterName == 'slack')
       'slack'
     else
       ''
@@ -289,7 +289,7 @@ module.exports = (robot) ->
   uploadPath = () ->
     prefix = s3_prefix || 'grafana'
     "#{prefix}/#{crypto.randomBytes(20).toString('hex')}.png"
-  
+
   uploadTo =
     's3': (msg, title, grafanaDashboardRequest, link) ->
       grafanaDashboardRequest (err, res, body) ->
@@ -331,7 +331,7 @@ module.exports = (robot) ->
         req.end body
 
     'slack': (msg, title, grafanaDashboardRequest, link) ->
-      testAuthData = 
+      testAuthData =
         url: 'https://slack.com/api/auth.test'
         formData:
           token: slack_token
