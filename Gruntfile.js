@@ -19,7 +19,8 @@ module.exports = function (grunt) {
     release: {
       options: {
         tagName: 'v<%= version %>',
-        commitMessage: 'Prepared to release <%= version %>.'
+        commitMessage: 'Prepared to release <%= version %>.',
+        additionalFiles: ['package-lock.json']
       }
     },
     watch: {
