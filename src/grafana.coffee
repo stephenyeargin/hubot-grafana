@@ -16,6 +16,8 @@
 #   HUBOT_GRAFANA_HOST - Host for your Grafana 2.0 install, e.g. 'http://play.grafana.org'
 #   HUBOT_GRAFANA_API_KEY - API key for a particular user (leave unset if unauthenticated)
 #   HUBOT_GRAFANA_QUERY_TIME_RANGE - Optional; Default time range for queries (defaults to 6h)
+#   HUBOT_GRAFANA_DEFAULT_WIDTH - Optional; Default width for rendered images (defaults to 1000)
+#   HUBOT_GRAFANA_DEFAULT_HEIGHT - Optional; Default height for rendered images (defaults to 500)
 #   HUBOT_GRAFANA_S3_ENDPOINT - Optional; Endpoint of the S3 API (useful for S3 compatible API, defaults to s3.amazonaws.com)
 #   HUBOT_GRAFANA_S3_BUCKET - Optional; Name of the S3 bucket to copy the graph into
 #   HUBOT_GRAFANA_S3_ACCESS_KEY_ID - Optional; Access key ID for S3
@@ -56,11 +58,12 @@ module.exports = (robot) ->
   s3_region = process.env.HUBOT_GRAFANA_S3_REGION or 'us-standard'
   s3_port = process.env.HUBOT_GRAFANA_S3_PORT if process.env.HUBOT_GRAFANA_S3_PORT
   slack_token = process.env.HUBOT_SLACK_TOKEN
+
   site = () ->
     # prioritize S3 no matter if adpater is slack
     if (s3_bucket && s3_access_key && s3_secret_key)
       's3'
-    else if (robot.adapterName == 'slack') 
+    else if (robot.adapterName == 'slack')
       'slack'
     else
       ''
@@ -79,7 +82,9 @@ module.exports = (robot) ->
     visualPanelId = false
     apiPanelId = false
     pname = false
-    imagesize = { "width": 1000, "height": 500 }
+    imagesize =
+      width: process.env.HUBOT_GRAFANA_DEFAULT_WIDTH or 1000
+      height: process.env.HUBOT_GRAFANA_DEFAULT_HEIGHT or 500
 
     # Parse out a specific panel
     if /\:/.test slug
@@ -106,7 +111,7 @@ module.exports = (robot) ->
           if part.split('=')[0] of imagesize
             imagesize[part.split('=')[0]] = part.split('=')[1]
             continue
-            
+
           variables = "#{variables}&var-#{part}"
           template_params.push { "name": part.split('=')[0], "value": part.split('=')[1] }
 
@@ -297,7 +302,7 @@ module.exports = (robot) ->
   uploadPath = () ->
     prefix = s3_prefix || 'grafana'
     "#{prefix}/#{crypto.randomBytes(20).toString('hex')}.png"
-  
+
   uploadTo =
     's3': (msg, title, grafanaDashboardRequest, link) ->
       grafanaDashboardRequest (err, res, body) ->
@@ -339,7 +344,7 @@ module.exports = (robot) ->
         req.end body
 
     'slack': (msg, title, grafanaDashboardRequest, link) ->
-      testAuthData = 
+      testAuthData =
         url: 'https://slack.com/api/auth.test'
         formData:
           token: slack_token

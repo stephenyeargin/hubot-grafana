@@ -113,6 +113,52 @@ describe 'grafana', ->
         [ 'hubot', "Graphite examples: http://play.grafana.org/render/dashboard-solo/db/grafana-play-home/?panelId=8&width=1000&height=500&from=now-6h&to=now - http://play.grafana.org/dashboard/db/grafana-play-home/?panelId=8&fullscreen&from=now-6h&to=now"]
       ]
 
+  context 'ask hubot to return different default image sizes', ->
+    beforeEach (done) ->
+      process.env.HUBOT_GRAFANA_DEFAULT_WIDTH = 1024
+      process.env.HUBOT_GRAFANA_DEFAULT_HEIGHT = 768
+      nock('http://play.grafana.org')
+        .get('/api/dashboards/db/grafana-play-home')
+        .replyWithFile(200, __dirname + '/fixtures/dashboard-grafana-play-home.json')
+      room.user.say 'alice', 'hubot graf db grafana-play-home:3'
+      setTimeout done, 100
+    afterEach ->
+      delete process.env.HUBOT_GRAFANA_DEFAULT_WIDTH
+      delete process.env.HUBOT_GRAFANA_DEFAULT_HEIGHT
+
+    it 'hubot should respond with the custom image size set in environment', ->
+      expect(room.messages).to.eql [
+        [ 'alice', 'hubot graf db grafana-play-home:3' ]
+        [ 'hubot', "Graphite examples: http://play.grafana.org/render/dashboard-solo/db/grafana-play-home/?panelId=8&width=1024&height=768&from=now-6h&to=now - http://play.grafana.org/dashboard/db/grafana-play-home/?panelId=8&fullscreen&from=now-6h&to=now"]
+      ]
+
+  context 'ask hubot to return a specific panel with a custom size', ->
+    beforeEach (done) ->
+      nock('http://play.grafana.org')
+        .get('/api/dashboards/db/grafana-play-home')
+        .replyWithFile(200, __dirname + '/fixtures/dashboard-grafana-play-home.json')
+      room.user.say 'alice', 'hubot graf db grafana-play-home:3 width=2500 height=700'
+      setTimeout done, 100
+
+    it 'hubot should respond with a resized image specified in request', ->
+      expect(room.messages).to.eql [
+        [ 'alice', 'hubot graf db grafana-play-home:3 width=2500 height=700' ]
+        [ 'hubot', "Graphite examples: http://play.grafana.org/render/dashboard-solo/db/grafana-play-home/?panelId=8&width=2500&height=700&from=now-6h&to=now - http://play.grafana.org/dashboard/db/grafana-play-home/?panelId=8&fullscreen&from=now-6h&to=now"]
+      ]
+  context 'ask hubot to return a specific panel with a custom size in any order', ->
+    beforeEach (done) ->
+      nock('http://play.grafana.org')
+        .get('/api/dashboards/db/grafana-play-home')
+        .replyWithFile(200, __dirname + '/fixtures/dashboard-grafana-play-home.json')
+      room.user.say 'alice', 'hubot graf db grafana-play-home:3 height=700 width=2500'
+      setTimeout done, 100
+
+    it 'hubot should respond with a resized image specified in request', ->
+      expect(room.messages).to.eql [
+        [ 'alice', 'hubot graf db grafana-play-home:3 height=700 width=2500' ]
+        [ 'hubot', "Graphite examples: http://play.grafana.org/render/dashboard-solo/db/grafana-play-home/?panelId=8&width=2500&height=700&from=now-6h&to=now - http://play.grafana.org/dashboard/db/grafana-play-home/?panelId=8&fullscreen&from=now-6h&to=now"]
+      ]
+
   context 'ask hubot for templated dashboard', ->
     beforeEach (done) ->
       nock('http://play.grafana.org')
