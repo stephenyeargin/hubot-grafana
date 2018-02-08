@@ -4,6 +4,8 @@
 #   Examples:
 #   - `hubot graf db graphite-carbon-metrics` - Get all panels in the dashboard
 #   - `hubot graf db graphite-carbon-metrics:3` - Get only the third panel, from left to right, of a particular dashboard
+#   - `hubot graf db graphite-carbon-metrics:3 width=1000` - Get only the third panel, from left to right, of a particular dashboard. Set the image width to 1000px
+#   - `hubot graf db graphite-carbon-metrics:3 height=2000` - Get only the third panel, from left to right, of a particular dashboard. Set the image height to 2000px
 #   - `hubot graf db graphite-carbon-metrics:panel-8` - Get only the panel of a particular dashboard with the ID of 8
 #   - `hubot graf db graphite-carbon-metrics:cpu` - Get only the panels containing "cpu" (case insensitive) in the title
 #   - `hubot graf db graphite-carbon-metrics now-12hr` - Get a dashboard with a window of 12 hours ago to now
@@ -14,6 +16,8 @@
 #   HUBOT_GRAFANA_HOST - Host for your Grafana 2.0 install, e.g. 'http://play.grafana.org'
 #   HUBOT_GRAFANA_API_KEY - API key for a particular user (leave unset if unauthenticated)
 #   HUBOT_GRAFANA_QUERY_TIME_RANGE - Optional; Default time range for queries (defaults to 6h)
+#   HUBOT_GRAFANA_DEFAULT_WIDTH - Optional; Default width for rendered images (defaults to 1000)
+#   HUBOT_GRAFANA_DEFAULT_HEIGHT - Optional; Default height for rendered images (defaults to 500)
 #   HUBOT_GRAFANA_S3_ENDPOINT - Optional; Endpoint of the S3 API (useful for S3 compatible API, defaults to s3.amazonaws.com)
 #   HUBOT_GRAFANA_S3_BUCKET - Optional; Name of the S3 bucket to copy the graph into
 #   HUBOT_GRAFANA_S3_ACCESS_KEY_ID - Optional; Access key ID for S3
@@ -54,11 +58,12 @@ module.exports = (robot) ->
   s3_region = process.env.HUBOT_GRAFANA_S3_REGION or 'us-standard'
   s3_port = process.env.HUBOT_GRAFANA_S3_PORT if process.env.HUBOT_GRAFANA_S3_PORT
   slack_token = process.env.HUBOT_SLACK_TOKEN
+
   site = () ->
     # prioritize S3 no matter if adpater is slack
     if (s3_bucket && s3_access_key && s3_secret_key)
       's3'
-    else if (robot.adapterName == 'slack') 
+    else if (robot.adapterName == 'slack')
       'slack'
     else
       ''
@@ -77,6 +82,9 @@ module.exports = (robot) ->
     visualPanelId = false
     apiPanelId = false
     pname = false
+    imagesize =
+      width: process.env.HUBOT_GRAFANA_DEFAULT_WIDTH or 1000
+      height: process.env.HUBOT_GRAFANA_DEFAULT_HEIGHT or 500
 
     # Parse out a specific panel
     if /\:/.test slug
@@ -99,6 +107,11 @@ module.exports = (robot) ->
       for part in remainder.trim().split ' '
         # Check if it's a variable or part of the timespan
         if part.indexOf('=') >= 0
+          #put imagesize stuff into its own dict
+          if part.split('=')[0] of imagesize
+            imagesize[part.split('=')[0]] = part.split('=')[1]
+            continue
+
           variables = "#{variables}&var-#{part}"
           template_params.push { "name": part.split('=')[0], "value": part.split('=')[1] }
 
@@ -171,7 +184,7 @@ module.exports = (robot) ->
 
           # Build links for message sending
           title = formatTitleWithTemplate(panel.title, template_map)
-          imageUrl = "#{grafana_host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=1000&height=500&from=#{timespan.from}&to=#{timespan.to}#{variables}"
+          imageUrl = "#{grafana_host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=#{imagesize.width}&height=#{imagesize.height}&from=#{timespan.from}&to=#{timespan.to}#{variables}"
           link = "#{grafana_host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
 
           sendDashboardChart msg, title, imageUrl, link
@@ -289,7 +302,7 @@ module.exports = (robot) ->
   uploadPath = () ->
     prefix = s3_prefix || 'grafana'
     "#{prefix}/#{crypto.randomBytes(20).toString('hex')}.png"
-  
+
   uploadTo =
     's3': (msg, title, grafanaDashboardRequest, link) ->
       grafanaDashboardRequest (err, res, body) ->
@@ -331,7 +344,7 @@ module.exports = (robot) ->
         req.end body
 
     'slack': (msg, title, grafanaDashboardRequest, link) ->
-      testAuthData = 
+      testAuthData =
         url: 'https://slack.com/api/auth.test'
         formData:
           token: slack_token
