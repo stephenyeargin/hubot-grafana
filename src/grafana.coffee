@@ -276,6 +276,21 @@ module.exports = (robot) ->
       # Hipchat
       when 'hipchat'
         msg.send "#{title}: #{link} - #{image}"
+      # BearyChat
+      when 'bearychat'
+        robot.emit 'bearychat.attachment', {
+          message:
+            room: msg.envelope.room
+          text: "[#{title}](#{link})"
+          attachments: [
+            {
+              fallback: "#{title}: #{image} - #{link}",
+              images: [
+                url: image
+              ]
+            }
+          ],
+        }
       # Everything else
       else
         msg.send "#{title}: #{image} - #{link}"
