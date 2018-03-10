@@ -138,16 +138,18 @@ module.exports = (robot) ->
       if dashboard.message
         return sendError dashboard.message, msg
 
-      # Handle refactor done for version 2.0.2+
-      if dashboard.dashboard
-        # 2.0.2+: Changed in https://github.com/grafana/grafana/commit/e5c11691203fe68958e66693e429f6f5a3c77200
-        data = dashboard.dashboard
-        # The URL was changed in https://github.com/grafana/grafana/commit/35cc0a1cc0bca453ce789056f6fbd2fcb13f74cb
-        apiEndpoint = 'dashboard-solo'
-      else
-        # 2.0.2 and older
-        data = dashboard.model
-        apiEndpoint = 'dashboard/solo'
+      # Defaults
+      apiEndpoint = 'dashboard-solo'
+      data = dashboard.dashboard
+
+      # Handle refactor done for version 5.0.0+
+      if dashboard.dashboard.panels
+        # Concept of "rows" was replaced by coordinate system
+        data.rows = [dashboard.dashboard]
+
+      # Handle empty dashboard
+      if !data.rows?
+        return sendError 'Dashboard empty.', msg
 
       # Support for templated dashboards
       robot.logger.debug data.templating.list
