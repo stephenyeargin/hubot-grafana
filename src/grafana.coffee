@@ -202,12 +202,12 @@ module.exports = (robot) ->
   robot.respond /(?:grafana|graph|graf) list\s?(.+)?/i, (msg) ->
     if msg.match[1]
       tag = msg.match[1].trim()
-      callGrafana "search?tag=#{tag}", (dashboards) ->
+      callGrafana "search?type=dash-db&tag=#{tag}", (dashboards) ->
         robot.logger.debug dashboards
         response = "Dashboards tagged `#{tag}`:\n"
         sendDashboardList dashboards, response, msg
     else
-      callGrafana 'search', (dashboards) ->
+      callGrafana 'search?type=dash-db', (dashboards) ->
         robot.logger.debug dashboards
         response = "Available dashboards:\n"
         sendDashboardList dashboards, response, msg
@@ -216,7 +216,7 @@ module.exports = (robot) ->
   robot.respond /(?:grafana|graph|graf) search (.+)/i, (msg) ->
     query = msg.match[1].trim()
     robot.logger.debug query
-    callGrafana "search?query=#{query}", (dashboards) ->
+    callGrafana "search?type=dash-db&query=#{query}", (dashboards) ->
       robot.logger.debug dashboards
       response = "Dashboards matching `#{query}`:\n"
       sendDashboardList dashboards, response, msg
