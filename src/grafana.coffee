@@ -58,13 +58,21 @@ module.exports = (robot) ->
   s3_region = process.env.HUBOT_GRAFANA_S3_REGION or 'us-standard'
   s3_port = process.env.HUBOT_GRAFANA_S3_PORT if process.env.HUBOT_GRAFANA_S3_PORT
   slack_token = process.env.HUBOT_SLACK_TOKEN
+  rocketchat_url = process.env.ROCKETCHAT_URL
+  rocketchat_user = process.env.ROCKETCHAT_USER
+  rocketchat_password = process.env.ROCKETCHAT_PASSWORD
+
+  if rocketchat_url && ! rocketchat_url.startsWith 'http'
+    rocketchat_url = 'http://' + rocketchat_url
 
   site = () ->
-    # prioritize S3 no matter if adpater is slack
+    # prioritize S3 no matter if adpater is slack or rocketchat
     if (s3_bucket && s3_access_key && s3_secret_key)
       's3'
     else if (robot.adapterName == 'slack')
       'slack'
+    else if (robot.adapterName == 'rocketchat')
+      'rocketchat'
     else
       ''
   isUploadSupported = site() != ''
@@ -171,7 +179,6 @@ module.exports = (robot) ->
           robot.logger.debug panel
 
           panelNumber += 1
-
           # Skip if visual panel ID was specified and didn't match
           if visualPanelId && visualPanelId != panelNumber
             continue
@@ -396,6 +403,55 @@ module.exports = (robot) ->
                 robot.logger.error "Slack service error while posting data:" +res["error"]
                 msg.send "#{title} - [Form Error: can't upload file] - #{link}"
 
+    'rocketchat': (msg, title, grafanaDashboardRequest, link) ->
+      authData =
+        url: rocketchat_url + '/api/v1/login'
+        form:
+          username: rocketchat_user
+          password: rocketchat_password
+
+      # We auth against rocketchat to obtain the auth token
+      request.post authData, (err, httpResponse, rocketchatResBody) ->
+          if err
+            robot.logger.error err
+            msg.send "#{title} - [Rocketchat auth Error - invalid url, user or password/can't access rocketchat api] - #{link}"
+          else
+            status = JSON.parse(rocketchatResBody)["status"]
+            if status != "success"
+              errMsg = JSON.parse(rocketchatResBody)["message"]
+              robot.logger.error errMsg
+              msg.send "#{title} - [Rocketchat auth Error - #{errMsg}] - #{link}"
+
+            auth = JSON.parse(rocketchatResBody)["data"]
+
+            # fill in the POST request. This must be www-form/multipart
+            uploadData =
+              url: rocketchat_url + '/api/v1/rooms.upload/' + msg.envelope.user.roomID
+              headers:
+                'X-Auth-Token': auth.authToken
+                'X-User-Id': auth.userId
+              formData:
+                msg: "#{title}: #{link}"
+                # grafanaDashboardRequest() is the method that downloads the .png
+                file:
+                  value: grafanaDashboardRequest()
+                  options:
+                    filename: "#{title} #{Date()}.png",
+                    contentType: 'image/png'
+
+            # Try to upload the image to rocketchat else pass the link over
+            request.post uploadData, (err, httpResponse, body) ->
+              res = JSON.parse(body)
+
+              # Error logging, we must also check the body response.
+              # It will be something like: { "success": <boolean>, "error": <error message> }
+              if err
+                robot.logger.error err
+                msg.send "#{title} - [Upload Error] - #{link}"
+              else if !res["success"]
+                errMsg = res["error"]
+                robot.logger.error "rocketchat service error while posting data:" +errMsg
+                msg.send "#{title} - [Form Error: can't upload file : #{errMsg}] - #{link}"
 
   # Fetch an image from provided URL, upload it to S3, returning the resulting URL
   uploadChart = (msg, title, url, link, site) ->
@@ -418,3 +474,4 @@ module.exports = (robot) ->
           callback(err, res, body)
 
     uploadTo[site()](msg, title, grafanaDashboardRequest, link)
+
