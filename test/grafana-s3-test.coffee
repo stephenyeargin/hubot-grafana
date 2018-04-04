@@ -40,11 +40,11 @@ describe 's3 enabled', ->
 
     nock('http://play.grafana.org')
       .get('/api/dashboards/db/monitoring-default')
-      .replyWithFile(200, __dirname + '/fixtures/dashboard-monitoring-default-v4.json')
+      .replyWithFile(200, __dirname + '/fixtures/v4/dashboard-monitoring-default.json')
 
     nock('http://play.grafana.org')
       .get('/render/dashboard-solo/db/monitoring-default/?panelId=7&width=1000&height=500&from=now-6h&to=now&var-server=ww3.example.com')
-      .replyWithFile(200, __dirname + '/fixtures/dashboard-monitoring-default-v4.png')
+      .replyWithFile(200, __dirname + '/fixtures/dashboard-monitoring-default.png')
 
   afterEach ->
     room.destroy()
