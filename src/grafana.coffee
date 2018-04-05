@@ -24,6 +24,10 @@
 #   HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY - Optional; Secret access key for S3
 #   HUBOT_GRAFANA_S3_PREFIX - Optional; Bucket prefix (useful for shared buckets)
 #   HUBOT_GRAFANA_S3_REGION - Optional; Bucket region (defaults to us-standard)
+#   HUBOT_SLACK_TOKEN - Optional; Token to connect to Slack (already configured with the adapter)
+#   ROCKETCHAT_URL - Optional; URL to your Rocket.Chat instance (already configured with the adapter)
+#   ROCKETCHAT_USER - Optional; Bot username (already configured with the adapter)
+#   ROCKETCHAT_PASSWORD - Optional; Bot password (already configured with the adapter)
 #
 # Dependencies:
 #   "knox": "^0.9.2"
@@ -474,4 +478,3 @@ module.exports = (robot) ->
           callback(err, res, body)
 
     uploadTo[site()](msg, title, grafanaDashboardRequest, link)
-
