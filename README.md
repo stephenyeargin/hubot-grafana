@@ -1,6 +1,6 @@
 # Grafana for Hubot
 
-[![npm version](https://badge.fury.io/js/hubot-grafana.svg)](http://badge.fury.io/js/hubot-grafana) [![Build Status](https://travis-ci.org/stephenyeargin/hubot-grafana.png)](https://travis-ci.org/stephenyeargin/hubot-grafana) [![Coverage Status](https://coveralls.io/repos/stephenyeargin/hubot-grafana/badge.svg?branch=master&service=github)](https://coveralls.io/github/stephenyeargin/hubot-grafana?branch=master)
+[![npm version](https://badge.fury.io/js/hubot-grafana.svg)](http://badge.fury.io/js/hubot-grafana) [![Build Status](https://travis-ci.org/stephenyeargin/hubot-grafana.png)](https://travis-ci.org/stephenyeargin/hubot-grafana)
 
 ![Screenshot](http://docs.grafana.org/img/tutorials/hubot_grafana.png)
 

@@ -20,10 +20,8 @@
     "hubot": ">= 2.x"
   },
   "devDependencies": {
-    "blanket": "^1.2.3",
     "chai": "^4.1.2",
     "coffee-script": "1.12.7",
-    "coveralls": "^3.0.0",
     "grunt": "^1.0.2",
     "grunt-cli": "^1.2.0",
     "grunt-contrib-watch": "~1.0.0",
@@ -34,19 +32,11 @@
     "husky": "^0.14.3",
     "matchdep": "~2.0.0",
     "mocha": "^5.0.5",
-    "mocha-lcov-reporter": "^1.3.0",
     "nock": "^9.2.3",
     "require-dir": "^1.0.0",
     "sinon": "^4.5.0",
     "sinon-chai": "^3.0.0",
     "travis-cov": "^0.2.5"
-  },
-  "config": {
-    "blanket": {
-      "pattern": "src",
-      "data-cover-never": "node_modules",
-      "loader": "./node-loaders/coffee-script"
-    }
   },
   "main": "index.coffee",
   "scripts": {

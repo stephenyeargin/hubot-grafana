@@ -8,8 +8,7 @@ module.exports = function (grunt) {
         options: {
           reporter: 'spec',
           require: [
-            'coffee-script',
-            'blanket',
+            'coffee-script'
           ],
           compilers: 'coffee:coffee-script/register'
         },
@@ -27,7 +26,7 @@ module.exports = function (grunt) {
       files: ['Gruntfile.js', 'src/**/*.coffee', 'test/**/*.coffee'],
       tasks: ['test']
     }
-  });
+  })
 
   // load all grunt tasks
   require('matchdep').filterDev(['grunt-*', '!grunt-cli']).forEach(grunt.loadNpmTasks);

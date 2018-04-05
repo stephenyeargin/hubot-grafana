@@ -8,15 +8,6 @@ helper = new Helper('./../src/grafana.coffee')
 
 expect = chai.expect
 
-before ->
-  matchesBlanket = (path) -> path.match /node_modules\/blanket/
-  runningTestCoverage = Object.keys(require.cache).filter(matchesBlanket).length > 0
-  if runningTestCoverage
-    require('require-dir')("#{__dirname}/../src", {recurse: true, duplicates: true})
-
-after ->
-  nock.cleanAll()
-
 describe 'grafana v5', ->
   room = null
 
