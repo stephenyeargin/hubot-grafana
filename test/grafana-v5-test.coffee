@@ -14,13 +14,16 @@ before ->
   if runningTestCoverage
     require('require-dir')("#{__dirname}/../src", {recurse: true, duplicates: true})
 
+after ->
+  nock.cleanAll()
+
 describe 'grafana v5', ->
   room = null
 
   beforeEach ->
     process.env.HUBOT_GRAFANA_HOST = 'http://play.grafana.org'
     room = helper.createRoom()
-    do nock.disableNetConnect
+    nock.disableNetConnect()
 
     @robot =
       respond: sinon.spy()
