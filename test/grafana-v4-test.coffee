@@ -14,7 +14,7 @@ describe 'grafana v4 and below', ->
   beforeEach ->
     process.env.HUBOT_GRAFANA_HOST = 'http://play.grafana.org'
     room = helper.createRoom()
-    do nock.disableNetConnect
+    nock.disableNetConnect()
 
     @robot =
       respond: sinon.spy()

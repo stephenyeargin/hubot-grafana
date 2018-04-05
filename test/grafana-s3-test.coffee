@@ -8,7 +8,7 @@ helper = new Helper('./../src/grafana.coffee')
 
 expect = chai.expect
 
-describe 's3 enabled', ->
+describe 's3', ->
   beforeEach ->
     process.env.HUBOT_GRAFANA_HOST = 'http://play.grafana.org'
     process.env.HUBOT_GRAFANA_S3_BUCKET='graf'
@@ -34,7 +34,7 @@ describe 's3 enabled', ->
         to: 'now',
         "var-server": 'ww3.example.com'
       )
-      .replyWithFile(200, __dirname + '/fixtures/dashboard-monitoring-default.png')
+      .replyWithFile(200, __dirname + '/fixtures/v4/dashboard-monitoring-default.png')
 
   afterEach ->
     @room.destroy()
@@ -64,6 +64,7 @@ describe 's3 enabled', ->
           expect(selfRoom.messages[1][1]).to.match(
             /ww3.example.com network: https:\/\/graf\.s3\.amazonaws\.com\/grafana\/[a-z0-9]+\.png - http:\/\/play\.grafana\.org\/dashboard\/db\/monitoring-default\/\?panelId=7\&fullscreen\&from=now-6h\&to=now\&var-server=ww3.example.com/
           )
+          expect(nock.activeMocks()).to.be.empty
           done()
         catch err
           done err
@@ -93,6 +94,7 @@ describe 's3 enabled', ->
           expect(selfRoom.messages[1][1]).to.match(
             /ww3.example.com network: https:\/\/graf\.custom\.s3\.endpoint\.com\/grafana\/[a-z0-9]+\.png - http:\/\/play\.grafana\.org\/dashboard\/db\/monitoring-default\/\?panelId=7\&fullscreen\&from=now-6h\&to=now\&var-server=ww3.example.com/
           )
+          expect(nock.activeMocks()).to.be.empty
           done()
         catch err
           done err
@@ -122,6 +124,7 @@ describe 's3 enabled', ->
           expect(selfRoom.messages[1][1]).to.match(
             /ww3.example.com network: https:\/\/s3\.amazonaws\.com\/graf\/grafana\/[a-z0-9]+\.png - http:\/\/play\.grafana\.org\/dashboard\/db\/monitoring-default\/\?panelId=7\&fullscreen\&from=now-6h\&to=now\&var-server=ww3.example.com/
           )
+          expect(nock.activeMocks()).to.be.empty
           done()
         catch err
           done err
