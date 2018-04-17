@@ -372,9 +372,6 @@ module.exports = (robot) ->
         req.end body
 
     'slack': (msg, title, grafanaDashboardRequest, link) ->
-      unless title?
-        title = 'Upload'
-
       testAuthData =
         url: 'https://slack.com/api/auth.test'
         formData:
@@ -472,6 +469,10 @@ module.exports = (robot) ->
     else
       requestHeaders =
         encoding: null
+
+    # Default title if none provided
+    if !title
+      title = 'Image'
 
     # Pass this function along to the "registered" services that uploads the image.
     # The function will donwload the .png image(s) dashboard. You must pass this
