@@ -372,6 +372,9 @@ module.exports = (robot) ->
         req.end body
 
     'slack': (msg, title, grafanaDashboardRequest, link) ->
+      unless title?
+        title = 'Upload'
+
       testAuthData =
         url: 'https://slack.com/api/auth.test'
         formData:
