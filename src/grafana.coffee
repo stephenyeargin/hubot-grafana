@@ -389,10 +389,12 @@ module.exports = (robot) ->
             uploadData =
               url: slack_url + '/api/files.upload'
               formData:
+                title: "#{title}"
                 channels: msg.envelope.room
                 token: slack_token
                 # grafanaDashboardRequest() is the method that downloads the .png
                 file: grafanaDashboardRequest()
+                filetype: 'png'
 
             # Try to upload the image to slack else pass the link over
             request.post uploadData, (err, httpResponse, body) ->
@@ -467,6 +469,10 @@ module.exports = (robot) ->
     else
       requestHeaders =
         encoding: null
+
+    # Default title if none provided
+    if !title
+      title = 'Image'
 
     # Pass this function along to the "registered" services that uploads the image.
     # The function will donwload the .png image(s) dashboard. You must pass this
