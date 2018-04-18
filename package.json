@@ -17,7 +17,7 @@
     "request": "^2.85.0"
   },
   "peerDependencies": {
-    "hubot": ">= 2.x"
+    "hubot": ">=2 <10 || 0.0.0-development"
   },
   "devDependencies": {
     "chai": "^4.1.2",
@@ -31,8 +31,8 @@
     "hubot-test-helper": "1.9.0",
     "husky": "^0.14.3",
     "matchdep": "~2.0.0",
-    "mocha": "^5.0.5",
-    "nock": "^9.2.3",
+    "mocha": "^5.1.0",
+    "nock": "^9.2.5",
     "require-dir": "^1.0.0",
     "sinon": "^4.5.0",
     "sinon-chai": "^3.0.0",
