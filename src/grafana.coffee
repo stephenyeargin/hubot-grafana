@@ -247,14 +247,14 @@ module.exports = (robot) ->
         sendAlerts alerts, "Alerts with state '#{state}':\n", msg
     # *all* alerts
     else
-      robot.logger.debug "Show all alerts"
-      callGrafana "alerts", (alerts) ->
+      robot.logger.debug 'Show all alerts'
+      callGrafana 'alerts', (alerts) ->
         robot.logger.debug alerts
-        sendAlerts alerts, "All alerts:\n", msg
+        sendAlerts alerts, 'All alerts:\n', msg
 
   # Pause/unpause an alert
   robot.respond /(?:grafana|graph|graf) (unpause|pause)\salert\s(\d+)/i, (msg) ->
-    paused = msg.match[1] == "pause"
+    paused = msg.match[1] == 'pause'
     alertId = msg.match[2]
     postGrafana "alerts/#{alertId}/pause", {'paused': paused}, (result) ->
       robot.logger.debug result
@@ -264,8 +264,8 @@ module.exports = (robot) ->
   # Pause/unpause all alerts
   # requires an API token with admin permissions
   robot.respond /(?:grafana|graph|graf) (unpause|pause) all(?:\s+alerts)?/i, (msg) ->
-    paused = msg.match[1] == "pause"
-    postGrafana "admin/pause-all-alerts", {'paused': paused}, (result) ->
+    paused = msg.match[1] == 'pause'
+    postGrafana 'admin/pause-all-alerts', {'paused': paused}, (result) ->
       robot.logger.debug result
       if result.message
         msg.send result.message
@@ -361,16 +361,7 @@ module.exports = (robot) ->
 
   # Call off to Grafana
   callGrafana = (url, callback) ->
-    if grafana_api_key
-      authHeader = {
-        'Accept': 'application/json',
-        'Authorization': "Bearer #{grafana_api_key}"
-      }
-    else
-      authHeader = {
-        'Accept': 'application/json'
-      }
-    robot.http("#{grafana_host}/api/#{url}").headers(authHeader).get() (err, res, body) ->
+    robot.http("#{grafana_host}/api/#{url}").headers(grafanaHeaders()).get() (err, res, body) ->
       if (err)
         robot.logger.error err
         return callback(false)
@@ -379,24 +370,21 @@ module.exports = (robot) ->
 
   # Post to Grafana
   postGrafana = (url, data, callback) ->
-    if grafana_api_key
-      authHeader = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': "Bearer #{grafana_api_key}"
-      }
-    else
-      authHeader = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
     jsonPayload = JSON.stringify(data)
-    robot.http("#{grafana_host}/api/#{url}").headers(authHeader).post(jsonPayload) (err, res, body) ->
+    robot.http("#{grafana_host}/api/#{url}").headers(grafanaHeaders(true)).post(jsonPayload) (err, res, body) ->
       if (err)
         robot.logger.error err
         return callback(false)
       data = JSON.parse(body)
       return callback(data)
+
+  grafanaHeaders = (post = false) ->
+    headers = { 'Accept': 'application/json' }
+    if grafana_api_key
+      headers['Authorization'] = "Bearer #{grafana_api_key}"
+    if post
+      headers['Content-Type'] = 'application/json'
+    headers
 
   # Pick a random filename
   uploadPath = () ->
