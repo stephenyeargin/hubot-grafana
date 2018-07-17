@@ -42,6 +42,11 @@
 #   hubot graf db <dashboard slug>[:<panel id>][ <template variables>][ <from clause>][ <to clause>] - Show grafana dashboard graphs
 #   hubot graf list <tag> - Lists all dashboards available (optional: <tag>)
 #   hubot graf search <keyword> - Search available dashboards by <keyword>
+#   hubot graf alerts[ <state>] - Show all alerts (optional: <state>)
+#   hubot graf pause alert <id> - Pause the alert with specified <id>
+#   hubot graf unpause alert <id> - Un-pause the alert with specified <id>
+#   hubot graf pause all alerts - Pause all alerts (admin permissions required)
+#   hubot graf unpause all alerts - Un-pause all alerts (admin permissions required)
 #
 
 crypto  = require 'crypto'
@@ -232,6 +237,52 @@ module.exports = (robot) ->
       response = "Dashboards matching `#{query}`:\n"
       sendDashboardList dashboards, response, msg
 
+  # Show alerts
+  robot.respond /(?:grafana|graph|graf) alerts\s?(.+)?/i, (msg) ->
+    # all alerts of a specific type
+    if msg.match[1]
+      state = msg.match[1].trim()
+      callGrafana "alerts?state=#{state}", (alerts) ->
+        robot.logger.debug alerts
+        sendAlerts alerts, "Alerts with state '#{state}':\n", msg
+    # *all* alerts
+    else
+      robot.logger.debug 'Show all alerts'
+      callGrafana 'alerts', (alerts) ->
+        robot.logger.debug alerts
+        sendAlerts alerts, 'All alerts:\n', msg
+
+  # Pause/unpause an alert
+  robot.respond /(?:grafana|graph|graf) (unpause|pause)\salert\s(\d+)/i, (msg) ->
+    paused = msg.match[1] == 'pause'
+    alertId = msg.match[2]
+    postGrafana "alerts/#{alertId}/pause", {'paused': paused}, (result) ->
+      robot.logger.debug result
+      if result.message
+        msg.send result.message
+
+  # Pause/unpause all alerts
+  # requires an API token with admin permissions
+  robot.respond /(?:grafana|graph|graf) (unpause|pause) all(?:\s+alerts)?/i, (msg) ->
+    paused = msg.match[1] == 'pause'
+    postGrafana 'admin/pause-all-alerts', {'paused': paused}, (result) ->
+      robot.logger.debug result
+      if result.message
+        msg.send result.message
+
+  # Send a list of alerts
+  sendAlerts = (alerts, response, msg) ->
+    unless alerts.length > 0
+      return
+    for alert in alerts
+      line = "- *#{alert.name}* (#{alert.id}): `#{alert.state}`"
+      if alert.newStateDate
+        line = line + "\n  last state change: #{alert.newStateDate}"
+      if alert.executionError
+        line = line + "\n  execution error: #{alert.executionError}"
+      response = response + line + "\n"
+    msg.send response.trim()
+
   # Send Dashboard list
   sendDashboardList = (dashboards, response, msg) ->
     # Handle refactor done for version 2.0.2+
@@ -310,21 +361,30 @@ module.exports = (robot) ->
 
   # Call off to Grafana
   callGrafana = (url, callback) ->
-    if grafana_api_key
-      authHeader = {
-        'Accept': 'application/json',
-        'Authorization': "Bearer #{grafana_api_key}"
-      }
-    else
-      authHeader = {
-        'Accept': 'application/json'
-      }
-    robot.http("#{grafana_host}/api/#{url}").headers(authHeader).get() (err, res, body) ->
+    robot.http("#{grafana_host}/api/#{url}").headers(grafanaHeaders()).get() (err, res, body) ->
       if (err)
         robot.logger.error err
         return callback(false)
       data = JSON.parse(body)
       return callback(data)
+
+  # Post to Grafana
+  postGrafana = (url, data, callback) ->
+    jsonPayload = JSON.stringify(data)
+    robot.http("#{grafana_host}/api/#{url}").headers(grafanaHeaders(true)).post(jsonPayload) (err, res, body) ->
+      if (err)
+        robot.logger.error err
+        return callback(false)
+      data = JSON.parse(body)
+      return callback(data)
+
+  grafanaHeaders = (post = false) ->
+    headers = { 'Accept': 'application/json' }
+    if grafana_api_key
+      headers['Authorization'] = "Bearer #{grafana_api_key}"
+    if post
+      headers['Content-Type'] = 'application/json'
+    headers
 
   # Pick a random filename
   uploadPath = () ->

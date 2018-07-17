@@ -166,3 +166,45 @@ describe 'grafana v5', ->
         [ 'alice', 'hubot graf db templating:requests server=backend_01 now-6h' ]
         [ 'hubot', 'Requests / s: http://play.grafana.org/render/dashboard-solo/db/templating/?panelId=1&width=1000&height=500&from=now-6h&to=now&var-server=backend_01 - http://play.grafana.org/dashboard/db/templating/?panelId=1&fullscreen&from=now-6h&to=now&var-server=backend_01']
       ]
+
+  context 'ask hubot for list of alerts', ->
+    beforeEach (done) ->
+      nock('http://play.grafana.org')
+        .get('/api/alerts')
+        .replyWithFile(200, __dirname + '/fixtures/v5/alerts.json')
+      room.user.say 'alice', 'hubot graf alerts'
+      setTimeout done, 100
+
+    it 'hubot should respond with a list of alerts', ->
+      expect(room.messages).to.eql [
+        [ 'alice', 'hubot graf alerts' ]
+        [ 'hubot', 'All alerts:\n- *API Error  / 1min alert* (2): `ok`\n  last state change: 2018-07-17T16:34:03Z\n- *Customer Reviews alert* (11): `ok`\n  last state change: 2018-07-17T12:39:30Z\n- *Dashboard Loads Peaking* (4): `ok`\n  last state change: 2018-07-16T20:43:02Z\n- *InfluxDB Alert* (14): `ok`\n  last state change: 2018-05-07T13:05:45Z\n- *Metric Requests Peaking* (1): `ok`\n  last state change: 2018-07-09T21:54:01Z\n- *Payments Completed/s alert* (10): `ok`\n  last state change: 2018-07-13T01:31:14Z\n- *Payments Completed/s alert* (12): `ok`\n  last state change: 2018-07-17T13:43:06Z\n- *Request Time Average < 190ms alert* (3): `ok`\n  last state change: 2018-07-17T15:58:02Z\n- *Selected Servers alert* (7): `ok`\n  last state change: 2018-06-02T22:33:18Z\n- *Selected Servers alert* (8): `ok`\n  last state change: 2018-06-01T08:28:20Z\n- *When CPU is above 80% for 5m* (6): `ok`\n  last state change: 2018-07-09T23:09:15Z']
+      ]
+
+  context 'ask hubot to pause an alert', ->
+    beforeEach (done) ->
+      nock('http://play.grafana.org')
+        .post('/api/alerts/1/pause', {'paused': true})
+        .reply(200, {alertId: 1, message: 'alert paused'})
+      room.user.say 'alice', 'hubot graf pause alert 1'
+      setTimeout done, 100
+
+    it 'hubot should respond with a successful paused response', ->
+      expect(room.messages).to.eql [
+        [ 'alice', 'hubot graf pause alert 1' ]
+        [ 'hubot', 'alert paused']
+      ]
+
+  context 'ask hubot to un-pause an alert', ->
+    beforeEach (done) ->
+      nock('http://play.grafana.org')
+        .post('/api/alerts/1/pause', {'paused': false})
+        .reply(200, {alertId: 1, message: 'alert un-paused'})
+      room.user.say 'alice', 'hubot graf unpause alert 1'
+      setTimeout done, 100
+
+    it 'hubot should respond with a successful un-paused response', ->
+      expect(room.messages).to.eql [
+        [ 'alice', 'hubot graf unpause alert 1' ]
+        [ 'hubot', 'alert un-paused']
+      ]
