@@ -13,33 +13,34 @@
     "url": "https://github.com/stephenyeargin/hubot-grafana/issues"
   },
   "dependencies": {
+    "debug": "^2.6.9",
     "knox": "^0.9.2",
-    "request": "^2.85.0"
+    "request": "^2.88.0"
   },
   "peerDependencies": {
     "hubot": ">=2 <10 || 0.0.0-development"
   },
   "devDependencies": {
     "chai": "^4.1.2",
-    "coffee-script": "1.12.7",
-    "grunt": "^1.0.2",
+    "coffee-script": "^1.12.7",
+    "grunt": "^1.0.3",
     "grunt-cli": "^1.2.0",
-    "grunt-contrib-watch": "~1.0.0",
-    "grunt-mocha-test": "~0.13.3",
-    "grunt-release": "~0.14.0",
-    "hubot": "2.x",
-    "hubot-test-helper": "1.9.0",
+    "grunt-contrib-watch": "^1.1.0",
+    "grunt-mocha-test": "^0.13.3",
+    "hubot-test-helper": "^1.9.0",
     "husky": "^0.14.3",
-    "matchdep": "~2.0.0",
-    "mocha": "^5.1.0",
-    "nock": "^9.2.5",
+    "matchdep": "^2.0.0",
+    "mocha": "^5.2.0",
+    "nock": "^9.6.0",
+    "release-it": "^7.5.0",
     "require-dir": "^1.0.0",
-    "sinon": "^4.5.0",
-    "sinon-chai": "^3.0.0",
+    "sinon": "^6.1.5",
+    "sinon-chai": "^3.2.0",
     "travis-cov": "^0.2.5"
   },
   "main": "index.coffee",
   "scripts": {
+    "release": "release-it",
     "test": "grunt test",
     "precommit": "npm test",
     "prepush": "npm test"

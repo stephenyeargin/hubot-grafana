@@ -1,0 +1,9 @@
+{
+  "pkgFiles": ["package.json", "package-lock.json"],
+  "src": {
+    "tagName": "v%s"
+  },
+  "github": {
+    "release": true
+  }
+}
