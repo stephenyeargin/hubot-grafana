@@ -50,7 +50,7 @@
 #
 
 crypto  = require 'crypto'
-knox    = require 'knox'
+knox    = require 'knox-s3'
 request = require 'request'
 
 module.exports = (robot) ->
