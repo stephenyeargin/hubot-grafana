@@ -28,6 +28,9 @@
 #   ROCKETCHAT_URL - Optional; URL to your Rocket.Chat instance (already configured with the adapter)
 #   ROCKETCHAT_USER - Optional; Bot username (already configured with the adapter)
 #   ROCKETCHAT_PASSWORD - Optional; Bot password (already configured with the adapter)
+#   MOXTRA_CLIENTID - Optional; client id of the moxtra bot
+#   MOXTRA_CLIENT_SECRET -  Optional; client secret of moxtra Bot
+#   MOXTRA_API_ENDPOINT - Optional; API endpoint of moxtra   https://api.moxtra.com/v1 - for cloud instance
 #
 # Dependencies:
 #   "knox": "^0.9.2"
@@ -52,6 +55,7 @@
 crypto  = require 'crypto'
 knox    = require 'knox-s3'
 request = require 'request'
+URLSafeBase64 = require 'urlsafe-base64'
 
 module.exports = (robot) ->
   # Various configuration options stored in environment variables
@@ -70,6 +74,9 @@ module.exports = (robot) ->
   rocketchat_url = process.env.ROCKETCHAT_URL
   rocketchat_user = process.env.ROCKETCHAT_USER
   rocketchat_password = process.env.ROCKETCHAT_PASSWORD
+  moxtra_client_id = process.env.HUBOT_MOXTRA_CLIENTID
+  moxtra_client_secret = process.env.HUBOT_MOXTRA_SECRET
+  moxtra_api_endpoint = process.env.HUBOT_MOXTRA_API_ENDPOINT
 
   if rocketchat_url && ! rocketchat_url.startsWith 'http'
     rocketchat_url = 'http://' + rocketchat_url
@@ -82,6 +89,8 @@ module.exports = (robot) ->
       'slack'
     else if (robot.adapterName == 'rocketchat')
       'rocketchat'
+    else if (robot.adapterName == 'moxtra')
+      'moxtra'
     else
       ''
   isUploadSupported = site() != ''
@@ -518,6 +527,66 @@ module.exports = (robot) ->
                 errMsg = res["error"]
                 robot.logger.error "rocketchat service error while posting data:" +errMsg
                 msg.send "#{title} - [Form Error: can't upload file : #{errMsg}] - #{link}"
+
+    'moxtra' : (msg, title, grafanaDashboardRequest, link) ->
+      # Get Access token to send the message back to Moxtra's Server
+      robot.logger.debug "Trying to upload to moxtra"
+      moxtra_org_id = msg.message.org_id
+      MOXTRA_TOKEN_KEY = moxtra_org_id + "_token"
+      timestamp = (new Date).getTime()
+      token = robot.brain.get(MOXTRA_TOKEN_KEY)
+
+      #check validity of previous token
+      if !token || timestamp > token.expired_time
+        buf = moxtra_client_id + moxtra_org_id + timestamp
+        sig = crypto.createHmac('sha256', new Buffer(moxtra_client_secret)).update(buf).digest()
+        signature = URLSafeBase64.encode sig
+        url = moxtra_api_endpoint + '/apps/token?client_id=' + moxtra_client_id + '&org_id=' + moxtra_org_id + '&timestamp=' + timestamp + '&signature=' + signature
+
+        robot.http(url)
+          .get() (err, response, body) ->
+            if response.statusCode isnt 200
+                robot.logger.error err
+                msg.send "#{title} - [Upload Error - Unable to generate Moxtra token] - #{link}"
+                return
+            else if err
+                robot.logger.error err
+                msg.send "#{title} - [Upload Error  - Unable to generate Moxtra token] - #{link}"
+                return
+            else if body
+                token = JSON.parse(body)
+                token.expired_time = timestamp + (parseInt(token.expires_in) * 1000)
+                robot.brain.set(MOXTRA_TOKEN_KEY, token)
+                robot.logger.debug "Got NEW access_token! "+ token.access_token + " expired_time: " + token.expired_time
+                moxtraUpload(msg, title, grafanaDashboardRequest, link,token)
+      else
+        moxtraUpload(msg, title, grafanaDashboardRequest, link, token)
+
+  moxtraUpload = (msg, title, grafanaDashboardRequest, link, token) ->
+    uploadData =
+      url: moxtra_api_endpoint + "/" + msg.message.id + "/messages"
+      headers:
+        'Accept': 'multipart/form-data',
+        'Authorization': 'Bearer ' + token.access_token
+      formData:
+        # grafanaDashboardRequest() is the method that downloads the .png
+        file:
+          value: grafanaDashboardRequest()
+          options:
+            filename: "#{title} #{Date()}.png",
+            contentType: 'image/png'
+
+    # Try to upload the image to moxtra else pass the link over
+    request.post uploadData, (err, httpResponse, body) ->
+      res = JSON.parse(body)
+      if err
+        robot.logger.error err
+        msg.send "#{title} - [Upload Error] - #{link}"
+      else if res["code"] != 'RESPONSE_SUCCESS'
+        errMsg = res["error"]
+        robot.logger.error "Moxtra service error while posting data:" +errMsg
+        msg.send "#{title} - [Form Error: can't upload file : #{errMsg}] - #{link}"
+
 
   # Fetch an image from provided URL, upload it to S3, returning the resulting URL
   uploadChart = (msg, title, url, link, site) ->

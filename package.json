@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "knox-s3": "^0.9.5",
-    "request": "^2.88.0"
+    "request": "^2.88.0",
+    "urlsafe-base64": "^1.0.0"
   },
   "peerDependencies": {
     "hubot": ">=2 <10 || 0.0.0-development"
