@@ -117,7 +117,7 @@ module.exports = (robot) ->
         pname = false
 
     # Check if we have any extra fields
-    if remainder
+    if remainder && remainder.trim() != ''
       # The order we apply non-variables in
       timeFields = ['from', 'to']
 
