@@ -447,7 +447,7 @@ module.exports = (robot) ->
 
             # fill in the POST request. This must be www-form/multipart
             uploadData =
-              url: slack_url + '/api/files.upload'
+              url: slack_url.replace(/\/$/, '') + '/api/files.upload'
               formData:
                 title: "#{title}"
                 channels: msg.envelope.room
