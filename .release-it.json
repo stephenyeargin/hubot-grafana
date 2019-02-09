@@ -1,7 +1,7 @@
 {
   "pkgFiles": ["package.json", "package-lock.json"],
   "src": {
-    "tagName": "v%s"
+    "tagName": "v${version}"
   },
   "github": {
     "release": true
