@@ -48,7 +48,7 @@ describe 'slack', ->
         .post('/api/auth.test')
         .replyWithFile(200, __dirname + '/fixtures/slack/auth.test.json')
       nock('https://subarachnoid.slack.com')
-        .post('//api/files.upload')
+        .post('/api/files.upload')
         .replyWithFile(200, __dirname + '/fixtures/slack/files.upload.json')
 
     afterEach ->
@@ -65,9 +65,10 @@ describe 'slack', ->
           ]
           # This would be where the actual image would be returned. There is
           # not an easy way to mock that, so we are assuming that the other
-          # pieces worked as expected if we get to here without errors and nock
-          # sent all available data.
-          expect(nock.activeMocks()).to.eql []
+          # pieces worked as expected if we get to here without errors.
+          expect(selfRoom.messages).to.eql [
+            ['alice', '@hubot graf db grafana-play-home:panel-8']
+          ]
           done()
         catch err
           done err
