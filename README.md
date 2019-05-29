@@ -28,12 +28,16 @@ Then add **hubot-grafana** to your `external-scripts.json`:
 
 | Configuration Variable           | Required | Description                    |
 | -------------------------------- | -------- | ------------------------------ |
-| `HUBOT_GRAFANA_HOST`             | **Yes**  | Host for your Grafana 2.x install, e.g. `http://play.grafana.org` |
-| `HUBOT_GRAFANA_API_KEY`          | _Yes^_   | Grafana API key (This can be "Viewer" role.) |
+| `HUBOT_GRAFANA_HOST`             | **Yes^**  | Host for your Grafana 2.x install, e.g. `http://play.grafana.org` |
+| `HUBOT_GRAFANA_API_KEY`          | _Yes^^_   | Grafana API key (This can be "Viewer" role.) |
+| `HUBOT_GRAFANA_PER_ROOM`         | No       | Allow per room Grafana Host & API key configuration |
 | `HUBOT_GRAFANA_QUERY_TIME_RANGE` | No       | Default time range for queries (defaults to 6h) |
 | `HUBOT_GRAFANA_DEFAULT_WIDTH`    | No       | Default width for rendered images (defaults to 1000) |
 | `HUBOT_GRAFANA_DEFAULT_HEIGHT`   | No       | Default height for rendered images (defaults to 500) |
-^ _Not required for `auth.anonymous` Grafana configurations. All other authentication models will require a user-specific API key._
+^ _Not required when `HUBOT_GRAFANA_PER_ROOM` is set to 1._
+
+^^ _Not required for `auth.anonymous` Grafana configurations. All other authentication models will require a user-specific API key._
+
 
 ### Image Hosting Configuration
 
@@ -140,4 +144,13 @@ Similarly, you can search the list of dashboards. In this example, return all da
 
 ```
 hubot graf search elb
+```
+
+### Per room configuration
+
+When `HUBOT_GRAFANA_PER_ROOM` is set to '1' the following commands configure the Grafana Host and API key for the room in which the commands are issued.
+
+```
+hubot graf set host http://play.grafana.org
+hubot graf set api_key abcd01234deadbeef01234
 ```

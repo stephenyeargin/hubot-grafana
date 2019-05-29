@@ -15,6 +15,7 @@
 # Configuration:
 #   HUBOT_GRAFANA_HOST - Host for your Grafana 2.0 install, e.g. 'http://play.grafana.org'
 #   HUBOT_GRAFANA_API_KEY - API key for a particular user (leave unset if unauthenticated)
+#   HUBOT_GRAFANA_PER_ROOM - Optional; if set use robot brain to store host & API key per room
 #   HUBOT_GRAFANA_QUERY_TIME_RANGE - Optional; Default time range for queries (defaults to 6h)
 #   HUBOT_GRAFANA_DEFAULT_WIDTH - Optional; Default width for rendered images (defaults to 1000)
 #   HUBOT_GRAFANA_DEFAULT_HEIGHT - Optional; Default height for rendered images (defaults to 500)
@@ -39,6 +40,7 @@
 #     hubot-slack: 4.0+
 #
 # Commands:
+#   hubot graf set `[host|api_key]` <value> - Setup Grafana host or API key
 #   hubot graf db <dashboard slug>[:<panel id>][ <template variables>][ <from clause>][ <to clause>] - Show grafana dashboard graphs
 #   hubot graf list <tag> - Lists all dashboards available (optional: <tag>)
 #   hubot graf search <keyword> - Search available dashboards by <keyword>
@@ -57,6 +59,7 @@ module.exports = (robot) ->
   # Various configuration options stored in environment variables
   grafana_host = process.env.HUBOT_GRAFANA_HOST
   grafana_api_key = process.env.HUBOT_GRAFANA_API_KEY
+  grafana_per_room = process.env.HUBOT_GRAFANA_PER_ROOM
   grafana_query_time_range = process.env.HUBOT_GRAFANA_QUERY_TIME_RANGE or '6h'
   s3_endpoint = process.env.HUBOT_GRAFANA_S3_ENDPOINT or 's3.amazonaws.com'
   s3_bucket = process.env.HUBOT_GRAFANA_S3_BUCKET
@@ -86,6 +89,29 @@ module.exports = (robot) ->
       ''
   isUploadSupported = site() != ''
 
+  get_room = (msg) ->
+    # placeholder for further adapter support (i.e. MS Teams) as then room also
+    # contains thread conversation id
+    return msg.envelope.room
+
+  get_grafana_endpoint = (msg) ->
+    if (grafana_per_room == '1')
+      room = get_room(msg)
+      grafana_host = robot.brain.get('grafana_host_' + room)
+      grafana_api_key = robot.brain.get('grafana_api_key_' + room)
+      if not grafana_host
+        return
+    return { "host": grafana_host, "api_key": grafana_api_key }
+
+  # Set Grafana host/api_key
+  robot.respond /(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) ->
+    if (grafana_per_room == '1')
+      context = msg.message.user.room.split('@')[0]
+      robot.brain.set('grafana_' + msg.match[1] + '_' + context, msg.match[2])
+      msg.send "Value set for #{msg.match[1]}"
+    else
+      msg.send "Not configured to use multiple configurations"
+
   # Get a specific dashboard with options
   robot.respond /(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) ->
     slug = msg.match[1].trim()
@@ -102,7 +128,10 @@ module.exports = (robot) ->
     imagesize =
       width: process.env.HUBOT_GRAFANA_DEFAULT_WIDTH or 1000
       height: process.env.HUBOT_GRAFANA_DEFAULT_HEIGHT or 500
-
+    endpoint = get_grafana_endpoint(msg)
+    if not endpoint
+      msg.send "no grafana endpoint configured"
+      return
     # Parse out a specific panel
     if /\:/.test slug
       parts = slug.split(':')
@@ -146,7 +175,7 @@ module.exports = (robot) ->
     robot.logger.debug pname
 
     # Call the API to get information about this dashboard
-    callGrafana "dashboards/db/#{slug}", (dashboard) ->
+    callGrafana endpoint, "dashboards/db/#{slug}", (dashboard) ->
       robot.logger.debug dashboard
 
       # Check dashboard information
@@ -202,8 +231,8 @@ module.exports = (robot) ->
 
           # Build links for message sending
           title = formatTitleWithTemplate(panel.title, template_map)
-          imageUrl = "#{grafana_host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=#{imagesize.width}&height=#{imagesize.height}&from=#{timespan.from}&to=#{timespan.to}#{variables}"
-          link = "#{grafana_host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
+          imageUrl = "#{endpoint.host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=#{imagesize.width}&height=#{imagesize.height}&from=#{timespan.from}&to=#{timespan.to}#{variables}"
+          link = "#{endpoint.host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
 
           sendDashboardChart msg, title, imageUrl, link
 
@@ -216,14 +245,17 @@ module.exports = (robot) ->
 
   # Get a list of available dashboards
   robot.respond /(?:grafana|graph|graf) list\s?(.+)?/i, (msg) ->
-    if msg.match[1]
+    endpoint = get_grafana_endpoint(msg)
+    if not endpoint
+      msg.send "no grafana endpoint configured"
+    else if msg.match[1]
       tag = msg.match[1].trim()
-      callGrafana "search?type=dash-db&tag=#{tag}", (dashboards) ->
+      callGrafana endpoint, "search?type=dash-db&tag=#{tag}", (dashboards) ->
         robot.logger.debug dashboards
         response = "Dashboards tagged `#{tag}`:\n"
         sendDashboardList dashboards, response, msg
     else
-      callGrafana 'search?type=dash-db', (dashboards) ->
+      callGrafana endpoint, 'search?type=dash-db', (dashboards) ->
         robot.logger.debug dashboards
         response = "Available dashboards:\n"
         sendDashboardList dashboards, response, msg
@@ -231,24 +263,32 @@ module.exports = (robot) ->
   # Search dashboards
   robot.respond /(?:grafana|graph|graf) search (.+)/i, (msg) ->
     query = msg.match[1].trim()
+    endpoint = get_grafana_endpoint(msg)
     robot.logger.debug query
-    callGrafana "search?type=dash-db&query=#{query}", (dashboards) ->
+    if not endpoint
+      msg.send "no grafana endpoint configured"
+      return
+    callGrafana endpoint, "search?type=dash-db&query=#{query}", (dashboards) ->
       robot.logger.debug dashboards
       response = "Dashboards matching `#{query}`:\n"
       sendDashboardList dashboards, response, msg
 
   # Show alerts
   robot.respond /(?:grafana|graph|graf) alerts\s?(.+)?/i, (msg) ->
+    endpoint = get_grafana_endpoint(msg)
+    if not endpoint
+      msg.send "no grafana endpoint configured"
+      return
     # all alerts of a specific type
     if msg.match[1]
       state = msg.match[1].trim()
-      callGrafana "alerts?state=#{state}", (alerts) ->
+      callGrafana endpoint, "alerts?state=#{state}", (alerts) ->
         robot.logger.debug alerts
         sendAlerts alerts, "Alerts with state '#{state}':\n", msg
     # *all* alerts
     else
       robot.logger.debug 'Show all alerts'
-      callGrafana 'alerts', (alerts) ->
+      callGrafana endpoint, 'alerts', (alerts) ->
         robot.logger.debug alerts
         sendAlerts alerts, 'All alerts:\n', msg
 
@@ -256,7 +296,11 @@ module.exports = (robot) ->
   robot.respond /(?:grafana|graph|graf) (unpause|pause)\salert\s(\d+)/i, (msg) ->
     paused = msg.match[1] == 'pause'
     alertId = msg.match[2]
-    postGrafana "alerts/#{alertId}/pause", {'paused': paused}, (result) ->
+    endpoint = get_grafana_endpoint(msg)
+    if not endpoint
+      msg.send "no grafana endpoint configured"
+      return
+    postGrafana endpoint, "alerts/#{alertId}/pause", {'paused': paused}, (result) ->
       robot.logger.debug result
       if result.message
         msg.send result.message
@@ -265,7 +309,11 @@ module.exports = (robot) ->
   # requires an API token with admin permissions
   robot.respond /(?:grafana|graph|graf) (unpause|pause) all(?:\s+alerts)?/i, (msg) ->
     paused = msg.match[1] == 'pause'
-    postGrafana 'admin/pause-all-alerts', {'paused': paused}, (result) ->
+    endpoint = get_grafana_endpoint(msg)
+    if not endpoint
+      msg.send "no grafana endpoint configured"
+      return
+    postGrafana endpoint, 'admin/pause-all-alerts', {'paused': paused}, (result) ->
       robot.logger.debug result
       if result.message
         msg.send result.message
@@ -360,8 +408,8 @@ module.exports = (robot) ->
         msg.send "#{title}: #{image} - #{link}"
 
   # Call off to Grafana
-  callGrafana = (url, callback) ->
-    robot.http("#{grafana_host}/api/#{url}").headers(grafanaHeaders()).get() (err, res, body) ->
+  callGrafana = (endpoint, url, callback) ->
+    robot.http("#{endpoint.host}/api/#{url}").headers(grafanaHeaders(endpoint)).get() (err, res, body) ->
       if (err)
         robot.logger.error err
         return callback(false)
@@ -369,19 +417,19 @@ module.exports = (robot) ->
       return callback(data)
 
   # Post to Grafana
-  postGrafana = (url, data, callback) ->
+  postGrafana = (endpoint, url, data, callback) ->
     jsonPayload = JSON.stringify(data)
-    robot.http("#{grafana_host}/api/#{url}").headers(grafanaHeaders(true)).post(jsonPayload) (err, res, body) ->
+    robot.http("#{endpoint.host}/api/#{url}").headers(grafanaHeaders(endpoint, true)).post(jsonPayload) (err, res, body) ->
       if (err)
         robot.logger.error err
         return callback(false)
       data = JSON.parse(body)
       return callback(data)
 
-  grafanaHeaders = (post = false) ->
+  grafanaHeaders = (endpoint, post = false) ->
     headers = { 'Accept': 'application/json' }
-    if grafana_api_key
-      headers['Authorization'] = "Bearer #{grafana_api_key}"
+    if endpoint.api_key
+      headers['Authorization'] = "Bearer #{endpoint.api_key}"
     if post
       headers['Content-Type'] = 'application/json'
     headers
