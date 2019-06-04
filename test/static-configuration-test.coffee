@@ -39,7 +39,7 @@ describe 'static configuration', ->
     it 'hubot should respond it cannot configure the host', ->
       expect(room.messages).to.eql [
         [ 'alice', 'hubot graf set host http://play.grafana.org' ]
-        [ 'hubot', "Not configured to use multiple configurations"]
+        [ 'hubot', "Set HUBOT_GRAFANA_PER_ROOM=1 to use multiple configurations."]
       ]
 
   context 'ask hubot to configure grafana api_key', ->
@@ -50,5 +50,5 @@ describe 'static configuration', ->
     it 'hubot should respond it cannot configure the api_key', ->
       expect(room.messages).to.eql [
         [ 'alice', 'hubot graf set api_key AABBCC' ]
-        [ 'hubot', "Not configured to use multiple configurations"]
+        [ 'hubot', "Set HUBOT_GRAFANA_PER_ROOM=1 to use multiple configurations."]
       ]

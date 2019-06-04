@@ -63,7 +63,7 @@ describe 'per room configuration', ->
     it 'hubot should respond that grafana endpoint is not configured', ->
       expect(room_one.messages).to.eql [
         [ 'alice', 'hubot graf list demo' ]
-        [ 'hubot', "no grafana endpoint configured"]
+        [ 'hubot', "No Grafana endpoint configured."]
       ]
 
   context 'ask hubot to configure host and then list dashboards filterd by tag', ->

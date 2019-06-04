@@ -110,7 +110,7 @@ module.exports = (robot) ->
       robot.brain.set('grafana_' + msg.match[1] + '_' + context, msg.match[2])
       msg.send "Value set for #{msg.match[1]}"
     else
-      msg.send "Not configured to use multiple configurations"
+      sendError 'Set HUBOT_GRAFANA_PER_ROOM=1 to use multiple configurations.', msg
 
   # Get a specific dashboard with options
   robot.respond /(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) ->
@@ -130,7 +130,7 @@ module.exports = (robot) ->
       height: process.env.HUBOT_GRAFANA_DEFAULT_HEIGHT or 500
     endpoint = get_grafana_endpoint(msg)
     if not endpoint
-      msg.send "no grafana endpoint configured"
+      sendError 'No Grafana endpoint configured.', msg
       return
     # Parse out a specific panel
     if /\:/.test slug
@@ -247,7 +247,7 @@ module.exports = (robot) ->
   robot.respond /(?:grafana|graph|graf) list\s?(.+)?/i, (msg) ->
     endpoint = get_grafana_endpoint(msg)
     if not endpoint
-      msg.send "no grafana endpoint configured"
+      sendError 'No Grafana endpoint configured.', msg
     else if msg.match[1]
       tag = msg.match[1].trim()
       callGrafana endpoint, "search?type=dash-db&tag=#{tag}", (dashboards) ->
@@ -266,7 +266,7 @@ module.exports = (robot) ->
     endpoint = get_grafana_endpoint(msg)
     robot.logger.debug query
     if not endpoint
-      msg.send "no grafana endpoint configured"
+      sendError 'No Grafana endpoint configured.', msg
       return
     callGrafana endpoint, "search?type=dash-db&query=#{query}", (dashboards) ->
       robot.logger.debug dashboards
@@ -277,7 +277,7 @@ module.exports = (robot) ->
   robot.respond /(?:grafana|graph|graf) alerts\s?(.+)?/i, (msg) ->
     endpoint = get_grafana_endpoint(msg)
     if not endpoint
-      msg.send "no grafana endpoint configured"
+      sendError 'No Grafana endpoint configured.', msg
       return
     # all alerts of a specific type
     if msg.match[1]
@@ -298,7 +298,7 @@ module.exports = (robot) ->
     alertId = msg.match[2]
     endpoint = get_grafana_endpoint(msg)
     if not endpoint
-      msg.send "no grafana endpoint configured"
+      sendError 'No Grafana endpoint configured.', msg
       return
     postGrafana endpoint, "alerts/#{alertId}/pause", {'paused': paused}, (result) ->
       robot.logger.debug result
@@ -311,7 +311,7 @@ module.exports = (robot) ->
     paused = msg.match[1] == 'pause'
     endpoint = get_grafana_endpoint(msg)
     if not endpoint
-      msg.send "no grafana endpoint configured"
+      sendError 'No Grafana endpoint configured.', msg
       return
     postGrafana endpoint, 'admin/pause-all-alerts', {'paused': paused}, (result) ->
       robot.logger.debug result
