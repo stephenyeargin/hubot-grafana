@@ -1,6 +1,6 @@
 {
   "pkgFiles": ["package.json", "package-lock.json"],
-  "src": {
+  "git": {
     "tagName": "v${version}"
   },
   "github": {
