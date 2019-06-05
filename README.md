@@ -34,6 +34,7 @@ Then add **hubot-grafana** to your `external-scripts.json`:
 | `HUBOT_GRAFANA_QUERY_TIME_RANGE` | No       | Default time range for queries (defaults to 6h) |
 | `HUBOT_GRAFANA_DEFAULT_WIDTH`    | No       | Default width for rendered images (defaults to 1000) |
 | `HUBOT_GRAFANA_DEFAULT_HEIGHT`   | No       | Default height for rendered images (defaults to 500) |
+
 ^ _Not required when `HUBOT_GRAFANA_PER_ROOM` is set to 1._
 
 ^^ _Not required for `auth.anonymous` Grafana configurations. All other authentication models will require a user-specific API key._
