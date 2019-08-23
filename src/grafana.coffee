@@ -313,10 +313,17 @@ module.exports = (robot) ->
     if not endpoint
       sendError 'No Grafana endpoint configured.', msg
       return
-    postGrafana endpoint, 'admin/pause-all-alerts', {'paused': paused}, (result) ->
-      robot.logger.debug result
-      if result.message
-        msg.send result.message
+    callGrafana endpoint, 'alerts', (alerts) ->
+      robot.logger.debug alerts
+      errored = 0
+      unless alerts.length > 0
+        return
+      for alert in alerts
+        postGrafana endpoint, "alerts/#{alert.id}/pause", {'paused': paused}, (result) ->
+          robot.logger.debug result
+          if result == false
+            errored = errored + 1
+      msg.send "Sucessfully tried to #{msg.match[1]} *#{alerts.length}* alerts.\n*Success: #{alerts.length - errored}*\n*Errored: #{errored}*"
 
   # Send a list of alerts
   sendAlerts = (alerts, response, msg) ->
