@@ -14,27 +14,27 @@
   },
   "dependencies": {
     "knox-s3": "^0.9.5",
-    "request": "^2.88.0"
+    "request": "^2.88.2"
   },
   "peerDependencies": {
-    "hubot": ">=2 <10 || 0.0.0-development"
+    "hubot": "^3"
   },
   "devDependencies": {
     "chai": "^4.2.0",
     "coffee-script": "^1.12.7",
-    "grunt": "^1.0.4",
+    "grunt": "^1.1.0",
     "grunt-cli": "^1.3.2",
     "grunt-contrib-watch": "^1.1.0",
     "grunt-mocha-test": "^0.13.3",
     "hubot-test-helper": "^1.9.0",
-    "husky": "^3.0.0",
+    "husky": "^4.2.3",
     "matchdep": "^2.0.0",
-    "mocha": "^6.1.4",
-    "nock": "^10.0.6",
-    "release-it": "^12.3.0",
+    "mocha": "^7.1.1",
+    "nock": "^12.0.3",
+    "release-it": "^13.5.1",
     "require-dir": "^1.2.0",
-    "sinon": "^7.2.3",
-    "sinon-chai": "^3.3.0",
+    "sinon": "^9.0.1",
+    "sinon-chai": "^3.5.0",
     "travis-cov": "^0.2.5"
   },
   "main": "index.coffee",
