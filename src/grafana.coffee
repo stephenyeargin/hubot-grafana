@@ -399,9 +399,6 @@ module.exports = (robot) ->
           ],
           unfurl_links: false
         }
-      # Hipchat
-      when 'hipchat'
-        msg.send "#{title}: #{link} - #{image}"
       # BearyChat
       when 'bearychat'
         robot.emit 'bearychat.attachment', {

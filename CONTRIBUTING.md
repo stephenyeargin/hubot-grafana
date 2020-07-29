@@ -19,7 +19,7 @@ Note: You won't need to do a version bump in the `package.json` file as we have 
 
 - Test coverage makes the world go round. If you add a feature or fix a bug, be sure to adjust the tests to account for it when practical.
 - Configuration options are preferable to changing something globally. Many folks may depend on the current behavior (e.g. the default time window) and want to leave the default in place.
-- This package is designed to work with all Hubot adapters, so we are not wanting to limit it to only folks who use Slack, HipChat, etc. See [`robot.adapterName`](https://github.com/github/hubot/pull/663) if you want to create an adapter-specific feature.
+- This package is designed to work with all Hubot adapters, so we are not wanting to limit it to only folks who use Slack, IRC, etc. See [`robot.adapterName`](https://github.com/github/hubot/pull/663) if you want to create an adapter-specific feature.
 - If you find yourself copying large blocks of code, consider refactoring it to be a bit more [DRY](https://en.wikipedia.org/wiki/Don't_repeat_yourself).
 - `robot.logger.debug` and `robot.logger.error` are helpful methods. You can set your `HUBOT_LOG_LEVEL` locally to see the output of these methods as your code is run.
 - If you have something super custom (say, wanting to prefix every command with "hey Siri ..."), it is totally fine to fork this repository and _not_ submit back a Pull Request. You can include your forked version in Hubot by specifying the repository URL in the version field in `package.json`.
