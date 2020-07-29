@@ -235,6 +235,7 @@ module.exports = (robot) ->
           link = "#{endpoint.host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
 
           sendDashboardChart msg, title, imageUrl, link
+    , msg
 
   # Process the bot response
   sendDashboardChart = (msg, title, imageUrl, link) ->
@@ -254,11 +255,13 @@ module.exports = (robot) ->
         robot.logger.debug dashboards
         response = "Dashboards tagged `#{tag}`:\n"
         sendDashboardList dashboards, response, msg
+      , msg
     else
       callGrafana endpoint, 'search?type=dash-db', (dashboards) ->
         robot.logger.debug dashboards
         response = "Available dashboards:\n"
         sendDashboardList dashboards, response, msg
+      , msg
 
   # Search dashboards
   robot.respond /(?:grafana|graph|graf) search (.+)/i, (msg) ->
@@ -272,6 +275,7 @@ module.exports = (robot) ->
       robot.logger.debug dashboards
       response = "Dashboards matching `#{query}`:\n"
       sendDashboardList dashboards, response, msg
+    , msg
 
   # Show alerts
   robot.respond /(?:grafana|graph|graf) alerts\s?(.+)?/i, (msg) ->
@@ -285,6 +289,7 @@ module.exports = (robot) ->
       callGrafana endpoint, "alerts?state=#{state}", (alerts) ->
         robot.logger.debug alerts
         sendAlerts alerts, "Alerts with state '#{state}':\n", msg
+      , msg
     # *all* alerts
     else
       robot.logger.debug 'Show all alerts'
@@ -304,6 +309,7 @@ module.exports = (robot) ->
       robot.logger.debug result
       if result.message
         msg.send result.message
+    , msg
 
   # Pause/unpause all alerts
   # requires an API token with admin permissions
@@ -323,6 +329,7 @@ module.exports = (robot) ->
           robot.logger.debug result
           if result == false
             errored = errored + 1
+        , msg
       msg.send "Sucessfully tried to #{msg.match[1]} *#{alerts.length}* alerts.\n*Success: #{alerts.length - errored}*\n*Errored: #{errored}*"
 
   # Send a list of alerts
@@ -415,12 +422,17 @@ module.exports = (robot) ->
         msg.send "#{title}: #{image} - #{link}"
 
   # Call off to Grafana
-  callGrafana = (endpoint, url, callback) ->
+  callGrafana = (endpoint, url, callback, msg) ->
     robot.http("#{endpoint.host}/api/#{url}").headers(grafanaHeaders(endpoint)).get() (err, res, body) ->
       if (err)
-        robot.logger.error err
+        sendError err, msg
         return callback(false)
-      data = JSON.parse(body)
+      try
+        data = JSON.parse(body)
+      catch parseError
+        robot.logger.debug body
+        sendError "An error ocurred calling the Grafana API on <#{endpoint.host}>. See logs for details.", msg
+        return callback(false)
       return callback(data)
 
   # Post to Grafana
@@ -428,9 +440,14 @@ module.exports = (robot) ->
     jsonPayload = JSON.stringify(data)
     robot.http("#{endpoint.host}/api/#{url}").headers(grafanaHeaders(endpoint, true)).post(jsonPayload) (err, res, body) ->
       if (err)
-        robot.logger.error err
+        sendError err, msg
         return callback(false)
-      data = JSON.parse(body)
+      try
+        data = JSON.parse(body)
+      catch parseError
+        robot.logger.debug body
+        sendError "An error ocurred posting to the Grafana API on <#{endpoint.host}>. See logs for details.", msg
+        return callback(false)
       return callback(data)
 
   grafanaHeaders = (endpoint, post = false) ->

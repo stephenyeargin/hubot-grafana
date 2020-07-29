@@ -208,3 +208,31 @@ describe 'grafana v5', ->
         [ 'alice', 'hubot graf unpause alert 1' ]
         [ 'hubot', 'alert un-paused']
       ]
+
+  context 'handle an invalid response from the API', ->
+    beforeEach (done) ->
+      nock('http://play.grafana.org')
+        .get('/api/search?type=dash-db')
+        .reply(200, 'I\'m a teapot.')
+      room.user.say 'alice', 'hubot graf list'
+      setTimeout done, 100
+
+    it 'hubot should respond with an error message', ->
+      expect(room.messages).to.eql [
+        [ 'alice', 'hubot graf list' ]
+        [ 'hubot', 'An error ocurred calling the Grafana API on <http://play.grafana.org>. See logs for details.']
+      ]
+
+  context 'handle a server error from the API', ->
+    beforeEach (done) ->
+      nock('http://play.grafana.org')
+        .get('/api/search?type=dash-db')
+        .reply(500)
+      room.user.say 'alice', 'hubot graf list'
+      setTimeout done, 100
+
+    it 'hubot should respond with an error message', ->
+      expect(room.messages).to.eql [
+        [ 'alice', 'hubot graf list' ]
+        [ 'hubot', 'An error ocurred calling the Grafana API on <http://play.grafana.org>. See logs for details.']
+      ]
