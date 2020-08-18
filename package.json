@@ -25,7 +25,7 @@
     "hubot-test-helper": "^1.9.0",
     "husky": "^4.2.5",
     "matchdep": "^2.0.0",
-    "mocha": "^8.0.1",
+    "mocha": "^8.1.1",
     "nock": "^13.0.2",
     "release-it": "^13.6.5",
     "require-dir": "^1.2.0",
