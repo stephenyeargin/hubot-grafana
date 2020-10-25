@@ -11,6 +11,7 @@
 #   - `hubot graf db graphite-carbon-metrics now-12hr` - Get a dashboard with a window of 12 hours ago to now
 #   - `hubot graf db graphite-carbon-metrics now-24hr now-12hr` - Get a dashboard with a window of 24 hours ago to 12 hours ago
 #   - `hubot graf db graphite-carbon-metrics:3 now-8d now-1d` - Get only the third panel of a particular dashboard with a window of 8 days ago to yesterday
+#   - `hubot graf db graphite-carbon-metrics:3 tz=Europe/Amsterdam` - Get only the third panel of a particular dashboard and render in the time zone Europe/Amsterdam
 #
 # Configuration:
 #   HUBOT_GRAFANA_HOST - Host for your Grafana 2.0 install, e.g. 'http://play.grafana.org'
@@ -42,7 +43,7 @@
 #
 # Commands:
 #   hubot graf set `[host|api_key]` <value> - Setup Grafana host or API key
-#   hubot graf db <dashboard slug>[:<panel id>][ <template variables>][ <from clause>][ <to clause>][ <tz clause>] - Show grafana dashboard graphs
+#   hubot graf db <dashboard slug>[:<panel id>][ <template variables>][ <from clause>][ <to clause>] - Show grafana dashboard graphs
 #   hubot graf list <tag> - Lists all dashboards available (optional: <tag>)
 #   hubot graf search <keyword> - Search available dashboards by <keyword>
 #   hubot graf alerts[ <state>] - Show all alerts (optional: <state>)
