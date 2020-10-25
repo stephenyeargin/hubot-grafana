@@ -6,7 +6,7 @@ This follows the standard [GitHub Flow](https://guides.github.com/introduction/f
 
 1. [Open a GitHub Issue](https://github.com/stephenyeargin/hubot-grafana/issues/new) before starting. This is a great way to get feedback from other users on your idea and helps clarify what the upcoming PR will accomplish.
 2. [Fork the repository](https://github.com/stephenyeargin/hubot-grafana/fork) to your account or organization.
-3. Clone the repository locally and run `npm install` to download the necessary dependancies.
+3. Clone the repository locally and run `npm install` to download the necessary dependencies.
 4. Run the test suite with `npm test` in your cloned repository. This is to make sure you've got everything you need to get started.
 5. Use `npm link` in the cloned repository and then run `nmp link hubot-grafana` in your Hubot checkout to connect your cloned version to your local Hubot install. Now you can test changes with your own data!
 6. Commit and push changes back to your forked repository.
