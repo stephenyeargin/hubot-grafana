@@ -233,7 +233,7 @@ module.exports = (robot) ->
 
           # Build links for message sending
           title = formatTitleWithTemplate(panel.title, template_map)
-          imageUrl = "#{endpoint.host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=#{imagesize.width}&height=#{imagesize.height}&from=#{timespan.from}&to=#{timespan.to}#{variables}"
+          imageUrl = "#{endpoint.host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=#{query.width}&height=#{query.height}&from=#{timespan.from}&to=#{timespan.to}#{variables}"
           if query.tz
             imageUrl += "&tz=#{encodeURIComponent query.tz}"
           link = "#{endpoint.host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
