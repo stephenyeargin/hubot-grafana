@@ -26,14 +26,15 @@ Then add **hubot-grafana** to your `external-scripts.json`:
 
 ### General Settings
 
-| Configuration Variable           | Required | Description                    |
-| -------------------------------- | -------- | ------------------------------ |
-| `HUBOT_GRAFANA_HOST`             | **Yes^**  | Host for your Grafana 2.x install, e.g. `http://play.grafana.org` |
-| `HUBOT_GRAFANA_API_KEY`          | _Yes^^_   | Grafana API key (This can be "Viewer" role.) |
-| `HUBOT_GRAFANA_PER_ROOM`         | No       | Allow per room Grafana Host & API key configuration |
-| `HUBOT_GRAFANA_QUERY_TIME_RANGE` | No       | Default time range for queries (defaults to 6h) |
-| `HUBOT_GRAFANA_DEFAULT_WIDTH`    | No       | Default width for rendered images (defaults to 1000) |
-| `HUBOT_GRAFANA_DEFAULT_HEIGHT`   | No       | Default height for rendered images (defaults to 500) |
+| Configuration Variable            | Required | Description                    |
+| --------------------------------- | -------- | ------------------------------ |
+| `HUBOT_GRAFANA_HOST`              | **Yes^** | Host for your Grafana 2.x install, e.g. `http://play.grafana.org` |
+| `HUBOT_GRAFANA_API_KEY`           | _Yes^^_  | Grafana API key (This can be "Viewer" role.) |
+| `HUBOT_GRAFANA_PER_ROOM`          | No       | Allow per room Grafana Host & API key configuration |
+| `HUBOT_GRAFANA_QUERY_TIME_RANGE`  | No       | Default time range for queries (defaults to 6h) |
+| `HUBOT_GRAFANA_DEFAULT_WIDTH`     | No       | Default width for rendered images (defaults to 1000) |
+| `HUBOT_GRAFANA_DEFAULT_HEIGHT`    | No       | Default height for rendered images (defaults to 500) |
+| `HUBOT_GRAFANA_DEFAULT_TIME_ZONE` | No       | Default time zone for rendered images (defaults to `""`) |
 
 ^ _Not required when `HUBOT_GRAFANA_PER_ROOM` is set to 1._
 
