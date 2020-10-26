@@ -11,6 +11,7 @@
 #   - `hubot graf db graphite-carbon-metrics now-12hr` - Get a dashboard with a window of 12 hours ago to now
 #   - `hubot graf db graphite-carbon-metrics now-24hr now-12hr` - Get a dashboard with a window of 24 hours ago to 12 hours ago
 #   - `hubot graf db graphite-carbon-metrics:3 now-8d now-1d` - Get only the third panel of a particular dashboard with a window of 8 days ago to yesterday
+#   - `hubot graf db graphite-carbon-metrics:3 tz=Europe/Amsterdam` - Get only the third panel of a particular dashboard and render in the time zone Europe/Amsterdam
 #
 # Configuration:
 #   HUBOT_GRAFANA_HOST - Host for your Grafana 2.0 install, e.g. 'http://play.grafana.org'
@@ -19,6 +20,7 @@
 #   HUBOT_GRAFANA_QUERY_TIME_RANGE - Optional; Default time range for queries (defaults to 6h)
 #   HUBOT_GRAFANA_DEFAULT_WIDTH - Optional; Default width for rendered images (defaults to 1000)
 #   HUBOT_GRAFANA_DEFAULT_HEIGHT - Optional; Default height for rendered images (defaults to 500)
+#   HUBOT_GRAFANA_DEFAULT_TIME_ZONE - Optional; Default time zone (default to "")
 #   HUBOT_GRAFANA_S3_ENDPOINT - Optional; Endpoint of the S3 API (useful for S3 compatible API, defaults to s3.amazonaws.com)
 #   HUBOT_GRAFANA_S3_BUCKET - Optional; Name of the S3 bucket to copy the graph into
 #   HUBOT_GRAFANA_S3_ACCESS_KEY_ID - Optional; Access key ID for S3
@@ -125,9 +127,10 @@ module.exports = (robot) ->
     visualPanelId = false
     apiPanelId = false
     pname = false
-    imagesize =
+    query =
       width: process.env.HUBOT_GRAFANA_DEFAULT_WIDTH or 1000
       height: process.env.HUBOT_GRAFANA_DEFAULT_HEIGHT or 500
+      tz: process.env.HUBOT_GRAFANA_DEFAULT_TIME_ZONE or ""
     endpoint = get_grafana_endpoint(msg)
     if not endpoint
       sendError 'No Grafana endpoint configured.', msg
@@ -153,9 +156,9 @@ module.exports = (robot) ->
       for part in remainder.trim().split ' '
         # Check if it's a variable or part of the timespan
         if part.indexOf('=') >= 0
-          #put imagesize stuff into its own dict
-          if part.split('=')[0] of imagesize
-            imagesize[part.split('=')[0]] = part.split('=')[1]
+          #put query stuff into its own dict
+          if part.split('=')[0] of query
+            query[part.split('=')[0]] = part.split('=')[1]
             continue
 
           variables = "#{variables}&var-#{part}"
@@ -231,7 +234,9 @@ module.exports = (robot) ->
 
           # Build links for message sending
           title = formatTitleWithTemplate(panel.title, template_map)
-          imageUrl = "#{endpoint.host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=#{imagesize.width}&height=#{imagesize.height}&from=#{timespan.from}&to=#{timespan.to}#{variables}"
+          imageUrl = "#{endpoint.host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=#{query.width}&height=#{query.height}&from=#{timespan.from}&to=#{timespan.to}#{variables}"
+          if query.tz
+            imageUrl += "&tz=#{encodeURIComponent query.tz}"
           link = "#{endpoint.host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
 
           sendDashboardChart msg, title, imageUrl, link
