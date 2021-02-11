@@ -35,6 +35,9 @@ Then add **hubot-grafana** to your `external-scripts.json`:
 | `HUBOT_GRAFANA_DEFAULT_WIDTH`     | No       | Default width for rendered images (defaults to 1000) |
 | `HUBOT_GRAFANA_DEFAULT_HEIGHT`    | No       | Default height for rendered images (defaults to 500) |
 | `HUBOT_GRAFANA_DEFAULT_TIME_ZONE` | No       | Default time zone for rendered images (defaults to `""`) |
+| `HUBOT_GRAFANA_ORG_ID`            | No       | Default organization id, need for image rendering in new versions of grafana (defaults to `""`) |
+| `HUBOT_GRAFANA_API_ENDPOINT`      | No       | Default rendering api endpoint, need for image rendering in new versions of grafana  (defaults to `"dashboard-solo"`) |
+| `HUBOT_GRAFANA_USE_UID`           | No       | Allow use of dashboard uid instead of `db`, need for image rendering in new versions of grafana (defaults to `""`) |
 
 ^ _Not required when `HUBOT_GRAFANA_PER_ROOM` is set to 1._
 
@@ -50,6 +53,7 @@ You can use one of the following strategies to host the generated images from Gr
 - [Amazon S3](https://github.com/stephenyeargin/hubot-grafana/wiki/Amazon-S3-Image-Hosting)
 - [Slack](https://github.com/stephenyeargin/hubot-grafana/wiki/Slack-Image-Hosting)
 - [Rocket.Chat](https://github.com/stephenyeargin/hubot-grafana/wiki/Rocket.Chat-Image-Hosting)
+- [Telegram](https://github.com/stephenyeargin/hubot-grafana/wiki/Telegram-Image-Hosting)
 
 ### Example Configuration
 

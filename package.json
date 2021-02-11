@@ -1,13 +1,13 @@
 {
   "name": "hubot-grafana",
   "description": "Query Grafana dashboards",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "author": "Stephen Yeargin <stephen@yearg.in>",
   "license": "MIT",
   "keywords": "hubot, hubot-scripts, grafana, graphs",
   "repository": {
     "type": "git",
-    "url": "git://github.com/stephenyeargin/hubot-grafana.git"
+    "url": "git://github.com/pinguingman/hubot-grafana.git"
   },
   "bugs": {
     "url": "https://github.com/stephenyeargin/hubot-grafana/issues"
