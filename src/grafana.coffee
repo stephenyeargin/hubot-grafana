@@ -87,8 +87,6 @@ module.exports = (robot) ->
       'slack'
     else if (robot.adapterName == 'rocketchat')
       'rocketchat'
-    else if (robot.adapterName == 'telegram')
-      'telegram'
     else
       ''
   isUploadSupported = site() != ''
@@ -133,9 +131,6 @@ module.exports = (robot) ->
       width: process.env.HUBOT_GRAFANA_DEFAULT_WIDTH or 1000
       height: process.env.HUBOT_GRAFANA_DEFAULT_HEIGHT or 500
       tz: process.env.HUBOT_GRAFANA_DEFAULT_TIME_ZONE or ""
-      orgId: process.env.HUBOT_GRAFANA_ORG_ID or ""
-      apiEndpoint: process.env.HUBOT_GRAFANA_API_ENDPOINT or "dashboard-solo"
-      useUid: process.env.HUBOT_GRAFANA_USE_UID or ""
     endpoint = get_grafana_endpoint(msg)
     if not endpoint
       sendError 'No Grafana endpoint configured.', msg
@@ -193,6 +188,7 @@ module.exports = (robot) ->
         return sendError dashboard.message, msg
 
       # Defaults
+      apiEndpoint = 'dashboard-solo'
       data = dashboard.dashboard
 
       # Handle refactor done for version 5.0.0+
@@ -238,12 +234,9 @@ module.exports = (robot) ->
 
           # Build links for message sending
           title = formatTitleWithTemplate(panel.title, template_map)
-          db = if query.useUid then dashboard.dashboard.uid else "db"
-          imageUrl = "#{endpoint.host}/render/#{query.apiEndpoint}/#{db}/#{slug}/?panelId=#{panel.id}&width=#{query.width}&height=#{query.height}&from=#{timespan.from}&to=#{timespan.to}#{variables}"
+          imageUrl = "#{endpoint.host}/render/#{apiEndpoint}/db/#{slug}/?panelId=#{panel.id}&width=#{query.width}&height=#{query.height}&from=#{timespan.from}&to=#{timespan.to}#{variables}"
           if query.tz
             imageUrl += "&tz=#{encodeURIComponent query.tz}"
-          if query.orgId
-            imageUrl += "&orgId=#{encodeURIComponent query.orgId}"
           link = "#{endpoint.host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
 
           sendDashboardChart msg, title, imageUrl, link
@@ -585,9 +578,6 @@ module.exports = (robot) ->
                 errMsg = res["error"]
                 robot.logger.error "rocketchat service error while posting data:" +errMsg
                 msg.send "#{title} - [Form Error: can't upload file : #{errMsg}] - #{link}"
-    'telegram': (msg, title, grafanaDashboardRequest, link) ->
-      caption = "#{title}: #{link}"
-      msg.sendPhoto msg.envelope.room, grafanaDashboardRequest(), {caption: caption}
 
   # Fetch an image from provided URL, upload it to S3, returning the resulting URL
   uploadChart = (msg, title, url, link, site) ->
