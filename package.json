@@ -7,7 +7,7 @@
   "keywords": "hubot, hubot-scripts, grafana, graphs",
   "repository": {
     "type": "git",
-    "url": "git://github.com/pinguingman/hubot-grafana.git"
+    "url": "git://github.com/stephenyeargin/hubot-grafana.git"
   },
   "bugs": {
     "url": "https://github.com/stephenyeargin/hubot-grafana/issues"
