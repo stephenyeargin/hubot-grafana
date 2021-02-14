@@ -2,7 +2,7 @@
 
 [![npm version](https://badge.fury.io/js/hubot-grafana.svg)](http://badge.fury.io/js/hubot-grafana) [![Build Status](https://travis-ci.org/stephenyeargin/hubot-grafana.png)](https://travis-ci.org/stephenyeargin/hubot-grafana)
 
-![Screenshot](http://docs.grafana.org/img/tutorials/hubot_grafana.png)
+![Screenshot](screenshot.png)
 
 Use Hubot to query Grafana dashboards. Inspired by the work of [`hubot-graphite`](https://github.com/github/hubot-scripts/blob/master/src/scripts/graphite.coffee) and [`hubot-graphme`](https://github.com/rick/hubot-graphme). Check out the [HOWTO](http://docs.grafana.org/tutorials/hubot_howto/) to get started with the bot.
 
