@@ -20,28 +20,23 @@
     "hubot": "^3"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
+    "chai": "^4.3.4",
     "coffee-script": "^1.12.7",
     "hubot-test-helper": "^1.9.0",
-    "husky": "^4.2.5",
+    "husky": "^6.0.0",
     "matchdep": "^2.0.0",
-    "mocha": "^8.1.1",
-    "nock": "^13.0.2",
-    "release-it": "^13.6.5",
+    "mocha": "^8.3.2",
+    "nock": "^13.0.11",
+    "release-it": "^14.5.0",
     "require-dir": "^1.2.0",
-    "sinon": "^9.0.2",
-    "sinon-chai": "^3.5.0",
+    "sinon": "^10.0.0",
+    "sinon-chai": "^3.6.0",
     "travis-cov": "^0.2.5"
   },
   "main": "index.coffee",
   "scripts": {
     "release": "release-it",
-    "test": "mocha --require coffee-script/register \"test/**/*.coffee\" --reporter spec"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm test",
-      "pre-push": "npm test"
-    }
+    "test": "mocha --require coffee-script/register \"test/**/*.coffee\" --reporter spec",
+    "prepare": "husky install"
   }
 }
