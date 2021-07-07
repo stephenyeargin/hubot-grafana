@@ -118,7 +118,7 @@ module.exports = (robot) ->
 
   # Get a specific dashboard with options
   robot.respond /(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) ->
-    slug = msg.match[1].trim()
+    uid = msg.match[1].trim()
     remainder = msg.match[2]
     timespan = {
       from: "now-#{grafana_query_time_range}"
@@ -134,16 +134,15 @@ module.exports = (robot) ->
       height: process.env.HUBOT_GRAFANA_DEFAULT_HEIGHT or 500
       tz: process.env.HUBOT_GRAFANA_DEFAULT_TIME_ZONE or ""
       orgId: process.env.HUBOT_GRAFANA_ORG_ID or ""
-      apiEndpoint: process.env.HUBOT_GRAFANA_API_ENDPOINT or "dashboard-solo"
-      useUid: process.env.HUBOT_GRAFANA_USE_UID or ""
+      apiEndpoint: process.env.HUBOT_GRAFANA_API_ENDPOINT or "d-solo"
     endpoint = get_grafana_endpoint(msg)
     if not endpoint
       sendError 'No Grafana endpoint configured.', msg
       return
     # Parse out a specific panel
-    if /\:/.test slug
-      parts = slug.split(':')
-      slug = parts[0]
+    if /\:/.test uid
+      parts = uid.split(':')
+      uid = parts[0]
       visualPanelId = parseInt parts[1], 10
       if isNaN visualPanelId
         visualPanelId = false
@@ -174,7 +173,7 @@ module.exports = (robot) ->
           timespan[timeFields.shift()] = part.trim()
 
     robot.logger.debug msg.match
-    robot.logger.debug slug
+    robot.logger.debug uid
     robot.logger.debug timespan
     robot.logger.debug variables
     robot.logger.debug template_params
@@ -183,7 +182,7 @@ module.exports = (robot) ->
     robot.logger.debug pname
 
     # Call the API to get information about this dashboard
-    callGrafana endpoint, "dashboards/db/#{slug}", (dashboard) ->
+    callGrafana endpoint, "dashboards/uid/#{uid}", (dashboard) ->
       robot.logger.debug dashboard
 
       # Check dashboard information
@@ -238,13 +237,13 @@ module.exports = (robot) ->
 
           # Build links for message sending
           title = formatTitleWithTemplate(panel.title, template_map)
-          db = if query.useUid then dashboard.dashboard.uid else "db"
-          imageUrl = "#{endpoint.host}/render/#{query.apiEndpoint}/#{db}/#{slug}/?panelId=#{panel.id}&width=#{query.width}&height=#{query.height}&from=#{timespan.from}&to=#{timespan.to}#{variables}"
+          uid = dashboard.dashboard.uid
+          imageUrl = "#{endpoint.host}/render/#{query.apiEndpoint}/#{uid}/?panelId=#{panel.id}&width=#{query.width}&height=#{query.height}&from=#{timespan.from}&to=#{timespan.to}#{variables}"
           if query.tz
             imageUrl += "&tz=#{encodeURIComponent query.tz}"
           if query.orgId
             imageUrl += "&orgId=#{encodeURIComponent query.orgId}"
-          link = "#{endpoint.host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
+          link = "#{endpoint.host}/d/#{uid}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
 
           sendDashboardChart msg, title, imageUrl, link
 
@@ -363,12 +362,7 @@ module.exports = (robot) ->
       return
 
     for dashboard in list
-      # Handle refactor done for version 2.0.2+
-      if dashboard.uri
-        slug = dashboard.uri.replace /^db\//, ''
-      else
-        slug = dashboard.slug
-      response = response + "- #{slug}: #{dashboard.title}\n"
+      response = response + "- #{dashboard.uid}: #{dashboard.title}\n"
 
     # Remove trailing newline
     response.trim()
