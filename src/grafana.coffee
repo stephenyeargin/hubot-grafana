@@ -14,7 +14,7 @@
 #   - `hubot graf db graphite-carbon-metrics:3 tz=Europe/Amsterdam` - Get only the third panel of a particular dashboard and render in the time zone Europe/Amsterdam
 #
 # Configuration:
-#   HUBOT_GRAFANA_HOST - Host for your Grafana 2.0 install, e.g. 'http://play.grafana.org'
+#   HUBOT_GRAFANA_HOST - Host for your Grafana 2.0 install, e.g. 'https://play.grafana.org'
 #   HUBOT_GRAFANA_API_KEY - API key for a particular user (leave unset if unauthenticated)
 #   HUBOT_GRAFANA_PER_ROOM - Optional; if set use robot brain to store host & API key per room
 #   HUBOT_GRAFANA_QUERY_TIME_RANGE - Optional; Default time range for queries (defaults to 6h)
@@ -43,7 +43,7 @@
 #
 # Commands:
 #   hubot graf set `[host|api_key]` <value> - Setup Grafana host or API key
-#   hubot graf db <dashboard slug>[:<panel id>][ <template variables>][ <from clause>][ <to clause>] - Show grafana dashboard graphs
+#   hubot graf db <dashboard uid>[:<panel id>][ <template variables>][ <from clause>][ <to clause>] - Show grafana dashboard graphs
 #   hubot graf list <tag> - Lists all dashboards available (optional: <tag>)
 #   hubot graf search <keyword> - Search available dashboards by <keyword>
 #   hubot graf alerts[ <state>] - Show all alerts (optional: <state>)
@@ -75,6 +75,7 @@ module.exports = (robot) ->
   rocketchat_url = process.env.ROCKETCHAT_URL
   rocketchat_user = process.env.ROCKETCHAT_USER
   rocketchat_password = process.env.ROCKETCHAT_PASSWORD
+  max_return_dashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS or 25
 
   if rocketchat_url && ! rocketchat_url.startsWith 'http'
     rocketchat_url = 'http://' + rocketchat_url
@@ -184,7 +185,6 @@ module.exports = (robot) ->
     # Call the API to get information about this dashboard
     callGrafana endpoint, "dashboards/uid/#{uid}", (dashboard) ->
       robot.logger.debug dashboard
-
       # Check dashboard information
       if !dashboard
         return sendError 'An error ocurred. Check your logs for more details.', msg
@@ -245,7 +245,8 @@ module.exports = (robot) ->
             imageUrl += "&orgId=#{encodeURIComponent query.orgId}"
           link = "#{endpoint.host}/d/#{uid}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
 
-          sendDashboardChart msg, title, imageUrl, link
+          return sendDashboardChart msg, title, imageUrl, link
+      return sendError "Could not locate desired panel.", msg
 
   # Process the bot response
   sendDashboardChart = (msg, title, imageUrl, link) ->
@@ -351,23 +352,23 @@ module.exports = (robot) ->
 
   # Send Dashboard list
   sendDashboardList = (dashboards, response, msg) ->
-    # Handle refactor done for version 2.0.2+
-    if dashboards.dashboards
-      list = dashboards.dashboards
-    else
-      list = dashboards
-
-    robot.logger.debug list
-    unless list.length > 0
+    robot.logger.debug dashboards
+    unless dashboards.length > 0
       return
 
-    for dashboard in list
-      response = response + "- #{dashboard.uid}: #{dashboard.title}\n"
+    remaing = 0
+    if dashboards.length > max_return_dashboards
+      remaining = dashboards.length - max_return_dashboards
+      dashboards = dashboards.slice(0, max_return_dashboards - 1)
 
-    # Remove trailing newline
-    response.trim()
+    list = []
+    for dashboard in dashboards
+      list.push "- #{dashboard.uid}: #{dashboard.title}"
 
-    msg.send response
+    if remaining
+      list.push " (and #{remaining} more)"
+
+    msg.send response + list.join("\n")
 
   # Handle generic errors
   sendError = (message, msg) ->
@@ -603,6 +604,8 @@ module.exports = (robot) ->
     # function and use it inside your service upload implementation.
     grafanaDashboardRequest = (callback) ->
       request url, requestHeaders, (err, res, body) ->
+        if err
+          return sendError err, msg
         robot.logger.debug "Uploading file: #{body.length} bytes, content-type[#{res.headers['content-type']}]"
         if callback
           callback(err, res, body)
