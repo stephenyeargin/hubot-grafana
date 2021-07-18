@@ -79,6 +79,41 @@ describe 'grafana v8', ->
         [ 'hubot', "Dashboards matching `elasticsearch`:\n- 000000030: ElasticSearch - Custom Templated query\n- VzxU55SWk: Elasticsearch Bar Gauge\n- 000000069: Elasticsearch Derivative\n- 000000014: Elasticsearch Metrics\n- 000000107: Elasticsearch Metrics Filter\n- 000000149: Elasticsearch query filter\n- CknOEXDMk: Elasticsearch Templated\n- uQRtuCoGz: Prometheus, InfluxDB, Elasticsearch DS Trends"]
       ]
 
+  context 'ask hubot to return the first matched panel by UID', ->
+    beforeEach (done) ->
+      nock('https://play.grafana.org')
+        .get('/api/dashboards/uid/97PlYC7Mk')
+        .replyWithFile(200, __dirname + '/fixtures/v8/dashboard-grafana-play.json')
+      room.user.say 'alice', 'hubot graf db 97PlYC7Mk'
+      setTimeout done, 100
+
+    it 'hubot should respond with a matching dashboard', ->
+      expect(room.messages).to.eql [
+        [ 'alice', 'hubot graf db 97PlYC7Mk' ]
+        [ 'hubot', "Grafana diagram architecture: https://play.grafana.org/render/d-solo/97PlYC7Mk/?panelId=13&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/97PlYC7Mk/?panelId=13&fullscreen&from=now-6h&to=now"]
+      ]
+
+  context 'ask hubot to return a panel by slug', ->
+    beforeEach (done) ->
+      nock('https://play.grafana.org')
+        .get('/api/dashboards/uid/flowcharting-grafana-play-home')
+        .reply(404, {message: 'Dashboard not found'})
+      nock('https://play.grafana.org')
+        .get('/api/search')
+        .query(type: 'dash-db')
+        .replyWithFile(200, __dirname + '/fixtures/v8/search.json')
+      nock('https://play.grafana.org')
+        .get('/api/dashboards/uid/97PlYC7Mk')
+        .replyWithFile(200, __dirname + '/fixtures/v8/dashboard-grafana-play.json')
+      room.user.say 'alice', 'hubot graf db flowcharting-grafana-play-home'
+      setTimeout done, 100
+
+    it 'hubot should respond with a matching dashboard', ->
+      expect(room.messages).to.eql [
+        [ 'alice', 'hubot graf db flowcharting-grafana-play-home' ]
+        [ 'hubot', "Try your query again with `97PlYC7Mk` instead of `flowcharting-grafana-play-home`"]
+      ]
+
   context 'ask hubot to return a specific panel by API ID', ->
     beforeEach (done) ->
       nock('https://play.grafana.org')
