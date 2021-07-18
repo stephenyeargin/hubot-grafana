@@ -13,26 +13,26 @@ expect = chai.expect
 
 describe 'slack', ->
   beforeEach ->
-    process.env.HUBOT_GRAFANA_HOST = 'http://play.grafana.org'
+    process.env.HUBOT_GRAFANA_HOST = 'https://play.grafana.org'
     process.env.HUBOT_GRAFANA_API_KEY='xxxxxxxxxxxxxxxxxxxxxxxxx'
     process.env.HUBOT_SLACK_TOKEN = 'foobarbaz'
 
-    nock('http://play.grafana.org')
-      .get('/api/dashboards/db/grafana-play-home')
-      .replyWithFile(200, __dirname + '/fixtures/v5/dashboard-grafana-play.json')
-    nock('http://play.grafana.org')
+    nock('https://play.grafana.org')
+      .get('/api/dashboards/uid/97PlYC7Mk')
+      .replyWithFile(200, __dirname + '/fixtures/v8/dashboard-grafana-play.json')
+    nock('https://play.grafana.org')
       .defaultReplyHeaders({
         'Content-Type': 'image/png'
       })
-      .get('/render/dashboard-solo/db/grafana-play-home/')
+      .get('/render/d-solo/97PlYC7Mk/')
       .query(
-        panelId: 8,
+        panelId: 3,
         width: 1000,
         height: 500,
         from: 'now-6h',
         to: 'now'
       )
-      .replyWithFile(200, __dirname + '/fixtures/v5/dashboard-grafana-play.png')
+      .replyWithFile(200, __dirname + '/fixtures/v8/dashboard-grafana-play.png')
 
   afterEach ->
     delete process.env.HUBOT_GRAFANA_HOST
@@ -57,17 +57,17 @@ describe 'slack', ->
 
     it 'should respond with an uploaded graph', (done) ->
       selfRoom = @room
-      selfRoom.user.say('alice', '@hubot graf db grafana-play-home:panel-8')
+      selfRoom.user.say('alice', '@hubot graf db 97PlYC7Mk:panel-3')
       setTimeout(() ->
         try
           expect(selfRoom.messages).to.eql [
-            ['alice', '@hubot graf db grafana-play-home:panel-8']
+            ['alice', '@hubot graf db 97PlYC7Mk:panel-3']
           ]
           # This would be where the actual image would be returned. There is
           # not an easy way to mock that, so we are assuming that the other
           # pieces worked as expected if we get to here without errors.
           expect(selfRoom.messages).to.eql [
-            ['alice', '@hubot graf db grafana-play-home:panel-8']
+            ['alice', '@hubot graf db 97PlYC7Mk:panel-3']
           ]
           done()
         catch err
@@ -97,7 +97,7 @@ describe 'slack', ->
 
     it 'should respond with an uploaded graph', (done) ->
       selfRoom = @room
-      selfRoom.user.say('alice', '@hubot graf db grafana-play-home:panel-8')
+      selfRoom.user.say('alice', '@hubot graf db 97PlYC7Mk:panel-3')
       setTimeout(() ->
         try
           expect(selfRoom.messages[1][1]).to.be.a('object')

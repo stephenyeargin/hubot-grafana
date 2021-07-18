@@ -14,7 +14,7 @@
 #   - `hubot graf db graphite-carbon-metrics:3 tz=Europe/Amsterdam` - Get only the third panel of a particular dashboard and render in the time zone Europe/Amsterdam
 #
 # Configuration:
-#   HUBOT_GRAFANA_HOST - Host for your Grafana 2.0 install, e.g. 'http://play.grafana.org'
+#   HUBOT_GRAFANA_HOST - Host for your Grafana 2.0 install, e.g. 'https://play.grafana.org'
 #   HUBOT_GRAFANA_API_KEY - API key for a particular user (leave unset if unauthenticated)
 #   HUBOT_GRAFANA_PER_ROOM - Optional; if set use robot brain to store host & API key per room
 #   HUBOT_GRAFANA_QUERY_TIME_RANGE - Optional; Default time range for queries (defaults to 6h)
@@ -43,7 +43,7 @@
 #
 # Commands:
 #   hubot graf set `[host|api_key]` <value> - Setup Grafana host or API key
-#   hubot graf db <dashboard slug>[:<panel id>][ <template variables>][ <from clause>][ <to clause>] - Show grafana dashboard graphs
+#   hubot graf db <dashboard uid>[:<panel id>][ <template variables>][ <from clause>][ <to clause>] - Show grafana dashboard graphs
 #   hubot graf list <tag> - Lists all dashboards available (optional: <tag>)
 #   hubot graf search <keyword> - Search available dashboards by <keyword>
 #   hubot graf alerts[ <state>] - Show all alerts (optional: <state>)
@@ -75,6 +75,7 @@ module.exports = (robot) ->
   rocketchat_url = process.env.ROCKETCHAT_URL
   rocketchat_user = process.env.ROCKETCHAT_USER
   rocketchat_password = process.env.ROCKETCHAT_PASSWORD
+  max_return_dashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS or 25
 
   if rocketchat_url && ! rocketchat_url.startsWith 'http'
     rocketchat_url = 'http://' + rocketchat_url
@@ -118,7 +119,7 @@ module.exports = (robot) ->
 
   # Get a specific dashboard with options
   robot.respond /(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) ->
-    slug = msg.match[1].trim()
+    uid = msg.match[1].trim()
     remainder = msg.match[2]
     timespan = {
       from: "now-#{grafana_query_time_range}"
@@ -134,16 +135,15 @@ module.exports = (robot) ->
       height: process.env.HUBOT_GRAFANA_DEFAULT_HEIGHT or 500
       tz: process.env.HUBOT_GRAFANA_DEFAULT_TIME_ZONE or ""
       orgId: process.env.HUBOT_GRAFANA_ORG_ID or ""
-      apiEndpoint: process.env.HUBOT_GRAFANA_API_ENDPOINT or "dashboard-solo"
-      useUid: process.env.HUBOT_GRAFANA_USE_UID or ""
+      apiEndpoint: process.env.HUBOT_GRAFANA_API_ENDPOINT or "d-solo"
     endpoint = get_grafana_endpoint(msg)
     if not endpoint
       sendError 'No Grafana endpoint configured.', msg
       return
     # Parse out a specific panel
-    if /\:/.test slug
-      parts = slug.split(':')
-      slug = parts[0]
+    if /\:/.test uid
+      parts = uid.split(':')
+      uid = parts[0]
       visualPanelId = parseInt parts[1], 10
       if isNaN visualPanelId
         visualPanelId = false
@@ -174,7 +174,7 @@ module.exports = (robot) ->
           timespan[timeFields.shift()] = part.trim()
 
     robot.logger.debug msg.match
-    robot.logger.debug slug
+    robot.logger.debug uid
     robot.logger.debug timespan
     robot.logger.debug variables
     robot.logger.debug template_params
@@ -183,14 +183,23 @@ module.exports = (robot) ->
     robot.logger.debug pname
 
     # Call the API to get information about this dashboard
-    callGrafana endpoint, "dashboards/db/#{slug}", (dashboard) ->
+    callGrafana endpoint, "dashboards/uid/#{uid}", (dashboard) ->
       robot.logger.debug dashboard
-
       # Check dashboard information
       if !dashboard
         return sendError 'An error ocurred. Check your logs for more details.', msg
       if dashboard.message
-        return sendError dashboard.message, msg
+        # Search for URL slug to offer help
+        if dashboard.message = "Dashboard not found"
+          callGrafana endpoint, "search?type=dash-db", (results) ->
+            for item in results
+              if item.url.match(new RegExp("\/d\/[a-z0-9\-]+\/#{uid}$", 'i'))
+                sendError "Try your query again with `#{item.uid}` instead of `#{uid}`", msg
+                return
+            sendError dashboard.message, msg
+        else
+          sendError dashboard.message, msg
+        return
 
       # Defaults
       data = dashboard.dashboard
@@ -238,15 +247,16 @@ module.exports = (robot) ->
 
           # Build links for message sending
           title = formatTitleWithTemplate(panel.title, template_map)
-          db = if query.useUid then dashboard.dashboard.uid else "db"
-          imageUrl = "#{endpoint.host}/render/#{query.apiEndpoint}/#{db}/#{slug}/?panelId=#{panel.id}&width=#{query.width}&height=#{query.height}&from=#{timespan.from}&to=#{timespan.to}#{variables}"
+          uid = dashboard.dashboard.uid
+          imageUrl = "#{endpoint.host}/render/#{query.apiEndpoint}/#{uid}/?panelId=#{panel.id}&width=#{query.width}&height=#{query.height}&from=#{timespan.from}&to=#{timespan.to}#{variables}"
           if query.tz
             imageUrl += "&tz=#{encodeURIComponent query.tz}"
           if query.orgId
             imageUrl += "&orgId=#{encodeURIComponent query.orgId}"
-          link = "#{endpoint.host}/dashboard/db/#{slug}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
+          link = "#{endpoint.host}/d/#{uid}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
 
-          sendDashboardChart msg, title, imageUrl, link
+          return sendDashboardChart msg, title, imageUrl, link
+      return sendError "Could not locate desired panel.", msg
 
   # Process the bot response
   sendDashboardChart = (msg, title, imageUrl, link) ->
@@ -352,28 +362,23 @@ module.exports = (robot) ->
 
   # Send Dashboard list
   sendDashboardList = (dashboards, response, msg) ->
-    # Handle refactor done for version 2.0.2+
-    if dashboards.dashboards
-      list = dashboards.dashboards
-    else
-      list = dashboards
-
-    robot.logger.debug list
-    unless list.length > 0
+    robot.logger.debug dashboards
+    unless dashboards.length > 0
       return
 
-    for dashboard in list
-      # Handle refactor done for version 2.0.2+
-      if dashboard.uri
-        slug = dashboard.uri.replace /^db\//, ''
-      else
-        slug = dashboard.slug
-      response = response + "- #{slug}: #{dashboard.title}\n"
+    remaing = 0
+    if dashboards.length > max_return_dashboards
+      remaining = dashboards.length - max_return_dashboards
+      dashboards = dashboards.slice(0, max_return_dashboards - 1)
 
-    # Remove trailing newline
-    response.trim()
+    list = []
+    for dashboard in dashboards
+      list.push "- #{dashboard.uid}: #{dashboard.title}"
 
-    msg.send response
+    if remaining
+      list.push " (and #{remaining} more)"
+
+    msg.send response + list.join("\n")
 
   # Handle generic errors
   sendError = (message, msg) ->
@@ -609,6 +614,8 @@ module.exports = (robot) ->
     # function and use it inside your service upload implementation.
     grafanaDashboardRequest = (callback) ->
       request url, requestHeaders, (err, res, body) ->
+        if err
+          return sendError err, msg
         robot.logger.debug "Uploading file: #{body.length} bytes, content-type[#{res.headers['content-type']}]"
         if callback
           callback(err, res, body)

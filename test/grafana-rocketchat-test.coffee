@@ -13,28 +13,28 @@ expect = chai.expect
 
 describe 'rocketchat', ->
   beforeEach ->
-    process.env.HUBOT_GRAFANA_HOST = 'http://play.grafana.org'
+    process.env.HUBOT_GRAFANA_HOST = 'https://play.grafana.org'
     process.env.HUBOT_GRAFANA_API_KEY='xxxxxxxxxxxxxxxxxxxxxxxxx'
     process.env.ROCKETCHAT_URL = 'http://chat.example.com'
     process.env.ROCKETCHAT_USER = 'user1'
     process.env.ROCKETCHAT_PASSWORD = 'sekret'
 
-    nock('http://play.grafana.org')
-      .get('/api/dashboards/db/grafana-play-home')
-      .replyWithFile(200, __dirname + '/fixtures/v5/dashboard-grafana-play.json')
-    nock('http://play.grafana.org')
+    nock('https://play.grafana.org')
+      .get('/api/dashboards/uid/97PlYC7Mk')
+      .replyWithFile(200, __dirname + '/fixtures/v8/dashboard-grafana-play.json')
+    nock('https://play.grafana.org')
       .defaultReplyHeaders({
         'Content-Type': 'image/png'
       })
-      .get('/render/dashboard-solo/db/grafana-play-home/')
+      .get('/render/d-solo/97PlYC7Mk/')
       .query(
-        panelId: 8,
+        panelId: 3,
         width: 1000,
         height: 500,
         from: 'now-6h',
         to: 'now'
       )
-      .replyWithFile(200, __dirname + '/fixtures/v5/dashboard-grafana-play.png')
+      .replyWithFile(200, __dirname + '/fixtures/v8/dashboard-grafana-play.png')
 
 
   afterEach ->
@@ -62,17 +62,17 @@ describe 'rocketchat', ->
 
     it 'should respond with an uploaded graph', (done) ->
       selfRoom = @room
-      selfRoom.user.say('alice', '@hubot graf db grafana-play-home:panel-8')
+      selfRoom.user.say('alice', '@hubot graf db 97PlYC7Mk:panel-3')
       setTimeout(() ->
         try
           expect(selfRoom.messages).to.eql [
-            ['alice', '@hubot graf db grafana-play-home:panel-8']
+            ['alice', '@hubot graf db 97PlYC7Mk:panel-3']
           ]
           # This would be where the actual image would be returned. There is
           # not an easy way to mock that, so we are assuming that the other
           # pieces worked as expected if we get to here without errors.
           expect(selfRoom.messages).to.eql [
-            ['alice', '@hubot graf db grafana-play-home:panel-8']
+            ['alice', '@hubot graf db 97PlYC7Mk:panel-3']
           ]
           done()
         catch err
@@ -102,15 +102,15 @@ describe 'rocketchat', ->
 
     it 'should respond with an uploaded graph', (done) ->
       selfRoom = @room
-      selfRoom.user.say('alice', '@hubot graf db grafana-play-home:panel-8')
+      selfRoom.user.say('alice', '@hubot graf db 97PlYC7Mk:panel-3')
       setTimeout(() ->
         try
           expect(selfRoom.messages[0]).to.eql [
             'alice',
-            '@hubot graf db grafana-play-home:panel-8'
+            '@hubot graf db 97PlYC7Mk:panel-3'
           ]
           expect(selfRoom.messages[1][1]).to.match(
-            /What\'s New: https:\/\/graf\.s3\.amazonaws\.com\/grafana\/[a-z0-9]+\.png \- http\:\/\/play\.grafana\.org\/dashboard\/db\/grafana-play-home\/\?panelId\=8&fullscreen&from\=now\-6h&to\=now/
+            /logins\: https\:\/\/graf\.s3\.amazonaws\.com\/grafana\/[0-9a-f]+\.png - https\:\/\/play\.grafana\.org\/d\/97PlYC7Mk\/\?panelId=3&fullscreen&from=now-6h&to=now/i
           )
           expect(nock.activeMocks()).to.be.empty
           done()

@@ -10,7 +10,7 @@ expect = chai.expect
 
 describe 's3', ->
   beforeEach ->
-    process.env.HUBOT_GRAFANA_HOST = 'http://play.grafana.org'
+    process.env.HUBOT_GRAFANA_HOST = 'https://play.grafana.org'
     process.env.HUBOT_GRAFANA_S3_BUCKET='graf'
     process.env.HUBOT_GRAFANA_S3_ACCESS_KEY_ID='99999999999999999'
     process.env.HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY='9999999999999999999999'
@@ -18,23 +18,23 @@ describe 's3', ->
     nock.disableNetConnect()
     @room = helper.createRoom()
 
-    nock('http://play.grafana.org')
-      .get('/api/dashboards/db/monitoring-default')
-      .replyWithFile(200, __dirname + '/fixtures/v4/dashboard-monitoring-default.json')
-    nock('http://play.grafana.org')
+    nock('https://play.grafana.org')
+      .get('/api/dashboards/uid/AAy9r_bmk')
+      .replyWithFile(200, __dirname + '/fixtures/v8/dashboard-monitoring-default.json')
+    nock('https://play.grafana.org')
       .defaultReplyHeaders({
         'Content-Type': 'image/png'
       })
-      .get('/render/dashboard-solo/db/monitoring-default/')
+      .get('/render/d-solo/AAy9r_bmk/')
       .query(
-        panelId: 7,
+        panelId: 3,
         width: 1000,
         height: 500,
         from: 'now-6h',
         to: 'now',
         "var-server": 'ww3.example.com'
       )
-      .replyWithFile(200, __dirname + '/fixtures/v4/dashboard-monitoring-default.png')
+      .replyWithFile(200, __dirname + '/fixtures/v8/dashboard-monitoring-default.png')
 
   afterEach ->
     @room.destroy()
@@ -54,15 +54,15 @@ describe 's3', ->
 
     it 'should respond with a png graph in the default s3 region', (done) ->
       selfRoom = @room
-      selfRoom.user.say('alice', '@hubot graf db monitoring-default:network server=ww3.example.com now-6h')
+      selfRoom.user.say('alice', '@hubot graf db AAy9r_bmk:cpu server=ww3.example.com now-6h')
       setTimeout(() ->
         try
           expect(selfRoom.messages[0]).to.eql [
             'alice',
-            '@hubot graf db monitoring-default:network server=ww3.example.com now-6h'
+            '@hubot graf db AAy9r_bmk:cpu server=ww3.example.com now-6h'
           ]
           expect(selfRoom.messages[1][1]).to.match(
-            /ww3.example.com network: https:\/\/graf\.s3\.amazonaws\.com\/grafana\/[a-z0-9]+\.png - http:\/\/play\.grafana\.org\/dashboard\/db\/monitoring-default\/\?panelId=7\&fullscreen\&from=now-6h\&to=now\&var-server=ww3.example.com/
+            /CPU: https:\/\/graf.s3.amazonaws.com\/grafana\/[0-9a-f]+.png \- https:\/\/play.grafana.org\/d\/AAy9r_bmk\/\?panelId=3&fullscreen&from=now\-6h&to=now&var\-server=ww3.example.com/
           )
           expect(nock.activeMocks()).to.be.empty
           done()
@@ -84,15 +84,15 @@ describe 's3', ->
 
     it 'should respond with a png graph stored at a custom endpoint', (done) ->
       selfRoom = @room
-      selfRoom.user.say('alice', '@hubot graf db monitoring-default:network server=ww3.example.com now-6h')
+      selfRoom.user.say('alice', '@hubot graf db AAy9r_bmk:cpu server=ww3.example.com now-6h')
       setTimeout(() ->
         try
           expect(selfRoom.messages[0]).to.eql [
             'alice',
-            '@hubot graf db monitoring-default:network server=ww3.example.com now-6h'
+            '@hubot graf db AAy9r_bmk:cpu server=ww3.example.com now-6h'
           ]
           expect(selfRoom.messages[1][1]).to.match(
-            /ww3.example.com network: https:\/\/graf\.custom\.s3\.endpoint\.com\/grafana\/[a-z0-9]+\.png - http:\/\/play\.grafana\.org\/dashboard\/db\/monitoring-default\/\?panelId=7\&fullscreen\&from=now-6h\&to=now\&var-server=ww3.example.com/
+            /CPU: https:\/\/graf.custom.s3.endpoint.com\/grafana\/[0-9a-f]+.png \- https:\/\/play.grafana.org\/d\/AAy9r_bmk\/\?panelId=3&fullscreen&from=no\w-6h&to=now&var\-server=ww3.example.com/
           )
           expect(nock.activeMocks()).to.be.empty
           done()
@@ -114,15 +114,15 @@ describe 's3', ->
 
     it 'should respond with a png graph stored at a custom endpoint and port', (done) ->
       selfRoom = @room
-      selfRoom.user.say('alice', '@hubot graf db monitoring-default:network server=ww3.example.com now-6h')
+      selfRoom.user.say('alice', '@hubot graf db AAy9r_bmk:cpu server=ww3.example.com now-6h')
       setTimeout(() ->
         try
           expect(selfRoom.messages[0]).to.eql [
             'alice',
-            '@hubot graf db monitoring-default:network server=ww3.example.com now-6h'
+            '@hubot graf db AAy9r_bmk:cpu server=ww3.example.com now-6h'
           ]
           expect(selfRoom.messages[1][1]).to.match(
-            /ww3.example.com network: https:\/\/s3\.amazonaws\.com\/graf\/grafana\/[a-z0-9]+\.png - http:\/\/play\.grafana\.org\/dashboard\/db\/monitoring-default\/\?panelId=7\&fullscreen\&from=now-6h\&to=now\&var-server=ww3.example.com/
+            /CPU: https:\/\/s3.amazonaws.com\/graf\/grafana\/[0-9a-f]+.png - https:\/\/play.grafana.org\/d\/AAy9r_bmk\/\?panelId=3&fullscreen&from=now\-6h&to=now&var\-server=ww3.example.com/
           )
           expect(nock.activeMocks()).to.be.empty
           done()

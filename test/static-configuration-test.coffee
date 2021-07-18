@@ -12,7 +12,7 @@ describe 'static configuration', ->
   room = null
 
   beforeEach ->
-    process.env.HUBOT_GRAFANA_HOST = 'http://play.grafana.org'
+    process.env.HUBOT_GRAFANA_HOST = 'https://play.grafana.org'
     room = helper.createRoom()
     nock.disableNetConnect()
 
@@ -33,12 +33,12 @@ describe 'static configuration', ->
 
   context 'ask hubot to configure grafana host', ->
     beforeEach (done) ->
-      room.user.say 'alice', 'hubot graf set host http://play.grafana.org'
+      room.user.say 'alice', 'hubot graf set host https://play.grafana.org'
       setTimeout done, 100
 
     it 'hubot should respond it cannot configure the host', ->
       expect(room.messages).to.eql [
-        [ 'alice', 'hubot graf set host http://play.grafana.org' ]
+        [ 'alice', 'hubot graf set host https://play.grafana.org' ]
         [ 'hubot', "Set HUBOT_GRAFANA_PER_ROOM=1 to use multiple configurations."]
       ]
 
