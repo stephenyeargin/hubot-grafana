@@ -4,7 +4,7 @@
 
 Use Hubot to query Grafana dashboards. Inspired by the work of [`hubot-graphite`](https://github.com/github/hubot-scripts/blob/master/src/scripts/graphite.coffee) and [`hubot-graphme`](https://github.com/rick/hubot-graphme). 
 
-**Note:** This package requires Grafana 8 or higher. If you need support for an older version, use the `v2.x` releases. As of version `3.x` you must use the `UID` of a given dashboard because of a change in the Grafana API. We strongly recommend using the [`hubot-alias`](https://www.npmjs.com/package/hubot-alias) to save some time in making common requests.
+**Note:** This package requires Grafana 5 or higher. If you need support for an older version, use the `v2.x` releases. As of version `3.x` you must use the `UID` of a given dashboard because of a change in the Grafana API. We strongly recommend using the [`hubot-alias`](https://www.npmjs.com/package/hubot-alias) to save some time in making common requests.
 
 ## Installation
 
@@ -79,7 +79,7 @@ hubot>> Graphite Carbon Metrics: https://play.grafana.org/render/d-solo/00000001
 Get all panels in a dashboard. In this example, `000000011` is the UID for the given dashboard. To obtain the UID, use `hubot graf list` or `hubot graf search <term>`.
 
 ```
-hubot graf db 000000016
+hubot graf db 000000011
 ```
 
 ### Retrieve Specific Panels
