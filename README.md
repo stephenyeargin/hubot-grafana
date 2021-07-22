@@ -1,6 +1,6 @@
 # Grafana for Hubot
 
-[![npm version](https://badge.fury.io/js/hubot-grafana.svg)](http://badge.fury.io/js/hubot-grafana) [![Build Status](https://travis-ci.org/stephenyeargin/hubot-grafana.png)](https://travis-ci.org/stephenyeargin/hubot-grafana)
+[![npm version](https://badge.fury.io/js/hubot-grafana.svg)](http://badge.fury.io/js/hubot-grafana) [![Node CI](https://github.com/stephenyeargin/hubot-grafana/actions/workflows/nodejs.yml/badge.svg)](https://github.com/stephenyeargin/hubot-grafana/actions/workflows/nodejs.yml)
 
 Use Hubot to query Grafana dashboards. Inspired by the work of [`hubot-graphite`](https://github.com/github/hubot-scripts/blob/master/src/scripts/graphite.coffee) and [`hubot-graphme`](https://github.com/rick/hubot-graphme). 
 
