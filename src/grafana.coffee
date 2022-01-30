@@ -228,6 +228,7 @@ module.exports = (robot) ->
 
       # Return dashboard rows
       panelNumber = 0
+      returnedCount = 0
       for row in data.rows
         for panel in row.panels
           robot.logger.debug panel
@@ -245,6 +246,10 @@ module.exports = (robot) ->
           if pname && panel.title.toLowerCase().indexOf(pname) is -1
             continue
 
+          # Skip if we have already returned max count of dashboards
+          if returnedCount > max_return_dashboards
+            continue
+
           # Build links for message sending
           title = formatTitleWithTemplate(panel.title, template_map)
           uid = dashboard.dashboard.uid
@@ -255,8 +260,11 @@ module.exports = (robot) ->
             imageUrl += "&orgId=#{encodeURIComponent query.orgId}"
           link = "#{endpoint.host}/d/#{uid}/?panelId=#{panel.id}&fullscreen&from=#{timespan.from}&to=#{timespan.to}#{variables}"
 
-          return sendDashboardChart msg, title, imageUrl, link
-      return sendError "Could not locate desired panel.", msg
+          sendDashboardChart msg, title, imageUrl, link
+          returnedCount += 1
+
+      if returnedCount == 0
+        return sendError "Could not locate desired panel.", msg
 
   # Process the bot response
   sendDashboardChart = (msg, title, imageUrl, link) ->

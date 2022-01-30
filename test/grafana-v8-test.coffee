@@ -91,6 +91,11 @@ describe 'grafana v8', ->
       expect(room.messages).to.eql [
         [ 'alice', 'hubot graf db 97PlYC7Mk' ]
         [ 'hubot', "Grafana diagram architecture: https://play.grafana.org/render/d-solo/97PlYC7Mk/?panelId=13&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/97PlYC7Mk/?panelId=13&fullscreen&from=now-6h&to=now"]
+        [ 'hubot', 'server requests: https://play.grafana.org/render/d-solo/97PlYC7Mk/?panelId=2&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/97PlYC7Mk/?panelId=2&fullscreen&from=now-6h&to=now' ]
+        [ 'hubot', 'client side full page load: https://play.grafana.org/render/d-solo/97PlYC7Mk/?panelId=5&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/97PlYC7Mk/?panelId=5&fullscreen&from=now-6h&to=now' ]
+        [ 'hubot', 'Memory / CPU: https://play.grafana.org/render/d-solo/97PlYC7Mk/?panelId=4&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/97PlYC7Mk/?panelId=4&fullscreen&from=now-6h&to=now' ]
+        [ 'hubot', 'Traffic In/Out: https://play.grafana.org/render/d-solo/97PlYC7Mk/?panelId=11&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/97PlYC7Mk/?panelId=11&fullscreen&from=now-6h&to=now' ]
+        [ 'hubot', 'logins: https://play.grafana.org/render/d-solo/97PlYC7Mk/?panelId=3&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now' ]
       ]
 
   context 'ask hubot to return a panel by slug', ->

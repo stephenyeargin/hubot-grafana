@@ -21,20 +21,13 @@ describe 's3', ->
     nock('https://play.grafana.org')
       .get('/api/dashboards/uid/AAy9r_bmk')
       .replyWithFile(200, __dirname + '/fixtures/v8/dashboard-monitoring-default.json')
-    nock('https://play.grafana.org')
-      .defaultReplyHeaders({
-        'Content-Type': 'image/png'
-      })
-      .get('/render/d-solo/AAy9r_bmk/')
-      .query(
-        panelId: 3,
-        width: 1000,
-        height: 500,
-        from: 'now-6h',
-        to: 'now',
-        "var-server": 'ww3.example.com'
-      )
-      .replyWithFile(200, __dirname + '/fixtures/v8/dashboard-monitoring-default.png')
+
+    for i in [3,7,8]
+      nock('https://play.grafana.org')
+        .defaultReplyHeaders({ 'Content-Type': 'image/png' })
+        .get('/render/d-solo/AAy9r_bmk/')
+        .query({ panelId: i, width: 1000, height: 500, from: 'now-6h', to: 'now', "var-server": 'ww3.example.com' })
+        .replyWithFile(200, __dirname + '/fixtures/v8/dashboard-monitoring-default.png')
 
   afterEach ->
     @room.destroy()
@@ -50,6 +43,7 @@ describe 's3', ->
       nock('https://graf.s3.amazonaws.com')
         .filteringPath(/[a-z0-9]+\.png/g, 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.png')
         .put('/grafana/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.png')
+        .times(3)
         .reply(200)
 
     it 'should respond with a png graph in the default s3 region', (done) ->
@@ -77,6 +71,7 @@ describe 's3', ->
       nock('https://graf.custom.s3.endpoint.com')
         .filteringPath(/[a-z0-9]+\.png/g, 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.png')
         .put('/grafana/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.png')
+        .times(3)
         .reply(200)
 
     after ->
@@ -107,6 +102,7 @@ describe 's3', ->
       nock('https://s3.amazonaws.com')
         .filteringPath(/[a-z0-9]+\.png/g, 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.png')
         .put('/graf/grafana/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.png')
+        .times(3)
         .reply(200)
 
     after ->
