@@ -27,6 +27,7 @@
 #   HUBOT_GRAFANA_S3_SECRET_ACCESS_KEY - Optional; Secret access key for S3
 #   HUBOT_GRAFANA_S3_PREFIX - Optional; Bucket prefix (useful for shared buckets)
 #   HUBOT_GRAFANA_S3_REGION - Optional; Bucket region (defaults to us-standard)
+#   HUBOT_GRAFANA_USE_THREADS - Optional; When set to any value, graphs are sent in thread instead of as new message.
 #   HUBOT_SLACK_TOKEN - Optional; Token to connect to Slack (already configured with the adapter)
 #   ROCKETCHAT_URL - Optional; URL to your Rocket.Chat instance (already configured with the adapter)
 #   ROCKETCHAT_USER - Optional; Bot username (already configured with the adapter)
@@ -76,6 +77,7 @@ module.exports = (robot) ->
   rocketchat_user = process.env.ROCKETCHAT_USER
   rocketchat_password = process.env.ROCKETCHAT_PASSWORD
   max_return_dashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS or 25
+  use_threads = process.env.HUBOT_GRAFANA_USE_THREADS or false
 
   if rocketchat_url && ! rocketchat_url.startsWith 'http'
     rocketchat_url = 'http://' + rocketchat_url
@@ -395,6 +397,7 @@ module.exports = (robot) ->
 
   # Format the title with template vars
   formatTitleWithTemplate = (title, template_map) ->
+    title = '' unless title
     title.replace /\$\w+/g, (match) ->
       if template_map[match]
         return template_map[match]
@@ -406,6 +409,7 @@ module.exports = (robot) ->
     switch robot.adapterName
       # Slack
       when 'slack'
+        msg.message.thread_ts = msg.message.rawMessage.ts if use_threads
         msg.send {
           attachments: [
             {
@@ -521,7 +525,7 @@ module.exports = (robot) ->
       request.post testAuthData, (err, httpResponse, slackResBody) ->
           if err
             robot.logger.error err
-            msg.send "#{title} - [Slak auth.test Error - invalid token/can't fetch team url] - #{link}"
+            msg.send "#{title} - [Slack auth.test Error - invalid token/can't fetch team url] - #{link}"
           else
             slack_url = JSON.parse(slackResBody)["url"]
 
@@ -535,6 +539,9 @@ module.exports = (robot) ->
                 # grafanaDashboardRequest() is the method that downloads the .png
                 file: grafanaDashboardRequest()
                 filetype: 'png'
+
+            # Post images in thread if configured
+            uploadData['formData']['thread_ts'] = msg.message.rawMessage.ts if use_threads
 
             # Try to upload the image to slack else pass the link over
             request.post uploadData, (err, httpResponse, body) ->

@@ -35,12 +35,12 @@ Then add **hubot-grafana** to your `external-scripts.json`:
 | `HUBOT_GRAFANA_DEFAULT_TIME_ZONE` | No       | Default time zone for rendered images (defaults to `""`) |
 | `HUBOT_GRAFANA_ORG_ID`            | No       | Default organization id, need for image rendering in new versions of Grafana (defaults to `""`) |
 | `HUBOT_GRAFANA_API_ENDPOINT`      | No       | Default rendering api endpoint, need for image rendering in new versions of Grafana  (defaults to `d-solo`) |
+| `HUBOT_GRAFANA_USE_THREADS`       | No       | When set to any value, graphs are sent in thread instead of as new message (only Slack supports this for now). |
 | `HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS` | No       | Count of dashboards to return to prevent chat flood (defaults to `25`) |
 
 ^ _Not required when `HUBOT_GRAFANA_PER_ROOM` is set to 1._
 
 ^^ _Not required for `auth.anonymous` Grafana configurations. All other authentication models will require a user-specific API key._
-
 
 ### Image Hosting Configuration
 
