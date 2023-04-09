@@ -1,6 +1,4 @@
---compilers coffee:coffee-script/register
 --reporter list
---require coffee-script
---require test/test_helper.coffee
+--require test/test_helper.js
 --colors
 --full-trace

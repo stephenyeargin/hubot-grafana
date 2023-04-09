@@ -1,7 +1,7 @@
 {
   "name": "hubot-grafana",
   "description": "Query Grafana dashboards",
-  "version": "3.2.2",
+  "version": "4.0.0",
   "author": "Stephen Yeargin <stephen@yearg.in>",
   "license": "MIT",
   "keywords": [
@@ -18,29 +18,32 @@
     "url": "https://github.com/stephenyeargin/hubot-grafana/issues"
   },
   "dependencies": {
-    "knox-s3": "^0.9.5",
+    "@aws-sdk/client-s3": "^3.352.0",
     "request": "^2.88.2"
   },
   "peerDependencies": {
-    "hubot": "^3"
+    "hubot": ">=2 <10 || 0.0.0-development"
   },
   "devDependencies": {
     "chai": "^4.3.7",
-    "coffee-script": "^1.12.7",
+    "eslint": "^8.42.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.27.5",
     "hubot-test-helper": "^1.9.0",
     "husky": "^8.0.3",
     "mocha": "^10.2.0",
-    "nock": "^13.3.0",
-    "release-it": "^15.6.0",
+    "nock": "^13.3.1",
+    "release-it": "^15.11.0",
     "require-dir": "^1.2.0",
-    "sinon": "^15.0.1",
+    "sinon": "^15.1.2",
     "sinon-chai": "^3.7.0",
     "travis-cov": "^0.2.5"
   },
-  "main": "index.coffee",
+  "main": "index.js",
   "scripts": {
     "release": "release-it",
-    "test": "mocha --require coffee-script/register \"test/**/*.coffee\" --reporter spec",
-    "prepare": "husky install"
+    "test": "mocha \"test/**/*.js\" --reporter spec",
+    "prepare": "husky install",
+    "lint": "eslint src/ test/"
   }
 }
