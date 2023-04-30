@@ -192,7 +192,7 @@ module.exports = (robot) ->
         return sendError 'An error ocurred. Check your logs for more details.', msg
       if dashboard.message
         # Search for URL slug to offer help
-        if dashboard.message = "Dashboard not found"
+        if dashboard.message == "Dashboard not found"
           callGrafana endpoint, "search?type=dash-db", (results) ->
             for item in results
               if item.url.match(new RegExp("\/d\/[a-z0-9\-]+\/#{uid}$", 'i'))
