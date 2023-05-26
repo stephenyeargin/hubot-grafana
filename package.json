@@ -22,7 +22,7 @@
     "request": "^2.88.2"
   },
   "peerDependencies": {
-    "hubot": "^3"
+    "hubot": "^3 || ^4"
   },
   "devDependencies": {
     "chai": "^4.3.7",
