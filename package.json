@@ -30,10 +30,10 @@
     "hubot-test-helper": "^1.9.0",
     "husky": "^8.0.3",
     "mocha": "^10.2.0",
-    "nock": "^13.3.0",
-    "release-it": "^15.6.0",
+    "nock": "^13.3.1",
+    "release-it": "^15.11.0",
     "require-dir": "^1.2.0",
-    "sinon": "^15.0.1",
+    "sinon": "^15.1.0",
     "sinon-chai": "^3.7.0",
     "travis-cov": "^0.2.5"
   },
