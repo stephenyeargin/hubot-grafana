@@ -18,7 +18,7 @@
     "url": "https://github.com/stephenyeargin/hubot-grafana/issues"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.370.0",
+    "@aws-sdk/client-s3": "^3.378.0",
     "request": "^2.88.2"
   },
   "peerDependencies": {
@@ -33,7 +33,7 @@
     "husky": "^8.0.3",
     "mocha": "^10.2.0",
     "nock": "^13.3.2",
-    "release-it": "^16.1.0",
+    "release-it": "^16.1.3",
     "require-dir": "^1.2.0",
     "sinon": "^15.2.0",
     "sinon-chai": "^3.7.0",
