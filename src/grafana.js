@@ -571,7 +571,7 @@ module.exports = (robot) => {
 
         s3.send(command)
           .then(() => {
-            return sendRobotResponse(msg, title, `https://${s3_bucket}.${s3_region}.s3.amazonaws.com/${params.Key}`, link);
+            return sendRobotResponse(msg, title, `https://${s3_bucket}.s3.${s3_region}.amazonaws.com/${params.Key}`, link);
           })
           .catch((s3Err) => {
             robot.logger.error(`Upload Error Code: ${s3Err}`);

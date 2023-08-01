@@ -68,7 +68,7 @@ describe('s3', () => {
             expect(
                 selfRoom.messages[1][1].replace(/\/[a-f0-9]{40}\.png/i, '/abdcdef0123456789.png')
               ).to.eql(
-                'CPU: https://graf.us-standard.s3.amazonaws.com/grafana/abdcdef0123456789.png - https://play.grafana.org/d/AAy9r_bmk/?panelId=3&fullscreen&from=now-6h&to=now&var-server=ww3.example.com'
+                'CPU: https://graf.s3.us-standard.amazonaws.com/grafana/abdcdef0123456789.png - https://play.grafana.org/d/AAy9r_bmk/?panelId=3&fullscreen&from=now-6h&to=now&var-server=ww3.example.com'
               );
             expect(nock.activeMocks()).to.be.empty;
             done();
