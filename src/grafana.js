@@ -75,7 +75,7 @@ module.exports = (robot) => {
     // prioritize S3 no matter if adapter is slack or rocketchat
     if (s3_bucket) {
       return 's3';
-    } if (robot.adapterName === 'slack') {
+    } if (robot.adapterName === 'slack' || robot.adapterName == '@hubot-friends/hubot-slack') {
       return 'slack';
     } if (robot.adapterName === 'rocketchat') {
       return 'rocketchat';
@@ -473,6 +473,7 @@ module.exports = (robot) => {
     switch (robot.adapterName) {
       // Slack
       case 'slack':
+      case '@hubot-friends/hubot-slack':
         if (use_threads) { msg.message.thread_ts = msg.message.rawMessage.ts; }
         return msg.send({
           attachments: [
