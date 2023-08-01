@@ -128,7 +128,7 @@ describe('rocketchat', () => {
               '@hubot graf db 97PlYC7Mk:panel-3',
             ]);
             expect(selfRoom.messages[1][1]).to.match(
-              /logins\: https\:\/\/graf\.us-east-2\.s3\.amazonaws\.com\/grafana\/[0-9a-f]+\.png - https\:\/\/play\.grafana\.org\/d\/97PlYC7Mk\/\?panelId=3&fullscreen&from=now-6h&to=now/i,
+              /logins\: https\:\/\/graf\.s3\.us-east-2\.amazonaws\.com\/grafana\/[0-9a-f]+\.png - https\:\/\/play\.grafana\.org\/d\/97PlYC7Mk\/\?panelId=3&fullscreen&from=now-6h&to=now/i,
             );
             expect(nock.activeMocks()).to.be.empty;
             done();
