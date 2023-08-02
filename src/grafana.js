@@ -72,14 +72,14 @@ module.exports = (robot) => {
   }
 
   const site = () => {
-    // prioritize S3 no matter if adapter is slack or rocketchat
+    // prioritize S3 if configured
     if (s3_bucket) {
       return 's3';
-    } if (robot.adapterName === 'slack' || robot.adapterName == '@hubot-friends/hubot-slack') {
+    } if (/slack/i.test(robot.adapterName)) {
       return 'slack';
-    } if (robot.adapterName === 'rocketchat') {
+    } if (/rocketchat/i.test(robot.adapterName)) {
       return 'rocketchat';
-    } if (robot.adapterName === 'telegram') {
+    } if (/telegram/i.test(robot.adapterName)) {
       return 'telegram';
     }
     return '';
@@ -473,6 +473,7 @@ module.exports = (robot) => {
     switch (robot.adapterName) {
       // Slack
       case 'slack':
+      case 'hubot-slack':
       case '@hubot-friends/hubot-slack':
         if (use_threads) { msg.message.thread_ts = msg.message.rawMessage.ts; }
         return msg.send({
@@ -488,8 +489,10 @@ module.exports = (robot) => {
         });
       // Hipchat
       case 'hipchat':
+      case 'hubot-hipchat':
         return msg.send(`${title}: ${link} - ${image}`);
       // BearyChat
+      case 'hubot-bearychat':
       case 'bearychat':
         return robot.emit('bearychat.attachment', {
           message: {
