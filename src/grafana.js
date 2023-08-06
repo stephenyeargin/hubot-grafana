@@ -49,7 +49,7 @@
 
 const crypto = require('crypto');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const request = require('request');
+const fetch = require('node-fetch');
 
 module.exports = (robot) => {
   // Various configuration options stored in environment variables
@@ -593,12 +593,12 @@ module.exports = (robot) => {
       };
 
       // We test auth against slack to obtain the team URL
-      return request.post(testAuthData, (err, httpResponse, slackResBody) => {
+      return post(testAuthData, (err, slackResBodyJson) => {
         if (err) {
           robot.logger.error(err);
           return msg.send(`${title} - [Slack auth.test Error - invalid token/can't fetch team url] - ${link}`);
         }
-        const slack_url = JSON.parse(slackResBody).url;
+        const slack_url = slackResBodyJson.url;
 
         // fill in the POST request. This must be www-form/multipart
         const uploadData = {
@@ -617,8 +617,7 @@ module.exports = (robot) => {
         if (use_threads) { uploadData.formData.thread_ts = msg.message.rawMessage.ts; }
 
         // Try to upload the image to slack else pass the link over
-        return request.post(uploadData, (err, httpResponse, body) => {
-          const res = JSON.parse(body);
+        return post(uploadData, (err, res) => {
 
           // Error logging, we must also check the body response.
           // It will be something like: { "ok": <boolean>, "error": <error message> }
@@ -643,20 +642,22 @@ module.exports = (robot) => {
       };
 
       // We auth against rocketchat to obtain the auth token
-      return request.post(authData, (err, httpResponse, rocketchatResBody) => {
+
+
+      return post(authData, (err, rocketchatResBodyJson) => {
         if (err) {
           robot.logger.error(err);
           return msg.send(`${title} - [Rocketchat auth Error - invalid url, user or password/can't access rocketchat api] - ${link}`);
         }
         let errMsg;
-        const { status } = JSON.parse(rocketchatResBody);
+        const { status } = rocketchatResBodyJson;
         if (status !== 'success') {
-          errMsg = JSON.parse(rocketchatResBody).message;
+          errMsg = rocketchatResBodyJson.message;
           robot.logger.error(errMsg);
           msg.send(`${title} - [Rocketchat auth Error - ${errMsg}] - ${link}`);
         }
 
-        const auth = JSON.parse(rocketchatResBody).data;
+        const auth = rocketchatResBodyJson.data;
 
         // fill in the POST request. This must be www-form/multipart
         const uploadData = {
@@ -679,8 +680,7 @@ module.exports = (robot) => {
         };
 
         // Try to upload the image to rocketchat else pass the link over
-        return request.post(uploadData, (err, httpResponse, body) => {
-          const res = JSON.parse(body);
+        return post(uploadData, (err, res) => {
 
           // Error logging, we must also check the body response.
           // It will be something like: { "success": <boolean>, "error": <error message> }
@@ -737,3 +737,19 @@ module.exports = (robot) => {
     return uploadTo[site()](msg, title, grafanaDashboardRequest, link);
   };
 };
+
+async function post(uploadData, callback) {
+  try {
+    const res = await fetch(uploadData.url, {
+      method: "POST",
+      body: uploadData.formData
+    })
+
+    const json = await res.json();
+
+    callback(null, json);
+  }
+  catch(ex) {
+    callback(ex, null)
+  }
+}
