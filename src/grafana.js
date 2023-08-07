@@ -723,7 +723,7 @@ module.exports = (robot) => {
     // Pass this function along to the "registered" services that uploads the image.
     // The function will download the .png image(s) dashboard. You must pass this
     // function and use it inside your service upload implementation.
-    const grafanaDashboardRequest = (callback) => request(url, requestHeaders, (err, res, body) => {
+    const grafanaDashboardRequest = (callback) => download(url, requestHeaders, (err, res, body) => {
       if (err) {
         return sendError(err, msg);
       }
@@ -743,13 +743,27 @@ async function post(uploadData, callback) {
     const res = await fetch(uploadData.url, {
       method: "POST",
       body: uploadData.formData
-    })
+    });
 
     const json = await res.json();
 
     callback(null, json);
   }
   catch(ex) {
-    callback(ex, null)
+    callback(ex, null);
+  }
+}
+
+async function download(url, headers, callback){
+
+  let res, blob
+
+  try{
+    res = await fetch(url, { headers:headers});
+    blob = await res.arrayBuffer();
+    return callback(null, res, blob);
+  }
+  catch(ex){
+    callback(ex, res, blob);
   }
 }
