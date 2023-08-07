@@ -42,7 +42,7 @@
   "main": "index.js",
   "scripts": {
     "release": "release-it",
-    "test": "mocha \"test/**/*.js\" --reporter spec",
+    "test": "mocha \"test/**/*.js\" --reporter spec --no-experiemental-fetch",
     "prepare": "husky install",
     "lint": "eslint src/ test/"
   }
