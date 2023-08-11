@@ -46,7 +46,6 @@
     "prepare": "husky install",
     "lint": "eslint src/ test/"
   },
-
   "files": [
     "src/grafana.js",
     "CONTRIBUTING.md",
