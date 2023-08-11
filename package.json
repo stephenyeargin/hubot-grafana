@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.378.0",
-    "request": "^2.88.2"
+    "node-fetch": "^2.6.12"
   },
   "peerDependencies": {
     "hubot": ">=2 <10 || 0.0.0-development"
@@ -42,7 +42,7 @@
   "main": "index.js",
   "scripts": {
     "release": "release-it",
-    "test": "mocha \"test/**/*.js\" --reporter spec",
+    "test": "mocha \"test/**/*.js\" --reporter spec --no-experiemental-fetch",
     "prepare": "husky install",
     "lint": "eslint src/ test/"
   }

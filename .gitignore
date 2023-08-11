@@ -42,3 +42,4 @@ coverage.json
 
 # Node versions (nodenv)
 .node-version
+.vscode/settings.json
