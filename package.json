@@ -45,5 +45,12 @@
     "test": "mocha \"test/**/*.js\" --reporter spec --no-experiemental-fetch",
     "prepare": "husky install",
     "lint": "eslint src/ test/"
-  }
+  },
+
+  "files": [
+    "src/grafana.js",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "index.js"
+  ]
 }
