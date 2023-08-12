@@ -50,13 +50,14 @@
 const crypto = require('crypto');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const fetch = require('node-fetch');
-const { callGrafana, postGrafana } = require("./grafana-client")
+const { GrafanaClient } = require("./grafana-client")
 
 module.exports = (robot) => {
   // Various configuration options stored in environment variables
   let grafana_host = process.env.HUBOT_GRAFANA_HOST;
   let grafana_api_key = process.env.HUBOT_GRAFANA_API_KEY;
   const grafana_per_room = process.env.HUBOT_GRAFANA_PER_ROOM;
+
   const grafana_query_time_range = process.env.HUBOT_GRAFANA_QUERY_TIME_RANGE || '6h';
   const s3_bucket = process.env.HUBOT_GRAFANA_S3_BUCKET;
   const s3_prefix = process.env.HUBOT_GRAFANA_S3_PREFIX;
@@ -67,6 +68,7 @@ module.exports = (robot) => {
   const rocketchat_password = process.env.ROCKETCHAT_PASSWORD;
   const max_return_dashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS || 25;
   const use_threads = process.env.HUBOT_GRAFANA_USE_THREADS || false;
+  const grafana = new GrafanaClient(robot)
 
   if (rocketchat_url && !rocketchat_url.startsWith('http')) {
     rocketchat_url = `http://${rocketchat_url}`;
@@ -188,7 +190,7 @@ module.exports = (robot) => {
     robot.logger.debug(pname);
 
     // Call the API to get information about this dashboard
-    return callGrafana(robot, endpoint, `dashboards/uid/${uid}`, (dashboard) => {
+    return grafana.call(endpoint, `dashboards/uid/${uid}`, (dashboard) => {
       let template_map;
       robot.logger.debug(dashboard);
       // Check dashboard information
@@ -198,7 +200,7 @@ module.exports = (robot) => {
       if (dashboard.message) {
         // Search for URL slug to offer help
         if ((dashboard.message = 'Dashboard not found')) {
-          callGrafana(robot, endpoint, 'search?type=dash-db', (results) => {
+          grafana.call(endpoint, 'search?type=dash-db', (results) => {
             for (const item of Array.from(results)) {
               if (item.url.match(new RegExp(`\/d\/[a-z0-9\-]+\/${uid}$`, 'i'))) {
                 sendError(`Try your query again with \`${item.uid}\` instead of \`${uid}\``, msg);
@@ -312,13 +314,13 @@ module.exports = (robot) => {
       return sendError('No Grafana endpoint configured.', msg);
     } if (msg.match[1]) {
       const tag = msg.match[1].trim();
-      return callGrafana(robot, endpoint, `search?type=dash-db&tag=${tag}`, (dashboards) => {
+      return grafana.call(endpoint, `search?type=dash-db&tag=${tag}`, (dashboards) => {
         robot.logger.debug(dashboards);
         const response = `Dashboards tagged \`${tag}\`:\n`;
         return sendDashboardList(dashboards, response, msg);
       });
     }
-    return callGrafana(robot, endpoint, 'search?type=dash-db', (dashboards) => {
+    return grafana.call(endpoint, 'search?type=dash-db', (dashboards) => {
       robot.logger.debug(dashboards);
       const response = 'Available dashboards:\n';
       return sendDashboardList(dashboards, response, msg);
@@ -334,7 +336,7 @@ module.exports = (robot) => {
       sendError('No Grafana endpoint configured.', msg);
       return;
     }
-    return callGrafana(robot, endpoint, `search?type=dash-db&query=${query}`, (dashboards) => {
+    return grafana.call(endpoint, `search?type=dash-db&query=${query}`, (dashboards) => {
       robot.logger.debug(dashboards);
       const response = `Dashboards matching \`${query}\`:\n`;
       return sendDashboardList(dashboards, response, msg);
@@ -351,14 +353,14 @@ module.exports = (robot) => {
     // all alerts of a specific type
     if (msg.match[1]) {
       const state = msg.match[1].trim();
-      return callGrafana(robot, endpoint, `alerts?state=${state}`, (alerts) => {
+      return grafana.call(endpoint, `alerts?state=${state}`, (alerts) => {
         robot.logger.debug(alerts);
         return sendAlerts(alerts, `Alerts with state '${state}':\n`, msg);
       });
       // *all* alerts
     }
     robot.logger.debug('Show all alerts');
-    return callGrafana(robot, endpoint, 'alerts', (alerts) => {
+    return grafana.call(endpoint, 'alerts', (alerts) => {
       robot.logger.debug(alerts);
       return sendAlerts(alerts, 'All alerts:\n', msg);
     });
@@ -373,7 +375,7 @@ module.exports = (robot) => {
       sendError('No Grafana endpoint configured.', msg);
       return;
     }
-    return postGrafana(robot, endpoint, `alerts/${alertId}/pause`, { paused }, (result) => {
+    return grafana.post(endpoint, `alerts/${alertId}/pause`, { paused }, (result) => {
       robot.logger.debug(result);
       if (result.message) {
         return msg.send(result.message);
@@ -390,7 +392,7 @@ module.exports = (robot) => {
       sendError('No Grafana endpoint configured.', msg);
       return;
     }
-    return callGrafana(robot, endpoint, 'alerts', (alerts) => {
+    return grafana.call(endpoint, 'alerts', (alerts) => {
       robot.logger.debug(alerts);
       let errored = 0;
       if (!(alerts.length > 0)) {
