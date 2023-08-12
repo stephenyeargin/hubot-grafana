@@ -300,29 +300,45 @@ module.exports = (robot) => {
 
   // Get a list of available dashboards
   robot.respond(/(?:grafana|graph|graf) list\s?(.+)?/i, (res) => {
+    if (!isValidEndpointConfig(res)) return;
+
+    let url = 'search?type=dash-db';
+    let title = 'Available dashboards:\n';
     if (res.match[1]) {
       const tag = res.match[1].trim();
-
-      return grafana.call(res, `search?type=dash-db&tag=${tag}`, (dashboards) => {
-        robot.logger.debug(dashboards);
-        const response = `Dashboards tagged \`${tag}\`:\n`;
-        return sendDashboardList(dashboards, response, res);
-      });
+      url += `&tag=${tag}`;
+      title = `Dashboards tagged \`${tag}\`:\n`;
     }
 
-    return grafana.call(res, 'search?type=dash-db', (dashboards) => {
-      robot.logger.debug(dashboards);
-      const response = 'Available dashboards:\n';
-      return sendDashboardList(dashboards, response, res);
-    });
+    return grafana
+      .get(res, url)
+      .then((dashboards) => {
+        robot.logger.debug(dashboards);
+        return sendDashboardList(dashboards, title, res);
+      })
+      .catch((err) => {
+        robot.logger.error(err, 'Error while listing dashboards, url: ' + url);
+      });
   });
+
+  /**
+   * Validates if the endpoints are valid given the context. If the context is
+   * not valid, an error message will be send to the user.
+   * @param {Hubot.Response} res the context.
+   * @returns {boolean}
+   */
+  function isValidEndpointConfig(res) {
+    if (!grafana.hasValidEndpoint(res)) {
+      sendError('No Grafana endpoint configured.', res);
+      return false;
+    }
+
+    return true;
+  }
 
   // Search dashboards
   robot.respond(/(?:grafana|graph|graf) search (.+)/i, (res) => {
-    if (!grafana.hasValidEndpoint(res)) {
-      this.sendError('No Grafana endpoint configured.', res);
-      return;
-    }
+    if (!isValidEndpointConfig()) return;
 
     const query = res.match[1].trim();
     robot.logger.debug(query);
