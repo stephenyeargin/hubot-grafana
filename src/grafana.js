@@ -386,9 +386,7 @@ module.exports = (robot) => {
         });
       }
       return res.send(
-        `Successfully tried to ${res.match[1]} *${alerts.length}* alerts.\n*Success: ${
-          alerts.length - errored
-        }*\n*Errored: ${errored}*`
+        `Successfully tried to ${res.match[1]} *${alerts.length}* alerts.\n*Success: ${alerts.length - errored}*\n*Errored: ${errored}*`
       );
     });
   });
@@ -540,12 +538,7 @@ module.exports = (robot) => {
 
         s3.send(command)
           .then(() => {
-            return sendRobotResponse(
-              msg,
-              title,
-              `https://${s3_bucket}.s3.${s3_region}.amazonaws.com/${params.Key}`,
-              link
-            );
+            return sendRobotResponse(msg, title, `https://${s3_bucket}.s3.${s3_region}.amazonaws.com/${params.Key}`, link);
           })
           .catch((s3Err) => {
             robot.logger.error(`Upload Error Code: ${s3Err}`);
@@ -618,9 +611,7 @@ module.exports = (robot) => {
       return post(authData, (err, rocketchatResBodyJson) => {
         if (err) {
           robot.logger.error(err);
-          return msg.send(
-            `${title} - [Rocketchat auth Error - invalid url, user or password/can't access rocketchat api] - ${link}`
-          );
+          return msg.send(`${title} - [Rocketchat auth Error - invalid url, user or password/can't access rocketchat api] - ${link}`);
         }
         let errMsg;
         const { status } = rocketchatResBodyJson;
