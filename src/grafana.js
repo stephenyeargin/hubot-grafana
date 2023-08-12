@@ -107,7 +107,7 @@ module.exports = (robot) => {
     const remainder = res.match[2];
     const timespan = {
       from: `now-${grafana_query_time_range}`,
-      to: 'now'
+      to: 'now',
     };
     let variables = '';
     const template_params = [];
@@ -119,7 +119,7 @@ module.exports = (robot) => {
       height: process.env.HUBOT_GRAFANA_DEFAULT_HEIGHT || 500,
       tz: process.env.HUBOT_GRAFANA_DEFAULT_TIME_ZONE || '',
       orgId: process.env.HUBOT_GRAFANA_ORG_ID || '',
-      apiEndpoint: process.env.HUBOT_GRAFANA_API_ENDPOINT || 'd-solo'
+      apiEndpoint: process.env.HUBOT_GRAFANA_API_ENDPOINT || 'd-solo',
     };
 
     const endpoint = grafana.get_grafana_endpoint(res);
@@ -161,7 +161,7 @@ module.exports = (robot) => {
           variables = `${variables}&var-${part}`;
           template_params.push({
             name: part.split('=')[0],
-            value: part.split('=')[1]
+            value: part.split('=')[1],
           });
 
           // Only add to the timespan if we haven't already filled out from and to
@@ -484,10 +484,10 @@ module.exports = (robot) => {
               fallback: `${title}: ${image} - ${link}`,
               title,
               title_link: link,
-              image_url: image
-            }
+              image_url: image,
+            },
           ],
-          unfurl_links: false
+          unfurl_links: false,
         });
       // Hipchat
       case 'hipchat':
@@ -498,15 +498,15 @@ module.exports = (robot) => {
       case 'bearychat':
         return robot.emit('bearychat.attachment', {
           message: {
-            room: res.envelope.room
+            room: res.envelope.room,
           },
           text: `[${title}](${link})`,
           attachments: [
             {
               fallback: `${title}: ${image} - ${link}`,
-              images: [{ url: image }]
-            }
-          ]
+              images: [{ url: image }],
+            },
+          ],
         });
       // Everything else
       default:
@@ -525,7 +525,7 @@ module.exports = (robot) => {
       return grafanaDashboardRequest(async (err, res, body) => {
         const s3 = new S3Client({
           apiVersion: '2006-03-01',
-          region: s3_region
+          region: s3_region,
         });
 
         const params = {
@@ -534,7 +534,7 @@ module.exports = (robot) => {
           Body: body,
           ACL: 'public-read',
           ContentLength: body.length,
-          ContentType: res.headers['content-type']
+          ContentType: res.headers['content-type'],
         };
         const command = new PutObjectCommand(params);
 
@@ -558,8 +558,8 @@ module.exports = (robot) => {
       const testAuthData = {
         url: 'https://slack.com/api/auth.test',
         formData: {
-          token: slack_token
-        }
+          token: slack_token,
+        },
       };
 
       // We test auth against slack to obtain the team URL
@@ -579,8 +579,8 @@ module.exports = (robot) => {
             token: slack_token,
             // grafanaDashboardRequest() is the method that downloads the .png
             file: grafanaDashboardRequest(),
-            filetype: 'png'
-          }
+            filetype: 'png',
+          },
         };
 
         // Post images in thread if configured
@@ -609,8 +609,8 @@ module.exports = (robot) => {
         url: `${rocketchat_url}/api/v1/login`,
         form: {
           username: rocketchat_user,
-          password: rocketchat_password
-        }
+          password: rocketchat_password,
+        },
       };
 
       // We auth against rocketchat to obtain the auth token
@@ -637,7 +637,7 @@ module.exports = (robot) => {
           url: `${rocketchat_url}/api/v1/rooms.upload/${msg.envelope.user.roomID}`,
           headers: {
             'X-Auth-Token': auth.authToken,
-            'X-User-Id': auth.userId
+            'X-User-Id': auth.userId,
           },
           formData: {
             msg: `${title}: ${link}`,
@@ -646,10 +646,10 @@ module.exports = (robot) => {
               value: grafanaDashboardRequest(),
               options: {
                 filename: `${title} ${Date()}.png`,
-                contentType: 'image/png'
-              }
-            }
-          }
+                contentType: 'image/png',
+              },
+            },
+          },
         };
 
         // Try to upload the image to rocketchat else pass the link over
@@ -671,9 +671,9 @@ module.exports = (robot) => {
     telegram(msg, title, grafanaDashboardRequest, link) {
       const caption = `${title}: ${link}`;
       return msg.sendPhoto(msg.envelope.room, grafanaDashboardRequest(), {
-        caption
+        caption,
       });
-    }
+    },
   };
 
   // Fetch an image from provided URL, upload it to S3, returning the resulting URL
@@ -683,8 +683,8 @@ module.exports = (robot) => {
       requestHeaders = {
         encoding: null,
         auth: {
-          bearer: grafana.grafana_api_key
-        }
+          bearer: grafana.grafana_api_key,
+        },
       };
     } else {
       requestHeaders = { encoding: null };
@@ -719,7 +719,7 @@ async function post(uploadData, callback) {
   try {
     const res = await fetch(uploadData.url, {
       method: 'POST',
-      body: uploadData.formData
+      body: uploadData.formData,
     });
 
     const json = await res.json();
