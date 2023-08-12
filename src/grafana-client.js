@@ -1,6 +1,11 @@
 "strict"
 
 class GrafanaClient {
+
+  /**
+   * Creates a new instance.
+   * @param {Hubot.Robot} robot 
+   */
   constructor(robot) {
     this.robot = robot;
 
@@ -10,10 +15,20 @@ class GrafanaClient {
     this.grafana_per_room = process.env.HUBOT_GRAFANA_PER_ROOM;
   }
 
-  call(msg, url, callback) {
-    const endpoint = this.get_grafana_endpoint(msg);
+  /**
+   * Performs a GET call to the Grafana API.
+   * 
+   * @param {Hubot.Response} res the Hubot context for which Grafana will be called.
+   * @param {string} url The API sub URL
+   * @param {(err: boolean, Record<string, any>)=>void} callback The callback.
+   * @returns 
+   * 
+   * TODO: figure out return type
+   */
+  call(res, url, callback) {
+    const endpoint = this.get_grafana_endpoint(res);
     if (!endpoint) {
-      this.sendError('No Grafana endpoint configured.', msg);
+      this.sendError('No Grafana endpoint configured.', res);
       return;
     }
 
@@ -30,11 +45,20 @@ class GrafanaClient {
     });
   }
 
-  // Post to Grafana
-  post(msg, url, data, callback) {
-    const endpoint = this.get_grafana_endpoint(msg);
+  /**
+   * Performs a POST call to the Grafana API.
+   * 
+   * @param {Hubot.Response} res the Hubot context for which Grafana will be called.
+   * @param {string} url The API sub URL
+   * @param {any} data The data that will be sent.
+   * @param {(err: boolean, Record<string, any>)=>void} callback The callback.
+   * @returns 
+   * TODO: figure out return type
+   */
+  post(res, url, data, callback) {
+    const endpoint = this.get_grafana_endpoint(res);
     if (!endpoint) {
-      this.sendError('No Grafana endpoint configured.', msg);
+      this.sendError('No Grafana endpoint configured.', res);
       return;
     }
 
@@ -52,36 +76,50 @@ class GrafanaClient {
     });
   }
 
-  get_room(msg) {
+  /**
+   * Gets the room from the context.
+   * @param {Hubot.Response} res The context.
+   * @returns {string}
+   */
+  get_room(res) {
     // placeholder for further adapter support (i.e. MS Teams) as then room also
     // contains thread conversation id
-    return msg.envelope.room;
+    return res.envelope.room;
   }
 
-  get_grafana_endpoint(msg) {
+  /**
+   * Gets the Grafana endpoints. If grafana_per_room is set to 1, the endpoints will
+   * be configured from by the context.
+   * @param {Hubot.Response} res The context.
+   * @returns { { host: string, api_key: string } | null }
+   */
+  get_grafana_endpoint(res) {
     let grafana_api_key = this.grafana_api_key;
     let grafana_host = this.grafana_host;
 
     if (this.grafana_per_room === "1") {
-      const room = this.get_room(msg);
+      const room = this.get_room(res);
       grafana_host = this.robot.brain.get(`grafana_host_${room}`);
       grafana_api_key = this.robot.brain.get(`grafana_api_key_${room}`);
-      if (!grafana_host) {
-        return null;
-      }
     }
+
+    //TODO: this was only part of the grafana_per_room, but it
+    //seems that it is OK never to continue without a grafana_host
+    if (!grafana_host) {
+      return null;
+    }
+
     return { host: grafana_host, api_key: grafana_api_key };
   }
 
-  has_end_point(msg) {
-    return this.get_grafana_endpoint(msg) !== null;
-  }
-
-  // Handle generic errors
-  //TODO: not sure if error handling should be here
-  sendError(message, msg) {
+  /**
+   * 
+   * @param {string} message the message containing the error.
+   * @param {Hubot.Response} res the context for which the error is sent.
+   */
+  sendError(message, res) {
     this.robot.logger.error(message);
-    return msg.send(message);
+    res.send(message);
   }
 }
 
