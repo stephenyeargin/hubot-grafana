@@ -20,7 +20,7 @@ class GrafanaClient {
    * 
    * @param {Hubot.Response} res the Hubot context for which Grafana will be called.
    * @param {string} url The API sub URL
-   * @param {(err: boolean, Record<string, any>)=>void} callback The callback.
+   * @param {(success: boolean, Record<string, any>)=>void} callback The callback.
    * @returns 
    * 
    * TODO: figure out return type
@@ -51,7 +51,7 @@ class GrafanaClient {
    * @param {Hubot.Response} res the Hubot context for which Grafana will be called.
    * @param {string} url The API sub URL
    * @param {any} data The data that will be sent.
-   * @param {(err: boolean, Record<string, any>)=>void} callback The callback.
+   * @param {(success: boolean, Record<string, any>)=>void} callback The callback.
    * @returns 
    * TODO: figure out return type
    */
