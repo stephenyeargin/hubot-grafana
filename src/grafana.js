@@ -120,7 +120,6 @@ module.exports = (robot) => {
       apiEndpoint: process.env.HUBOT_GRAFANA_API_ENDPOINT || 'd-solo',
     };
 
-    //TODO: check if needed here or can be done later
     const endpoint = grafana.get_grafana_endpoint(res);
     if (!endpoint) {
       sendError('No Grafana endpoint configured.', res);
@@ -423,9 +422,15 @@ module.exports = (robot) => {
   };
 
   // Handle generic errors
-  const sendError = (message, msg) => {
+
+  /**
+   * *Sends an error message.
+   * @param {string} message the error message.
+   * @param {Hubot.Response} res the resonse context.
+   */
+  const sendError = (message, res) => {
     robot.logger.error(message);
-    return msg.send(message);
+    res.send(message);
   };
 
   // Format the title with template vars
@@ -661,7 +666,8 @@ module.exports = (robot) => {
     // function and use it inside your service upload implementation.
     const grafanaDashboardRequest = (callback) => download(url, requestHeaders, (err, res, body) => {
       if (err) {
-        return sendError(err, msg);
+        sendError(err, msg);
+        return
       }
       robot.logger.debug(`Uploading file: ${body.length} bytes, content-type[${res.headers['content-type']}]`);
       if (callback) {
