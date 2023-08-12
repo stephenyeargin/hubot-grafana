@@ -360,37 +360,37 @@ module.exports = (robot) => {
   });
 
   // Show alerts
-  robot.respond(/(?:grafana|graph|graf) alerts\s?(.+)?/i, (msg) => {
+  robot.respond(/(?:grafana|graph|graf) alerts\s?(.+)?/i, (res) => {
     // all alerts of a specific type
-    if (msg.match[1]) {
-      const state = msg.match[1].trim();
-      return grafana.call(msg, `alerts?state=${state}`, (alerts) => {
+    if (res.match[1]) {
+      const state = res.match[1].trim();
+      return grafana.call(res, `alerts?state=${state}`, (alerts) => {
         robot.logger.debug(alerts);
-        return sendAlerts(alerts, `Alerts with state '${state}':\n`, msg);
+        return sendAlerts(alerts, `Alerts with state '${state}':\n`, res);
       });
       // *all* alerts
     }
     robot.logger.debug("Show all alerts");
-    return grafana.call(msg, "alerts", (alerts) => {
+    return grafana.call(res, "alerts", (alerts) => {
       robot.logger.debug(alerts);
-      return sendAlerts(alerts, "All alerts:\n", msg);
+      return sendAlerts(alerts, "All alerts:\n", res);
     });
   });
 
   // Pause/unpause an alert
   robot.respond(
     /(?:grafana|graph|graf) (unpause|pause)\salert\s(\d+)/i,
-    (msg) => {
-      const paused = msg.match[1] === "pause";
-      const alertId = msg.match[2];
+    (res) => {
+      const paused = res.match[1] === "pause";
+      const alertId = res.match[2];
       return grafana.post(
-        msg,
+        res,
         `alerts/${alertId}/pause`,
         { paused },
         (result) => {
           robot.logger.debug(result);
           if (result.message) {
-            return msg.send(result.message);
+            return res.send(result.message);
           }
         }
       );
@@ -510,16 +510,16 @@ module.exports = (robot) => {
   };
 
   // Send robot response
-  const sendRobotResponse = (msg, title, image, link) => {
+  const sendRobotResponse = (res, title, image, link) => {
     switch (robot.adapterName) {
       // Slack
       case "slack":
       case "hubot-slack":
       case "@hubot-friends/hubot-slack":
         if (use_threads) {
-          msg.message.thread_ts = msg.message.rawMessage.ts;
+          res.message.thread_ts = res.message.rawMessage.ts;
         }
-        return msg.send({
+        return res.send({
           attachments: [
             {
               fallback: `${title}: ${image} - ${link}`,
@@ -533,13 +533,13 @@ module.exports = (robot) => {
       // Hipchat
       case "hipchat":
       case "hubot-hipchat":
-        return msg.send(`${title}: ${link} - ${image}`);
+        return res.send(`${title}: ${link} - ${image}`);
       // BearyChat
       case "hubot-bearychat":
       case "bearychat":
         return robot.emit("bearychat.attachment", {
           message: {
-            room: msg.envelope.room,
+            room: res.envelope.room,
           },
           text: `[${title}](${link})`,
           attachments: [
@@ -551,7 +551,7 @@ module.exports = (robot) => {
         });
       // Everything else
       default:
-        return msg.send(`${title}: ${image} - ${link}`);
+        return res.send(`${title}: ${image} - ${link}`);
     }
   };
 
