@@ -338,7 +338,7 @@ module.exports = (robot) => {
 
   // Search dashboards
   robot.respond(/(?:grafana|graph|graf) search (.+)/i, (res) => {
-    if (!isValidEndpointConfig()) return;
+    if (!isValidEndpointConfig(res)) return;
 
     const query = res.match[1].trim();
     robot.logger.debug(query);
@@ -354,6 +354,8 @@ module.exports = (robot) => {
 
   // Show alerts
   robot.respond(/(?:grafana|graph|graf) alerts\s?(.+)?/i, async (res) => {
+    if (!isValidEndpointConfig(res)) return;
+
     let url = 'alerts';
     let title = 'All alerts:\n';
 
