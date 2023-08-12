@@ -318,41 +318,45 @@ module.exports = (robot) => {
   };
 
   // Get a list of available dashboards
-  robot.respond(/(?:grafana|graph|graf) list\s?(.+)?/i, (msg) => {
-    if (msg.match[1]) {
-      const tag = msg.match[1].trim();
+  robot.respond(/(?:grafana|graph|graf) list\s?(.+)?/i, (res) => {
+    if (res.match[1]) {
+      const tag = res.match[1].trim();
       return grafana.call(
-        msg,
+        res,
         `search?type=dash-db&tag=${tag}`,
         (dashboards) => {
           robot.logger.debug(dashboards);
           const response = `Dashboards tagged \`${tag}\`:\n`;
-          return sendDashboardList(dashboards, response, msg);
+          return sendDashboardList(dashboards, response, res);
         }
       );
     }
 
-    return grafana.call(msg, "search?type=dash-db", (dashboards) => {
+    return grafana.call(res, "search?type=dash-db", (dashboards) => {
       robot.logger.debug(dashboards);
       const response = "Available dashboards:\n";
-      return sendDashboardList(dashboards, response, msg);
+      return sendDashboardList(dashboards, response, res);
     });
   });
 
   // Search dashboards
-  robot.respond(/(?:grafana|graph|graf) search (.+)/i, async (res) => {
-    try {
-      const query = res.match[1].trim();
-      robot.logger.debug(query);
-      const dashboards = await grafana.searchDashboards(res, query);
-      const title = `Dashboards matching \`${query}\`:\n`;
-      sendDashboardList(dashboards, title, res);
-    } catch (err) {
-      this.robot.logger.error(err);
-      if(err.message === "No Grafana endpoint configured."){
-        sendError(err.message, res)
-      }
+  robot.respond(/(?:grafana|graph|graf) search (.+)/i, (res) => {
+
+    if(!grafana.hasValidEndpoint(res)){
+      this.sendError("No Grafana endpoint configured.", res);
+      return;
     }
+
+    const query = res.match[1].trim();
+    robot.logger.debug(query);
+    
+    return grafana
+      .get(res, `search?type=dash-db&query=${query}`)
+      .then(dashboards => {
+        const title = `Dashboards matching \`${query}\`:\n`;
+        sendDashboardList(dashboards, title, res);
+      })
+      .catch(err => this.robot.logger.error(err, "Error searching for dashboard."));
   });
 
   // Show alerts

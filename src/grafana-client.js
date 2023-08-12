@@ -151,15 +151,14 @@ class GrafanaClient {
     res.send(message);
   }
 
-  /**
-   * Searchs for dashboards.
-   * @param {Hubot.Response} res the context of the query
-   * @param {string} query the query
-   * @returns {Promise<any>}
-   */
-  async searchDashboards(res, query) {
-    return await this.get(res, `search?type=dash-db&query=${query}`);
+  hasValidEndpoint(res){
+    const endpoint = this.get_grafana_endpoint(res)
+    if (!endpoint) {
+      return false;
+    }
+    return true;
   }
+
 }
 
 function grafanaHeaders(endpoint, post = false) {
