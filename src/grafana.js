@@ -90,19 +90,19 @@ module.exports = (robot) => {
   const isUploadSupported = site() !== '';
 
   // Set Grafana host/api_key
-  robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) => {
+  robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (res) => {
     if (grafana.grafana_per_room === '1') {
-      const context = msg.message.user.room.split('@')[0];
-      robot.brain.set(`grafana_${msg.match[1]}_${context}`, msg.match[2]);
-      return msg.send(`Value set for ${msg.match[1]}`);
+      const context = res.message.user.room.split('@')[0];
+      robot.brain.set(`grafana_${res.match[1]}_${context}`, res.match[2]);
+      return res.send(`Value set for ${res.match[1]}`);
     }
-    return sendError('Set HUBOT_GRAFANA_PER_ROOM=1 to use multiple configurations.', msg);
+    return sendError('Set HUBOT_GRAFANA_PER_ROOM=1 to use multiple configurations.', res);
   });
 
   // Get a specific dashboard with options
-  robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) => {
-    let uid = msg.match[1].trim();
-    const remainder = msg.match[2];
+  robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (res) => {
+    let uid = res.match[1].trim();
+    const remainder = res.match[2];
     const timespan = {
       from: `now-${grafana_query_time_range}`,
       to: 'now',
@@ -121,9 +121,9 @@ module.exports = (robot) => {
     };
 
     //TODO: check if needed here or can be done later
-    const endpoint = grafana.get_grafana_endpoint(msg);
+    const endpoint = grafana.get_grafana_endpoint(res);
     if (!endpoint) {
-      sendError('No Grafana endpoint configured.', msg);
+      sendError('No Grafana endpoint configured.', res);
       return;
     }
 
@@ -167,7 +167,7 @@ module.exports = (robot) => {
       }
     }
 
-    robot.logger.debug(msg.match);
+    robot.logger.debug(res.match);
     robot.logger.debug(uid);
     robot.logger.debug(timespan);
     robot.logger.debug(variables);
@@ -177,27 +177,27 @@ module.exports = (robot) => {
     robot.logger.debug(pname);
 
     // Call the API to get information about this dashboard
-    return grafana.call(msg, `dashboards/uid/${uid}`, (dashboard) => {
+    return grafana.call(res, `dashboards/uid/${uid}`, (dashboard) => {
       let template_map;
       robot.logger.debug(dashboard);
       // Check dashboard information
       if (!dashboard) {
-        return sendError('An error ocurred. Check your logs for more details.', msg);
+        return sendError('An error ocurred. Check your logs for more details.', res);
       }
       if (dashboard.message) {
         // Search for URL slug to offer help
         if ((dashboard.message = 'Dashboard not found')) {
-          grafana.call(msg, 'search?type=dash-db', (results) => {
+          grafana.call(res, 'search?type=dash-db', (results) => {
             for (const item of Array.from(results)) {
               if (item.url.match(new RegExp(`\/d\/[a-z0-9\-]+\/${uid}$`, 'i'))) {
-                sendError(`Try your query again with \`${item.uid}\` instead of \`${uid}\``, msg);
+                sendError(`Try your query again with \`${item.uid}\` instead of \`${uid}\``, res);
                 return;
               }
             }
-            return sendError(dashboard.message, msg);
+            return sendError(dashboard.message, res);
           });
         } else {
-          sendError(dashboard.message, msg);
+          sendError(dashboard.message, res);
         }
         return;
       }
@@ -213,7 +213,7 @@ module.exports = (robot) => {
 
       // Handle empty dashboard
       if ((data.rows == null)) {
-        return sendError('Dashboard empty.', msg);
+        return sendError('Dashboard empty.', res);
       }
 
       // Support for templated dashboards
@@ -275,23 +275,23 @@ module.exports = (robot) => {
           }
           const link = `${endpoint.host}/d/${uid}/?panelId=${panel.id}&fullscreen&from=${timespan.from}&to=${timespan.to}${variables}`;
 
-          sendDashboardChart(msg, title, imageUrl, link);
+          sendDashboardChart(res, title, imageUrl, link);
           returnedCount += 1;
         }
       }
 
       if (returnedCount === 0) {
-        return sendError('Could not locate desired panel.', msg);
+        return sendError('Could not locate desired panel.', res);
       }
     });
   });
 
   // Process the bot response
-  const sendDashboardChart = (msg, title, imageUrl, link) => {
+  const sendDashboardChart = (res, title, imageUrl, link) => {
     if (isUploadSupported) {
-      return uploadChart(msg, title, imageUrl, link, site);
+      return uploadChart(res, title, imageUrl, link, site);
     }
-    return sendRobotResponse(msg, title, imageUrl, link);
+    return sendRobotResponse(res, title, imageUrl, link);
   };
 
   // Get a list of available dashboards
@@ -690,6 +690,12 @@ async function post(uploadData, callback) {
   }
 }
 
+/**
+ * Uses the URL to download a buffer from.
+ * @param {string} url the URL.
+ * @param {Record<string, string>} headers the headers.
+ * @param {Promise<unknown>} callback 
+ */
 async function download(url, headers, callback){
 
   let res, blob
@@ -700,6 +706,6 @@ async function download(url, headers, callback){
     return callback(null, res, blob);
   }
   catch(ex){
-    callback(ex, res, blob);
+    return callback(ex, res, blob);
   }
 }
