@@ -52,8 +52,11 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const fetch = require('node-fetch');
 const { GrafanaClient } = require("./grafana-client")
 
+/**
+ * Adds the Grafana commands to Hubot.
+ * @param {Hubot.Robot} robot 
+ */
 module.exports = (robot) => {
-
 
   const grafana_query_time_range = process.env.HUBOT_GRAFANA_QUERY_TIME_RANGE || '6h';
   const s3_bucket = process.env.HUBOT_GRAFANA_S3_BUCKET;
@@ -85,8 +88,6 @@ module.exports = (robot) => {
     return '';
   };
   const isUploadSupported = site() !== '';
-
-  
 
   // Set Grafana host/api_key
   robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) => {
@@ -365,7 +366,8 @@ module.exports = (robot) => {
         return;
       }
       for (const alert of Array.from(alerts)) {
-        postGrafana(robot, endpoint, `alerts/${alert.id}/pause`, { paused }, (result) => {
+        //TODO: don't know if this is tested
+        grafana.post(msg, `alerts/${alert.id}/pause`, { paused }, (result) => {
           robot.logger.debug(result);
           if (result === false) {
             return errored += 1;
