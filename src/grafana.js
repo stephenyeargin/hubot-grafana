@@ -353,21 +353,28 @@ module.exports = (robot) => {
   });
 
   // Show alerts
-  robot.respond(/(?:grafana|graph|graf) alerts\s?(.+)?/i, (res) => {
+  robot.respond(/(?:grafana|graph|graf) alerts\s?(.+)?/i, async (res) => {
+    let url = 'alerts';
+    let title = 'All alerts:\n';
+
     // all alerts of a specific type
     if (res.match[1]) {
       const state = res.match[1].trim();
-      return grafana.call(res, `alerts?state=${state}`, (alerts) => {
-        robot.logger.debug(alerts);
-        return sendAlerts(alerts, `Alerts with state '${state}':\n`, res);
-      });
-      // *all* alerts
+      url = `alerts?state=${state}`;
+      title = `Alerts with state '${state}':\n`;
     }
-    robot.logger.debug('Show all alerts');
-    return grafana.call(res, 'alerts', (alerts) => {
-      robot.logger.debug(alerts);
-      return sendAlerts(alerts, 'All alerts:\n', res);
-    });
+
+    robot.logger.debug(title.trim());
+
+    await grafana
+      .get(res, url)
+      .then((alerts) => {
+        robot.logger.debug(alerts);
+        sendAlerts(alerts, title, res);
+      })
+      .catch((err) => {
+        robot.logger.error(err, 'Error while getting alerts on URL: ' + url);
+      });
   });
 
   // Pause/unpause an alert
@@ -408,7 +415,15 @@ module.exports = (robot) => {
   });
 
   // Send a list of alerts
-  const sendAlerts = (alerts, message, res) => {
+
+  /**
+   *
+   * @param {any[]} alerts list of alerts
+   * @param {string} title the title
+   * @param {Hubot.Response} res the context
+   * @returns
+   */
+  const sendAlerts = (alerts, title, res) => {
     if (!(alerts.length > 0)) {
       return;
     }
@@ -420,9 +435,9 @@ module.exports = (robot) => {
       if (alert.executionError) {
         line += `\n  execution error: ${alert.executionError}`;
       }
-      message = `${message + line}\n`;
+      title = `${title + line}\n`;
     }
-    return res.send(message.trim());
+    res.send(title.trim());
   };
 
   /**
