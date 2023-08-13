@@ -93,7 +93,7 @@ module.exports = (robot) => {
   // Set Grafana host/api_key
   robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) => {
     msg.brain = robot.brain;
-    const grafana = new GrafanaClient(msg);
+    const grafana = new GrafanaClient(msg, robot.logger);
 
     if (grafana.grafana_per_room === '1') {
       const context = msg.message.user.room.split('@')[0];
@@ -334,9 +334,8 @@ module.exports = (robot) => {
     // Copy the brain -- should be set but isn't
     // TODO: figure out what Hubot spec says
     res.brain = robot.brain;
-    res.logger = robot.logger;
 
-    let grafana = new GrafanaClient(res);
+    let grafana = new GrafanaClient(res, robot.logger);
     if (grafana.endpoint == null) {
       sendError('No Grafana endpoint configured.', res);
       return null;

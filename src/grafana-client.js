@@ -6,8 +6,9 @@ class GrafanaClient {
   /**
    * Creates a new instance.
    * @param {Hubot.Response} res the context.
+   * @param {Hubot.Log} res the logger.
    */
-  constructor(res) {
+  constructor(res, logger) {
     /**
      * The context
      * @type {Hubot.Response}
@@ -29,7 +30,7 @@ class GrafanaClient {
      * The logger.
      * @type {Hubot.Log}
      */
-    this.logger = res.logger;
+    this.logger = logger;
   }
 
   /**
