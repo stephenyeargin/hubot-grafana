@@ -18,13 +18,13 @@
     "url": "https://github.com/stephenyeargin/hubot-grafana/issues"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.378.0",
-    "node-fetch": "^2.6.12"
+    "@aws-sdk/client-s3": "^3.378.0"
   },
   "peerDependencies": {
     "hubot": ">=2 <10 || 0.0.0-development"
   },
   "devDependencies": {
+    "@types/hubot": "^3.3.2",
     "chai": "^4.3.7",
     "eslint": "^8.45.0",
     "eslint-config-airbnb-base": "^15.0.0",
@@ -42,12 +42,12 @@
   "main": "index.js",
   "scripts": {
     "release": "release-it",
-    "test": "mocha \"test/**/*.js\" --reporter spec --no-experiemental-fetch",
+    "test": "mocha \"test/**/*.js\" --reporter spec",
     "prepare": "husky install",
     "lint": "eslint src/ test/"
   },
   "files": [
-    "src/grafana.js",
+    "src/**/*.js",
     "CONTRIBUTING.md",
     "LICENSE",
     "index.js"
