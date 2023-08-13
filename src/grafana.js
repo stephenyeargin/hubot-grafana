@@ -204,7 +204,6 @@ module.exports = (robot) => {
         } else {
           sendError(dashboard.message, msg);
         }
-
         return;
       }
 
@@ -294,11 +293,11 @@ module.exports = (robot) => {
   });
 
   // Process the bot response
-  const sendDashboardChart = (res, title, imageUrl, link) => {
+  const sendDashboardChart = (msg, title, imageUrl, link) => {
     if (isUploadSupported) {
-      return uploadChart(res, title, imageUrl, link, site);
+      return uploadChart(msg, title, imageUrl, link, site);
     }
-    return sendRobotResponse(res, title, imageUrl, link);
+    return sendRobotResponse(msg, title, imageUrl, link);
   };
 
   // Get a list of available dashboards
