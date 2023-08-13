@@ -609,7 +609,7 @@ module.exports = (robot) => {
       };
 
       // We test auth against slack to obtain the team URL
-      return post(testAuthData, (err, slackResBodyJson) => {
+      return post(robot, testAuthData, (err, slackResBodyJson) => {
         if (err) {
           robot.logger.error(err);
           return msg.send(`${title} - [Slack auth.test Error - invalid token/can't fetch team url] - ${link}`);
@@ -635,7 +635,7 @@ module.exports = (robot) => {
         }
 
         // Try to upload the image to slack else pass the link over
-        return post(uploadData, (err, res) => {
+        return post(robot, uploadData, (err, res) => {
           // Error logging, we must also check the body response.
           // It will be something like: { "ok": <boolean>, "error": <error message> }
           if (err) {
@@ -661,7 +661,7 @@ module.exports = (robot) => {
 
       // We auth against rocketchat to obtain the auth token
 
-      return post(authData, (err, rocketchatResBodyJson) => {
+      return post(robot, authData, (err, rocketchatResBodyJson) => {
         if (err) {
           robot.logger.error(err);
           return msg.send(`${title} - [Rocketchat auth Error - invalid url, user or password/can't access rocketchat api] - ${link}`);
@@ -697,7 +697,7 @@ module.exports = (robot) => {
         };
 
         // Try to upload the image to rocketchat else pass the link over
-        return post(uploadData, (err, res) => {
+        return post(robot, uploadData, (err, res) => {
           // Error logging, we must also check the body response.
           // It will be something like: { "success": <boolean>, "error": <error message> }
           if (err) {
@@ -753,17 +753,20 @@ module.exports = (robot) => {
   };
 };
 
-async function post(uploadData, callback) {
-  try {
-    const res = await fetch(uploadData.url, {
-      method: 'POST',
-      body: uploadData.formData,
-    });
+/**
+ *
+ * @param {Hubot.Robot} robot the robot, which will provide an HTTP
+ * @param {{url: string, formData: Record<string, any>}} uploadData
+ * @param {*} callback
+ */
+function post(robot, uploadData, callback) {
+  robot.http(uploadData.url).post(uploadData.formData)((err, res, body) => {
+    if (err) {
+      callback(err, null);
+      return;
+    }
 
-    const json = await res.json();
-
-    callback(null, json);
-  } catch (ex) {
-    callback(ex, null);
-  }
+    data = JSON.parse(body);
+    callback(null, data);
+  });
 }
