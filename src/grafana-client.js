@@ -44,8 +44,7 @@ class GrafanaClient {
    */
   call(url, callback) {
     if (!this.endpoint) {
-      this.sendError('No Grafana endpoint configured.');
-      return;
+      throw new Error('No Grafana endpoint configured.');
     }
 
     this.res
@@ -99,8 +98,7 @@ class GrafanaClient {
    */
   post(url, data, callback) {
     if (!this.endpoint) {
-      this.sendError('No Grafana endpoint configured.');
-      return;
+      throw new Error('No Grafana endpoint configured.');
     }
 
     const jsonPayload = JSON.stringify(data);
@@ -139,15 +137,6 @@ class GrafanaClient {
     }
 
     return { host: grafana_host, api_key: grafana_api_key };
-  }
-
-  /**
-   *
-   * @param {string} message the message containing the error.
-   */
-  sendError(message) {
-    this.logger.error(message);
-    this.res.send(message);
   }
 
   hasValidEndpoint() {
