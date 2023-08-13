@@ -91,25 +91,25 @@ module.exports = (robot) => {
   const isUploadSupported = site() !== '';
 
   // Set Grafana host/api_key
-  robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (res) => {
-    res.brain = robot.brain;
-    const grafana = new GrafanaClient(res);
+  robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) => {
+    msg.brain = robot.brain;
+    const grafana = new GrafanaClient(msg);
 
     if (grafana.grafana_per_room === '1') {
-      const context = res.message.user.room.split('@')[0];
-      robot.brain.set(`grafana_${res.match[1]}_${context}`, res.match[2]);
-      return res.send(`Value set for ${res.match[1]}`);
+      const context = msg.message.user.room.split('@')[0];
+      robot.brain.set(`grafana_${msg.match[1]}_${context}`, msg.match[2]);
+      return msg.send(`Value set for ${msg.match[1]}`);
     }
-    return sendError('Set HUBOT_GRAFANA_PER_ROOM=1 to use multiple configurations.', res);
+    return sendError('Set HUBOT_GRAFANA_PER_ROOM=1 to use multiple configurations.', msg);
   });
 
   // Get a specific dashboard with options
-  robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (res) => {
-    const grafana = createGrafanaClient(res);
+  robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) => {
+    const grafana = createGrafanaClient(msg);
     if (!grafana) return;
 
-    let uid = res.match[1].trim();
-    const remainder = res.match[2];
+    let uid = msg.match[1].trim();
+    const remainder = msg.match[2];
     const timespan = {
       from: `now-${grafana_query_time_range}`,
       to: 'now',
@@ -170,7 +170,7 @@ module.exports = (robot) => {
       }
     }
 
-    robot.logger.debug(res.match);
+    robot.logger.debug(msg.match);
     robot.logger.debug(uid);
     robot.logger.debug(timespan);
     robot.logger.debug(variables);
@@ -185,7 +185,7 @@ module.exports = (robot) => {
 
       // Check dashboard information
       if (!dashboard) {
-        sendError('An error ocurred. Check your logs for more details.', res);
+        sendError('An error ocurred. Check your logs for more details.', msg);
         return;
       }
 
@@ -195,14 +195,14 @@ module.exports = (robot) => {
           grafana.get('search?type=dash-db').then((results) => {
             for (const item of Array.from(results)) {
               if (item.url.match(new RegExp(`\/d\/[a-z0-9\-]+\/${uid}$`, 'i'))) {
-                sendError(`Try your query again with \`${item.uid}\` instead of \`${uid}\``, res);
+                sendError(`Try your query again with \`${item.uid}\` instead of \`${uid}\``, msg);
                 return;
               }
             }
-            return sendError(dashboard.message, res);
+            return sendError(dashboard.message, msg);
           });
         } else {
-          sendError(dashboard.message, res);
+          sendError(dashboard.message, msg);
         }
 
         return;
@@ -219,7 +219,7 @@ module.exports = (robot) => {
 
       // Handle empty dashboard
       if (data.rows == null) {
-        return sendError('Dashboard empty.', res);
+        return sendError('Dashboard empty.', msg);
       }
 
       // Support for templated dashboards
@@ -282,13 +282,13 @@ module.exports = (robot) => {
           }
           const link = `${grafana.endpoint.host}/d/${uid}/?panelId=${panel.id}&fullscreen&from=${timespan.from}&to=${timespan.to}${variables}`;
 
-          sendDashboardChart(res, title, imageUrl, link);
+          sendDashboardChart(msg, title, imageUrl, link);
           returnedCount += 1;
         }
       }
 
       if (returnedCount === 0) {
-        return sendError('Could not locate desired panel.', res);
+        return sendError('Could not locate desired panel.', msg);
       }
     });
   });
@@ -302,14 +302,14 @@ module.exports = (robot) => {
   };
 
   // Get a list of available dashboards
-  robot.respond(/(?:grafana|graph|graf) list\s?(.+)?/i, (res) => {
-    const grafana = createGrafanaClient(res);
+  robot.respond(/(?:grafana|graph|graf) list\s?(.+)?/i, (msg) => {
+    const grafana = createGrafanaClient(msg);
     if (!grafana) return;
 
     let url = 'search?type=dash-db';
     let title = 'Available dashboards:\n';
-    if (res.match[1]) {
-      const tag = res.match[1].trim();
+    if (msg.match[1]) {
+      const tag = msg.match[1].trim();
       url += `&tag=${tag}`;
       title = `Dashboards tagged \`${tag}\`:\n`;
     }
@@ -318,7 +318,7 @@ module.exports = (robot) => {
       .get(url)
       .then((dashboards) => {
         robot.logger.debug(dashboards);
-        return sendDashboardList(dashboards, title, res);
+        return sendDashboardList(dashboards, title, msg);
       })
       .catch((err) => {
         robot.logger.error(err, 'Error while listing dashboards, url: ' + url);
@@ -347,33 +347,33 @@ module.exports = (robot) => {
   }
 
   // Search dashboards
-  robot.respond(/(?:grafana|graph|graf) search (.+)/i, (res) => {
-    const grafana = createGrafanaClient(res);
+  robot.respond(/(?:grafana|graph|graf) search (.+)/i, (msg) => {
+    const grafana = createGrafanaClient(msg);
     if (!grafana) return;
 
-    const query = res.match[1].trim();
+    const query = msg.match[1].trim();
     robot.logger.debug(query);
 
     return grafana
       .get(`search?type=dash-db&query=${query}`)
       .then((dashboards) => {
         const title = `Dashboards matching \`${query}\`:\n`;
-        sendDashboardList(dashboards, title, res);
+        sendDashboardList(dashboards, title, msg);
       })
       .catch((err) => this.robot.logger.error(err, 'Error searching for dashboard.'));
   });
 
   // Show alerts
-  robot.respond(/(?:grafana|graph|graf) alerts\s?(.+)?/i, async (res) => {
-    const grafana = createGrafanaClient(res);
+  robot.respond(/(?:grafana|graph|graf) alerts\s?(.+)?/i, async (msg) => {
+    const grafana = createGrafanaClient(msg);
     if (!grafana) return;
 
     let url = 'alerts';
     let title = 'All alerts:\n';
 
     // all alerts of a specific type
-    if (res.match[1]) {
-      const state = res.match[1].trim();
+    if (msg.match[1]) {
+      const state = msg.match[1].trim();
       url = `alerts?state=${state}`;
       title = `Alerts with state '${state}':\n`;
     }
@@ -384,7 +384,7 @@ module.exports = (robot) => {
       .get(url)
       .then((alerts) => {
         robot.logger.debug(alerts);
-        sendAlerts(alerts, title, res);
+        sendAlerts(alerts, title, msg);
       })
       .catch((err) => {
         robot.logger.error(err, 'Error while getting alerts on URL: ' + url);
@@ -392,12 +392,12 @@ module.exports = (robot) => {
   });
 
   // Pause/unpause an alert
-  robot.respond(/(?:grafana|graph|graf) (unpause|pause)\salert\s(\d+)/i, (res) => {
-    const grafana = createGrafanaClient(res);
+  robot.respond(/(?:grafana|graph|graf) (unpause|pause)\salert\s(\d+)/i, (msg) => {
+    const grafana = createGrafanaClient(msg);
     if (!grafana) return;
 
-    const paused = res.match[1] === 'pause';
-    const alertId = res.match[2];
+    const paused = msg.match[1] === 'pause';
+    const alertId = msg.match[2];
     const url = `alerts/${alertId}/pause`;
 
     return grafana
@@ -405,7 +405,7 @@ module.exports = (robot) => {
       .then((result) => {
         robot.logger.debug(result);
         if (result.message) {
-          res.send(result.message);
+          msg.send(result.message);
         }
       })
       .catch((err) => {
@@ -415,11 +415,11 @@ module.exports = (robot) => {
 
   // Pause/unpause all alerts
   // requires an API token with admin permissions
-  robot.respond(/(?:grafana|graph|graf) (unpause|pause) all(?:\s+alerts)?/i, async (res) => {
-    const grafana = createGrafanaClient(res);
+  robot.respond(/(?:grafana|graph|graf) (unpause|pause) all(?:\s+alerts)?/i, async (msg) => {
+    const grafana = createGrafanaClient(msg);
     if (!grafana) return;
 
-    const paused = res.match[1] === 'pause';
+    const paused = msg.match[1] === 'pause';
 
     const alerts = await grafana.get('alerts');
     if (alerts == null || alerts.length == 0) {
@@ -437,7 +437,7 @@ module.exports = (robot) => {
       }
     }
 
-    res.send(`Successfully tried to ${res.match[1]} *${alerts.length}* alerts.\n*Success: ${alerts.length - errored}*\n*Errored: ${errored}*`);
+    msg.send(`Successfully tried to ${msg.match[1]} *${alerts.length}* alerts.\n*Success: ${alerts.length - errored}*\n*Errored: ${errored}*`);
   });
 
   // Send a list of alerts
