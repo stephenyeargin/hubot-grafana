@@ -334,7 +334,7 @@ module.exports = (robot) => {
     res.logger = robot.logger;
 
     let grafana = new GrafanaClient(res);
-    if (!grafana.hasValidEndpoint(res)) {
+    if (grafana.endpoint == null) {
       sendError('No Grafana endpoint configured.', res);
       return null;
     }
@@ -573,7 +573,7 @@ module.exports = (robot) => {
 
   const uploadTo = {
     s3(msg, title, grafanaDashboardRequest, link) {
-      return grafanaDashboardRequest(async (err, res, body) => {
+      return grafanaDashboardRequest(async (download) => {
         const s3 = new S3Client({
           apiVersion: '2006-03-01',
           region: s3_region,
@@ -582,10 +582,10 @@ module.exports = (robot) => {
         const params = {
           Bucket: s3_bucket,
           Key: uploadPath(),
-          Body: body,
+          Body: download.body,
           ACL: 'public-read',
-          ContentLength: body.length,
-          ContentType: res.headers['content-type'],
+          ContentLength: download.body.length,
+          ContentType: download.contentType,
         };
         const command = new PutObjectCommand(params);
 
@@ -725,38 +725,29 @@ module.exports = (robot) => {
     const grafana = createGrafanaClient(msg);
     if (!grafana) return;
 
-    let requestHeaders;
-    if (grafana.grafana_api_key) {
-      requestHeaders = {
-        encoding: null,
-        auth: {
-          bearer: grafana.grafana_api_key,
-        },
-      };
-    } else {
-      requestHeaders = { encoding: null };
-    }
+    /**
+     * Pass this function along to the "registered" services that uploads the image.
+     * The function will download the .png image(s) dashboard. You must pass this
+     * function and use it inside your service upload implementation.
+     * @param {({ body: Buffer, contentType: string})=>void} callback
+     */
+    const grafanaDashboardRequest = (callback) => {
+      grafana
+        .download(url)
+        .then((r) => {
+          if (callback) {
+            callback(r);
+          }
+        })
+        .catch((err) => {
+          sendError(err, msg);
+        });
+    };
 
     // Default title if none provided
     if (!title) {
       title = 'Image';
     }
-
-    // Pass this function along to the "registered" services that uploads the image.
-    // The function will download the .png image(s) dashboard. You must pass this
-    // function and use it inside your service upload implementation.
-    const grafanaDashboardRequest = (callback) =>
-      download(url, requestHeaders, (err, res, body) => {
-        if (err) {
-          sendError(err, msg);
-          return;
-        }
-        robot.logger.debug(`Uploading file: ${body.length} bytes, content-type[${res.headers['content-type']}]`);
-        if (callback) {
-          return callback(err, res, body);
-        }
-        return null;
-      });
 
     return uploadTo[site()](msg, title, grafanaDashboardRequest, link);
   };
@@ -774,23 +765,5 @@ async function post(uploadData, callback) {
     callback(null, json);
   } catch (ex) {
     callback(ex, null);
-  }
-}
-
-/**
- * Uses the URL to download a buffer from.
- * @param {string} url the URL.
- * @param {Record<string, string>} headers the headers.
- * @param {Promise<unknown>} callback
- */
-async function download(url, headers, callback) {
-  let res, blob;
-
-  try {
-    res = await fetch(url, { headers: headers });
-    blob = await res.arrayBuffer();
-    return callback(null, res, blob);
-  } catch (ex) {
-    return callback(ex, res, blob);
   }
 }

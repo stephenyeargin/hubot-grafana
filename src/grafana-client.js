@@ -63,12 +63,13 @@ class GrafanaClient {
    * @param {boolean} isPost Indicates if the HTTP client should post.
    * @returns {ScopedClient}
    */
-  createHttpClient(url, isPost = false) {
+  createHttpClient(url, isPost = false, isDownload = false) {
     // TODO: should we use robot.http or just fetch
     // currently we cannot switch because of nock testing
 
-    const fullUrl = `${this.endpoint.host}/api/${url}`;
-    const headers = grafanaHeaders(this.endpoint, isPost);
+    // in case of a download we get a "full" URL
+    const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `${this.endpoint.host}/api/${url}`;
+    const headers = grafanaHeaders(this.endpoint, isPost, isDownload);
     const client = this.res.http(fullUrl).headers(headers);
 
     return client;
@@ -130,6 +131,31 @@ class GrafanaClient {
   }
 
   /**
+   * Downloads the given URL.
+   * @param {string} url The URL.
+   * @returns {{ body: Buffer, contentType: string}}
+   */
+  async download(url) {
+    let client = this.createHttpClient(url, false, true);
+
+    return new Promise((resolve, reject) => {
+      client.get()((err, res, body) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        this.logger.debug(`Uploading file: ${body.length} bytes, content-type[${res.headers['content-type']}]`);
+
+        resolve({
+          body,
+          contentType: res.headers['content-type'],
+        });
+      });
+    });
+  }
+
+  /**
    * Gets the Grafana endpoints. If grafana_per_room is set to 1, the endpoints will
    * be configured from by the context.
    * @returns { { host: string, api_key: string } | null }
@@ -152,19 +178,18 @@ class GrafanaClient {
 
     return { host: grafana_host, api_key: grafana_api_key };
   }
-
-  hasValidEndpoint() {
-    return this.endpoint != null;
-  }
 }
 
-function grafanaHeaders(endpoint, post = false) {
+function grafanaHeaders(endpoint, isPost = false, isDownload = false) {
   const headers = { Accept: 'application/json' };
   if (endpoint.api_key) {
     headers.Authorization = `Bearer ${endpoint.api_key}`;
   }
-  if (post) {
+  if (isPost) {
     headers['Content-Type'] = 'application/json';
+  }
+  if (isDownload) {
+    headers['encoding'] = null;
   }
   return headers;
 }
