@@ -47,10 +47,7 @@ class GrafanaClient {
       throw new Error('No Grafana endpoint configured.');
     }
 
-    this.res
-      .http(`${this.endpoint.host}/api/${url}`) // TODO: should we use robot.http or just fetch
-      .headers(grafanaHeaders(this.endpoint))
-      .get()((err, res, body) => {
+    this.createHttpClient(url).get()((err, res, body) => {
       if (err) {
         this.logger.error(err);
         return callback(false);
@@ -58,6 +55,18 @@ class GrafanaClient {
       const data = JSON.parse(body);
       return callback(data);
     });
+  }
+
+  /**
+   * Creates a scoped HTTP client.
+   * @param {string} url The URL.
+   * @returns {ScopedClient}
+   */
+  createHttpClient(url) {
+    // TODO: should we use robot.http or just fetch
+    // currently we cannot switch because of nock testing
+
+    return this.res.http(`${this.endpoint.host}/api/${url}`).headers(grafanaHeaders(this.endpoint));
   }
 
   /**
@@ -72,11 +81,8 @@ class GrafanaClient {
       throw new Error('No Grafana endpoint configured.');
     }
 
-    const fullUrl = `${this.endpoint.host}/api/${url}`;
-    const headers = grafanaHeaders(this.endpoint);
-
     return new Promise((done) => {
-      this.res.http(fullUrl).headers(headers).get()((err, res, body) => {
+      this.createHttpClient(url).get()((err, res, body) => {
         if (err) {
           throw err;
         }
