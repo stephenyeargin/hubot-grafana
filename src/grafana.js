@@ -67,7 +67,6 @@ module.exports = (robot) => {
   const rocketchat_password = process.env.ROCKETCHAT_PASSWORD;
   const max_return_dashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS || 25;
   const use_threads = process.env.HUBOT_GRAFANA_USE_THREADS || false;
-  const grafana = new GrafanaClient(robot);
 
   if (rocketchat_url && !rocketchat_url.startsWith('http')) {
     rocketchat_url = `http://${rocketchat_url}`;
@@ -93,6 +92,9 @@ module.exports = (robot) => {
 
   // Set Grafana host/api_key
   robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (res) => {
+    res.brain = robot.brain;
+    const grafana = new GrafanaClient(res);
+
     if (grafana.grafana_per_room === '1') {
       const context = res.message.user.room.split('@')[0];
       robot.brain.set(`grafana_${res.match[1]}_${context}`, res.match[2]);
@@ -103,6 +105,9 @@ module.exports = (robot) => {
 
   // Get a specific dashboard with options
   robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (res) => {
+    const grafana = createGrafanaClient(res);
+    if (!grafana) return;
+
     let uid = res.match[1].trim();
     const remainder = res.match[2];
     const timespan = {
@@ -121,12 +126,6 @@ module.exports = (robot) => {
       orgId: process.env.HUBOT_GRAFANA_ORG_ID || '',
       apiEndpoint: process.env.HUBOT_GRAFANA_API_ENDPOINT || 'd-solo',
     };
-
-    const endpoint = grafana.get_grafana_endpoint(res);
-    if (!endpoint) {
-      sendError('No Grafana endpoint configured.', res);
-      return;
-    }
 
     // Parse out a specific panel
     if (/\:/.test(uid)) {
@@ -181,7 +180,7 @@ module.exports = (robot) => {
     robot.logger.debug(pname);
 
     // Call the API to get information about this dashboard
-    return grafana.call(res, `dashboards/uid/${uid}`, (dashboard) => {
+    return grafana.call(`dashboards/uid/${uid}`, (dashboard) => {
       let template_map;
       robot.logger.debug(dashboard);
       // Check dashboard information
@@ -191,7 +190,7 @@ module.exports = (robot) => {
       if (dashboard.message) {
         // Search for URL slug to offer help
         if ((dashboard.message = 'Dashboard not found')) {
-          grafana.call(res, 'search?type=dash-db', (results) => {
+          grafana.call('search?type=dash-db', (results) => {
             for (const item of Array.from(results)) {
               if (item.url.match(new RegExp(`\/d\/[a-z0-9\-]+\/${uid}$`, 'i'))) {
                 sendError(`Try your query again with \`${item.uid}\` instead of \`${uid}\``, res);
@@ -270,14 +269,14 @@ module.exports = (robot) => {
           // Build links for message sending
           const title = formatTitleWithTemplate(panel.title, template_map);
           ({ uid } = dashboard.dashboard);
-          let imageUrl = `${endpoint.host}/render/${query.apiEndpoint}/${uid}/?panelId=${panel.id}&width=${query.width}&height=${query.height}&from=${timespan.from}&to=${timespan.to}${variables}`;
+          let imageUrl = `${grafana.endpoint.host}/render/${query.apiEndpoint}/${uid}/?panelId=${panel.id}&width=${query.width}&height=${query.height}&from=${timespan.from}&to=${timespan.to}${variables}`;
           if (query.tz) {
             imageUrl += `&tz=${encodeURIComponent(query.tz)}`;
           }
           if (query.orgId) {
             imageUrl += `&orgId=${encodeURIComponent(query.orgId)}`;
           }
-          const link = `${endpoint.host}/d/${uid}/?panelId=${panel.id}&fullscreen&from=${timespan.from}&to=${timespan.to}${variables}`;
+          const link = `${grafana.endpoint.host}/d/${uid}/?panelId=${panel.id}&fullscreen&from=${timespan.from}&to=${timespan.to}${variables}`;
 
           sendDashboardChart(res, title, imageUrl, link);
           returnedCount += 1;
@@ -300,7 +299,8 @@ module.exports = (robot) => {
 
   // Get a list of available dashboards
   robot.respond(/(?:grafana|graph|graf) list\s?(.+)?/i, (res) => {
-    if (!isValidEndpointConfig(res)) return;
+    const grafana = createGrafanaClient(res);
+    if (!grafana) return;
 
     let url = 'search?type=dash-db';
     let title = 'Available dashboards:\n';
@@ -311,7 +311,7 @@ module.exports = (robot) => {
     }
 
     return grafana
-      .get(res, url)
+      .get(url)
       .then((dashboards) => {
         robot.logger.debug(dashboards);
         return sendDashboardList(dashboards, title, res);
@@ -322,29 +322,35 @@ module.exports = (robot) => {
   });
 
   /**
-   * Validates if the endpoints are valid given the context. If the context is
-   * not valid, an error message will be send to the user.
+   * Creates a Grafana client based on the context. If it can't create one
+   * it will echo an error to the user.
    * @param {Hubot.Response} res the context.
-   * @returns {boolean}
+   * @returns {GrafanaClient | null}
    */
-  function isValidEndpointConfig(res) {
+  function createGrafanaClient(res) {
+    // Copy the brain -- should be set but isn't
+    // TODO: figure out what Hubot spec says
+    res.brain = robot.brain;
+
+    let grafana = new GrafanaClient(res);
     if (!grafana.hasValidEndpoint(res)) {
       sendError('No Grafana endpoint configured.', res);
-      return false;
+      return null;
     }
 
-    return true;
+    return grafana;
   }
 
   // Search dashboards
   robot.respond(/(?:grafana|graph|graf) search (.+)/i, (res) => {
-    if (!isValidEndpointConfig(res)) return;
+    const grafana = createGrafanaClient(res);
+    if (!grafana) return;
 
     const query = res.match[1].trim();
     robot.logger.debug(query);
 
     return grafana
-      .get(res, `search?type=dash-db&query=${query}`)
+      .get(`search?type=dash-db&query=${query}`)
       .then((dashboards) => {
         const title = `Dashboards matching \`${query}\`:\n`;
         sendDashboardList(dashboards, title, res);
@@ -354,7 +360,8 @@ module.exports = (robot) => {
 
   // Show alerts
   robot.respond(/(?:grafana|graph|graf) alerts\s?(.+)?/i, async (res) => {
-    if (!isValidEndpointConfig(res)) return;
+    const grafana = createGrafanaClient(res);
+    if (!grafana) return;
 
     let url = 'alerts';
     let title = 'All alerts:\n';
@@ -369,7 +376,7 @@ module.exports = (robot) => {
     robot.logger.debug(title.trim());
 
     await grafana
-      .get(res, url)
+      .get(url)
       .then((alerts) => {
         robot.logger.debug(alerts);
         sendAlerts(alerts, title, res);
@@ -381,9 +388,12 @@ module.exports = (robot) => {
 
   // Pause/unpause an alert
   robot.respond(/(?:grafana|graph|graf) (unpause|pause)\salert\s(\d+)/i, (res) => {
+    const grafana = createGrafanaClient(res);
+    if (!grafana) return;
+
     const paused = res.match[1] === 'pause';
     const alertId = res.match[2];
-    return grafana.post(res, `alerts/${alertId}/pause`, { paused }, (result) => {
+    return grafana.post(`alerts/${alertId}/pause`, { paused }, (result) => {
       robot.logger.debug(result);
       if (result.message) {
         return res.send(result.message);
@@ -394,8 +404,11 @@ module.exports = (robot) => {
   // Pause/unpause all alerts
   // requires an API token with admin permissions
   robot.respond(/(?:grafana|graph|graf) (unpause|pause) all(?:\s+alerts)?/i, (res) => {
+    const grafana = createGrafanaClient(res);
+    if (!grafana) return;
+
     const paused = res.match[1] === 'pause';
-    return grafana.call(res, 'alerts', (alerts) => {
+    return grafana.call('alerts', (alerts) => {
       robot.logger.debug(alerts);
       let errored = 0;
       if (!(alerts.length > 0)) {
@@ -403,7 +416,7 @@ module.exports = (robot) => {
       }
       for (const alert of Array.from(alerts)) {
         //TODO: don't know if this is tested
-        grafana.post(res, `alerts/${alert.id}/pause`, { paused }, (result) => {
+        grafana.post(`alerts/${alert.id}/pause`, { paused }, (result) => {
           robot.logger.debug(result);
           if (result === false) {
             return (errored += 1);
@@ -445,11 +458,11 @@ module.exports = (robot) => {
   /**
    * Sends the list of dashboards.
    * @param {any} dashboards the list of dashboards
-   * @param {string} message the message that is printed before the result
+   * @param {string} title the title that is printed before the result
    * @param {Hubot.Response} res the context.
    * @returns
    */
-  const sendDashboardList = (dashboards, message, res) => {
+  const sendDashboardList = (dashboards, title, res) => {
     let remaining;
     robot.logger.debug(dashboards);
     if (!(dashboards.length > 0)) {
@@ -471,7 +484,7 @@ module.exports = (robot) => {
       list.push(` (and ${remaining} more)`);
     }
 
-    return res.send(message + list.join('\n'));
+    return res.send(title + list.join('\n'));
   };
 
   // Handle generic errors
@@ -702,6 +715,9 @@ module.exports = (robot) => {
 
   // Fetch an image from provided URL, upload it to S3, returning the resulting URL
   const uploadChart = (msg, title, url, link, site) => {
+    const grafana = createGrafanaClient(msg);
+    if (!grafana) return;
+
     let requestHeaders;
     if (grafana.grafana_api_key) {
       requestHeaders = {

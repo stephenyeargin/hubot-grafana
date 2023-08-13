@@ -1,17 +1,35 @@
 'strict';
 
+const { ScopedClient } = require('scoped-http-client');
+
 class GrafanaClient {
   /**
    * Creates a new instance.
-   * @param {Hubot.Robot} robot
+   * @param {Hubot.Response} res the context.
    */
-  constructor(robot) {
-    this.robot = robot;
+  constructor(res) {
+    /**
+     * The context
+     * @type {Hubot.Response}
+     */
+    this.res = res;
 
     // Various configuration options stored in environment variables
     this.grafana_host = process.env.HUBOT_GRAFANA_HOST;
     this.grafana_api_key = process.env.HUBOT_GRAFANA_API_KEY;
     this.grafana_per_room = process.env.HUBOT_GRAFANA_PER_ROOM;
+
+    /**
+     * The endpoint, determined by the context.
+     * @type { { host: string, api_key: string } | null }
+     */
+    this.endpoint = this.get_grafana_endpoint();
+
+    /**
+     * The logger.
+     * @type {Hubot.Log}
+     */
+    this.logger = res.logger;
   }
 
   /**
@@ -24,19 +42,18 @@ class GrafanaClient {
    *
    * TODO: figure out return type
    */
-  call(res, url, callback) {
-    const endpoint = this.get_grafana_endpoint(res);
-    if (!endpoint) {
-      this.sendError('No Grafana endpoint configured.', res);
+  call(url, callback) {
+    if (!this.endpoint) {
+      this.sendError('No Grafana endpoint configured.');
       return;
     }
 
-    this.robot
-      .http(`${endpoint.host}/api/${url}`) // TODO: should we use robot.http or just fetch
-      .headers(grafanaHeaders(endpoint))
+    this.res
+      .http(`${this.endpoint.host}/api/${url}`) // TODO: should we use robot.http or just fetch
+      .headers(grafanaHeaders(this.endpoint))
       .get()((err, res, body) => {
       if (err) {
-        this.robot.logger.error(err);
+        this.logger.error(err);
         return callback(false);
       }
       const data = JSON.parse(body);
@@ -51,17 +68,16 @@ class GrafanaClient {
    * @param {string} url the url
    * @returns {Promise<any>}
    */
-  async get(res, url) {
-    const endpoint = this.get_grafana_endpoint(res);
-    if (!endpoint) {
+  async get(url) {
+    if (!this.endpoint) {
       throw new Error('No Grafana endpoint configured.');
     }
 
-    const fullUrl = `${endpoint.host}/api/${url}`;
-    const headers = grafanaHeaders(endpoint);
+    const fullUrl = `${this.endpoint.host}/api/${url}`;
+    const headers = grafanaHeaders(this.endpoint);
 
     return new Promise((done) => {
-      this.robot.http(fullUrl).headers(headers).get()((err, res, body) => {
+      this.res.http(fullUrl).headers(headers).get()((err, res, body) => {
         if (err) {
           throw err;
         }
@@ -81,20 +97,19 @@ class GrafanaClient {
    * @returns
    * TODO: figure out return type
    */
-  post(res, url, data, callback) {
-    const endpoint = this.get_grafana_endpoint(res);
-    if (!endpoint) {
-      this.sendError('No Grafana endpoint configured.', res);
+  post(url, data, callback) {
+    if (!this.endpoint) {
+      this.sendError('No Grafana endpoint configured.');
       return;
     }
 
     const jsonPayload = JSON.stringify(data);
-    return this.robot
-      .http(`${endpoint.host}/api/${url}`) // TODO: should we use robot.http or just fetch
-      .headers(grafanaHeaders(endpoint, true))
+    return this.res
+      .http(`${this.endpoint.host}/api/${url}`) // TODO: should we use robot.http or just fetch
+      .headers(grafanaHeaders(this.endpoint, true))
       .post(jsonPayload)((err, res, body) => {
       if (err) {
-        this.robot.logger.error(err);
+        this.logger.error(err);
         return callback(false);
       }
       data = JSON.parse(body);
@@ -103,30 +118,18 @@ class GrafanaClient {
   }
 
   /**
-   * Gets the room from the context.
-   * @param {Hubot.Response} res The context.
-   * @returns {string}
-   */
-  get_room(res) {
-    // placeholder for further adapter support (i.e. MS Teams) as then room also
-    // contains thread conversation id
-    return res.envelope.room;
-  }
-
-  /**
    * Gets the Grafana endpoints. If grafana_per_room is set to 1, the endpoints will
    * be configured from by the context.
-   * @param {Hubot.Response} res The context.
    * @returns { { host: string, api_key: string } | null }
    */
-  get_grafana_endpoint(res) {
+  get_grafana_endpoint() {
     let grafana_api_key = this.grafana_api_key;
     let grafana_host = this.grafana_host;
 
     if (this.grafana_per_room === '1') {
-      const room = this.get_room(res);
-      grafana_host = this.robot.brain.get(`grafana_host_${room}`);
-      grafana_api_key = this.robot.brain.get(`grafana_api_key_${room}`);
+      const room = get_room(this.res);
+      grafana_host = this.res.brain.get(`grafana_host_${room}`);
+      grafana_api_key = this.res.brain.get(`grafana_api_key_${room}`);
     }
 
     //TODO: this was only part of the grafana_per_room, but it
@@ -141,19 +144,14 @@ class GrafanaClient {
   /**
    *
    * @param {string} message the message containing the error.
-   * @param {Hubot.Response} res the context for which the error is sent.
    */
-  sendError(message, res) {
-    this.robot.logger.error(message);
-    res.send(message);
+  sendError(message) {
+    this.logger.error(message);
+    this.res.send(message);
   }
 
-  hasValidEndpoint(res) {
-    const endpoint = this.get_grafana_endpoint(res);
-    if (!endpoint) {
-      return false;
-    }
-    return true;
+  hasValidEndpoint() {
+    return this.endpoint != null;
   }
 }
 
@@ -166,6 +164,17 @@ function grafanaHeaders(endpoint, post = false) {
     headers['Content-Type'] = 'application/json';
   }
   return headers;
+}
+
+/**
+ * Gets the room from the context.
+ * @param {Hubot.Response} res The context.
+ * @returns {string}
+ */
+function get_room(res) {
+  // placeholder for further adapter support (i.e. MS Teams) as then room also
+  // contains thread conversation id
+  return res.envelope.room;
 }
 
 module.exports = {
