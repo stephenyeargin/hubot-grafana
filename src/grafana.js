@@ -346,7 +346,7 @@ module.exports = (robot) => {
       return null;
     }
 
-    let grafana = new GrafanaClient(res, robot.logger, host, api_key);
+    let grafana = new GrafanaClient(robot.http, robot.logger, host, api_key);
 
     return grafana;
   }

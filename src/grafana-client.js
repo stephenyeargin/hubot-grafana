@@ -5,17 +5,17 @@ const { ScopedClient } = require('scoped-http-client');
 class GrafanaClient {
   /**
    * Creates a new instance.
-   * @param {Hubot.Response} res the context.
+   * @param {(url: string, options?: HttpOptions)=>ScopedClient} http the HTTP client.
    * @param {Hubot.Log} res the logger.
    * @param {string} grafana_host the host.
    * @param {string} grafana_api_key the api key.
    */
-  constructor(res, logger, grafana_host, grafana_api_key) {
+  constructor(http, logger, grafana_host, grafana_api_key) {
     /**
      * The context
-     * @type {Hubot.Response}
+     * @type {(url: string, options?: HttpOptions)=>ScopedClient}
      */
-    this.res = res;
+    this.http = http;
 
     /**
      * The logger.
@@ -54,7 +54,7 @@ class GrafanaClient {
     // in case of a download we get a "full" URL
     const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `${this.grafana_host}/api/${url}`;
     const headers = grafanaHeaders(contentType, encoding, this.grafana_api_key);
-    const client = this.res.http(fullUrl).headers(headers);
+    const client = this.http(fullUrl).headers(headers);
 
     return client;
   }
