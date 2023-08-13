@@ -180,7 +180,7 @@ module.exports = (robot) => {
     robot.logger.debug(pname);
 
     // Call the API to get information about this dashboard
-    return grafana.call(`dashboards/uid/${uid}`, (dashboard) => {
+    return grafana.get(`dashboards/uid/${uid}`).then((dashboard) => {
       let template_map;
       robot.logger.debug(dashboard);
       // Check dashboard information
