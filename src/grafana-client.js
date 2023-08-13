@@ -35,16 +35,17 @@ class GrafanaClient {
   /**
    * Creates a scoped HTTP client.
    * @param {string} url The URL.
-   * @param {boolean} isPost Indicates if the HTTP client should post.
+   * @param {string | null} contentType Indicates if the HTTP client should post.
+   * @param {encoding | false} encoding Incidates if an encoding should be set.
    * @returns {ScopedClient}
    */
-  createHttpClient(url, isPost = false, isDownload = false) {
+  createHttpClient(url, contentType = null, encoding = false) {
     // TODO: should we use robot.http or just fetch
     // currently we cannot switch because of nock testing
 
     // in case of a download we get a "full" URL
     const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `${this.endpoint.host}/api/${url}`;
-    const headers = grafanaHeaders(this.endpoint, isPost, isDownload);
+    const headers = grafanaHeaders(contentType, encoding, this.endpoint.api_key);
     const client = this.res.http(fullUrl).headers(headers);
 
     return client;
@@ -90,7 +91,7 @@ class GrafanaClient {
     }
 
     const jsonPayload = JSON.stringify(data);
-    const http = this.createHttpClient(url, true);
+    const http = this.createHttpClient(url, 'application/json');
 
     return new Promise((resolve, reject) => {
       http.post(jsonPayload)((err, res, body) => {
@@ -111,7 +112,7 @@ class GrafanaClient {
    * @returns {{ body: Buffer, contentType: string}}
    */
   async download(url) {
-    let client = this.createHttpClient(url, false, true);
+    let client = this.createHttpClient(url, null, null);
 
     return new Promise((resolve, reject) => {
       client.get()((err, res, body) => {
@@ -155,17 +156,30 @@ class GrafanaClient {
   }
 }
 
-function grafanaHeaders(endpoint, isPost = false, isDownload = false) {
+/**
+ * Create headers for the fr
+ * @param {string | null} contentType Indicates if the HTTP client should post.
+ * @param {string | false} encoding Incidates if an encoding should be set.
+ * @param {string | null} api_key The API key.
+ * @returns
+ */
+function grafanaHeaders(contentType, encoding, api_key) {
   const headers = { Accept: 'application/json' };
-  if (endpoint.api_key) {
-    headers.Authorization = `Bearer ${endpoint.api_key}`;
+
+  if (contentType) {
+    headers['Content-Type'] = contentType;
   }
-  if (isPost) {
-    headers['Content-Type'] = 'application/json';
+
+  // download needs a null encoding
+  // TODO: are we sure?
+  if (encoding !== false) {
+    headers['encoding'] = encoding;
   }
-  if (isDownload) {
-    headers['encoding'] = null;
+
+  if (api_key) {
+    headers.Authorization = `Bearer ${api_key}`;
   }
+
   return headers;
 }
 
