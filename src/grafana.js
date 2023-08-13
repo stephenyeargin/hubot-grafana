@@ -49,7 +49,6 @@
 
 const crypto = require('crypto');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const fetch = require('node-fetch');
 const { GrafanaClient } = require('./grafana-client');
 
 /**
