@@ -7,30 +7,33 @@ class GrafanaClient {
    * Creates a new instance.
    * @param {Hubot.Response} res the context.
    * @param {Hubot.Log} res the logger.
+   * @param {string} grafana_host the host.
+   * @param {string} grafana_api_key the api key.
    */
-  constructor(res, logger) {
+  constructor(res, logger, grafana_host, grafana_api_key) {
     /**
      * The context
      * @type {Hubot.Response}
      */
     this.res = res;
 
-    // Various configuration options stored in environment variables
-    this.grafana_host = process.env.HUBOT_GRAFANA_HOST;
-    this.grafana_api_key = process.env.HUBOT_GRAFANA_API_KEY;
-    this.grafana_per_room = process.env.HUBOT_GRAFANA_PER_ROOM;
-
-    /**
-     * The endpoint, determined by the context.
-     * @type { { host: string, api_key: string } | null }
-     */
-    this.endpoint = this.get_grafana_endpoint();
-
     /**
      * The logger.
      * @type {Hubot.Log}
      */
     this.logger = logger;
+
+    /**
+     * The host.
+     * @type {string | null}
+     */
+    this.grafana_host = grafana_host;
+
+    /**
+     * The API key.
+     * @type {string | null}
+     */
+    this.grafana_api_key = grafana_api_key;
   }
 
   /**
@@ -41,12 +44,16 @@ class GrafanaClient {
    * @returns {ScopedClient}
    */
   createHttpClient(url, contentType = null, encoding = false) {
+    if (!url.startsWith('http://') && !url.startsWith('https://') && !this.grafana_host) {
+      throw new Error('No Grafana endpoint configured.');
+    }
+
     // TODO: should we use robot.http or just fetch
     // currently we cannot switch because of nock testing
 
     // in case of a download we get a "full" URL
-    const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `${this.endpoint.host}/api/${url}`;
-    const headers = grafanaHeaders(contentType, encoding, this.endpoint.api_key);
+    const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `${this.grafana_host}/api/${url}`;
+    const headers = grafanaHeaders(contentType, encoding, this.grafana_api_key);
     const client = this.res.http(fullUrl).headers(headers);
 
     return client;
@@ -60,10 +67,6 @@ class GrafanaClient {
    * @returns {Promise<any>}
    */
   async get(url) {
-    if (!this.endpoint) {
-      throw new Error('No Grafana endpoint configured.');
-    }
-
     let client = this.createHttpClient(url);
     return new Promise((resolve) => {
       client.get()((err, res, body) => {
@@ -87,12 +90,8 @@ class GrafanaClient {
    * TODO: figure out return type
    */
   post(url, data) {
-    if (!this.endpoint) {
-      throw new Error('No Grafana endpoint configured.');
-    }
-
-    const jsonPayload = JSON.stringify(data);
     const http = this.createHttpClient(url, 'application/json');
+    const jsonPayload = JSON.stringify(data);
 
     return new Promise((resolve, reject) => {
       http.post(jsonPayload)((err, res, body) => {
@@ -131,30 +130,6 @@ class GrafanaClient {
       });
     });
   }
-
-  /**
-   * Gets the Grafana endpoints. If grafana_per_room is set to 1, the endpoints will
-   * be configured from by the context.
-   * @returns { { host: string, api_key: string } | null }
-   */
-  get_grafana_endpoint() {
-    let grafana_api_key = this.grafana_api_key;
-    let grafana_host = this.grafana_host;
-
-    if (this.grafana_per_room === '1') {
-      const room = get_room(this.res);
-      grafana_host = this.res.brain.get(`grafana_host_${room}`);
-      grafana_api_key = this.res.brain.get(`grafana_api_key_${room}`);
-    }
-
-    //TODO: this was only part of the grafana_per_room, but it
-    //seems that it is OK never to continue without a grafana_host
-    if (!grafana_host) {
-      return null;
-    }
-
-    return { host: grafana_host, api_key: grafana_api_key };
-  }
 }
 
 /**
@@ -182,17 +157,6 @@ function grafanaHeaders(contentType, encoding, api_key) {
   }
 
   return headers;
-}
-
-/**
- * Gets the room from the context.
- * @param {Hubot.Response} res The context.
- * @returns {string}
- */
-function get_room(res) {
-  // placeholder for further adapter support (i.e. MS Teams) as then room also
-  // contains thread conversation id
-  return res.envelope.room;
 }
 
 module.exports = {

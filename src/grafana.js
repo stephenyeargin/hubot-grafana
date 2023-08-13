@@ -57,6 +57,10 @@ const { GrafanaClient } = require('./grafana-client');
  * @param {Hubot.Robot} robot
  */
 module.exports = (robot) => {
+  // Various configuration options stored in environment variables
+  const grafana_host = process.env.HUBOT_GRAFANA_HOST;
+  const grafana_api_key = process.env.HUBOT_GRAFANA_API_KEY;
+  const grafana_per_room = process.env.HUBOT_GRAFANA_PER_ROOM;
   const grafana_query_time_range = process.env.HUBOT_GRAFANA_QUERY_TIME_RANGE || '6h';
   const s3_bucket = process.env.HUBOT_GRAFANA_S3_BUCKET;
   const s3_prefix = process.env.HUBOT_GRAFANA_S3_PREFIX;
@@ -92,10 +96,7 @@ module.exports = (robot) => {
 
   // Set Grafana host/api_key
   robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) => {
-    msg.brain = robot.brain;
-    const grafana = new GrafanaClient(msg, robot.logger);
-
-    if (grafana.grafana_per_room === '1') {
+    if (grafana_per_room === '1') {
       const context = msg.message.user.room.split('@')[0];
       robot.brain.set(`grafana_${msg.match[1]}_${context}`, msg.match[2]);
       return msg.send(`Value set for ${msg.match[1]}`);
@@ -272,14 +273,14 @@ module.exports = (robot) => {
           // Build links for message sending
           const title = formatTitleWithTemplate(panel.title, template_map);
           ({ uid } = dashboard.dashboard);
-          let imageUrl = `${grafana.endpoint.host}/render/${query.apiEndpoint}/${uid}/?panelId=${panel.id}&width=${query.width}&height=${query.height}&from=${timespan.from}&to=${timespan.to}${variables}`;
+          let imageUrl = `${grafana.grafana_host}/render/${query.apiEndpoint}/${uid}/?panelId=${panel.id}&width=${query.width}&height=${query.height}&from=${timespan.from}&to=${timespan.to}${variables}`;
           if (query.tz) {
             imageUrl += `&tz=${encodeURIComponent(query.tz)}`;
           }
           if (query.orgId) {
             imageUrl += `&orgId=${encodeURIComponent(query.orgId)}`;
           }
-          const link = `${grafana.endpoint.host}/d/${uid}/?panelId=${panel.id}&fullscreen&from=${timespan.from}&to=${timespan.to}${variables}`;
+          const link = `${grafana.grafana_host}/d/${uid}/?panelId=${panel.id}&fullscreen&from=${timespan.from}&to=${timespan.to}${variables}`;
 
           sendDashboardChart(msg, title, imageUrl, link);
           returnedCount += 1;
@@ -331,15 +332,21 @@ module.exports = (robot) => {
    * @returns {GrafanaClient | null}
    */
   function createGrafanaClient(res) {
-    // Copy the brain -- should be set but isn't
-    // TODO: figure out what Hubot spec says
-    res.brain = robot.brain;
+    let api_key = grafana_api_key;
+    let host = grafana_host;
 
-    let grafana = new GrafanaClient(res, robot.logger);
-    if (grafana.endpoint == null) {
+    if (grafana_per_room === '1') {
+      const room = get_room(res);
+      host = robot.brain.get(`grafana_host_${room}`);
+      api_key = robot.brain.get(`grafana_api_key_${room}`);
+    }
+
+    if (host == null) {
       sendError('No Grafana endpoint configured.', res);
       return null;
     }
+
+    let grafana = new GrafanaClient(res, robot.logger, host, api_key);
 
     return grafana;
   }
@@ -771,4 +778,15 @@ function post(robot, uploadData, callback) {
     data = JSON.parse(body);
     callback(null, data);
   });
+}
+
+/**
+ * Gets the room from the context.
+ * @param {Hubot.Response} res The context.
+ * @returns {string}
+ */
+function get_room(res) {
+  // placeholder for further adapter support (i.e. MS Teams) as then room also
+  // contains thread conversation id
+  return res.envelope.room;
 }
