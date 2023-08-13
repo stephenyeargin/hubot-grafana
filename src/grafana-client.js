@@ -12,7 +12,7 @@ class GrafanaClient {
    */
   constructor(http, logger, grafana_host, grafana_api_key) {
     /**
-     * The context
+     * The HTTP client
      * @type {(url: string, options?: HttpOptions)=>ScopedClient}
      */
     this.http = http;
@@ -62,7 +62,6 @@ class GrafanaClient {
   /**
    * Performs a GET on the Grafana API.
    * Remarks: uses Hubot because of Nock testing.
-   * @param {Hubot.Response} res the context.
    * @param {string} url the url
    * @returns {Promise<any>}
    */
@@ -74,7 +73,6 @@ class GrafanaClient {
           throw err;
         }
         const data = JSON.parse(body);
-
         return resolve(data);
       });
     });
@@ -83,7 +81,6 @@ class GrafanaClient {
   /**
    * Performs a POST call to the Grafana API.
    *
-   * @param {Hubot.Response} res the Hubot context for which Grafana will be called.
    * @param {string} url The API sub URL
    * @param {Record<string, any>} data The data that will be sent.
    * @returns {Promise<any>}
@@ -133,11 +130,11 @@ class GrafanaClient {
 }
 
 /**
- * Create headers for the fr
+ * Create headers for the Grafana request.
  * @param {string | null} contentType Indicates if the HTTP client should post.
  * @param {string | false} encoding Incidates if an encoding should be set.
  * @param {string | null} api_key The API key.
- * @returns
+ * @returns {Record<string, string|null>}
  */
 function grafanaHeaders(contentType, encoding, api_key) {
   const headers = { Accept: 'application/json' };
