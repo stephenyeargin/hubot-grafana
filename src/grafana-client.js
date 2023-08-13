@@ -33,31 +33,6 @@ class GrafanaClient {
   }
 
   /**
-   * Performs a GET call to the Grafana API.
-   *
-   * @param {Hubot.Response} res the Hubot context for which Grafana will be called.
-   * @param {string} url The API sub URL
-   * @param {(Record<string, any> | false)=>void} callback The callback.
-   * @returns
-   *
-   * TODO: figure out return type
-   */
-  call(url, callback) {
-    if (!this.endpoint) {
-      throw new Error('No Grafana endpoint configured.');
-    }
-
-    this.createHttpClient(url).get()((err, res, body) => {
-      if (err) {
-        this.logger.error(err);
-        return callback(false);
-      }
-      const data = JSON.parse(body);
-      return callback(data);
-    });
-  }
-
-  /**
    * Creates a scoped HTTP client.
    * @param {string} url The URL.
    * @param {boolean} isPost Indicates if the HTTP client should post.

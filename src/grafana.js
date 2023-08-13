@@ -181,16 +181,18 @@ module.exports = (robot) => {
 
     // Call the API to get information about this dashboard
     return grafana.get(`dashboards/uid/${uid}`).then((dashboard) => {
-      let template_map;
       robot.logger.debug(dashboard);
+
       // Check dashboard information
       if (!dashboard) {
-        return sendError('An error ocurred. Check your logs for more details.', res);
+        sendError('An error ocurred. Check your logs for more details.', res);
+        return;
       }
+
       if (dashboard.message) {
         // Search for URL slug to offer help
-        if ((dashboard.message = 'Dashboard not found')) {
-          grafana.call('search?type=dash-db', (results) => {
+        if (dashboard.message == 'Dashboard not found') {
+          grafana.get('search?type=dash-db').then((results) => {
             for (const item of Array.from(results)) {
               if (item.url.match(new RegExp(`\/d\/[a-z0-9\-]+\/${uid}$`, 'i'))) {
                 sendError(`Try your query again with \`${item.uid}\` instead of \`${uid}\``, res);
@@ -202,6 +204,7 @@ module.exports = (robot) => {
         } else {
           sendError(dashboard.message, res);
         }
+
         return;
       }
 
@@ -220,6 +223,7 @@ module.exports = (robot) => {
       }
 
       // Support for templated dashboards
+      let template_map;
       robot.logger.debug(data.templating.list);
       if (data.templating.list) {
         template_map = [];
