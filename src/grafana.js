@@ -331,6 +331,7 @@ module.exports = (robot) => {
     // Copy the brain -- should be set but isn't
     // TODO: figure out what Hubot spec says
     res.brain = robot.brain;
+    res.logger = robot.logger;
 
     let grafana = new GrafanaClient(res);
     if (!grafana.hasValidEndpoint(res)) {
@@ -393,40 +394,46 @@ module.exports = (robot) => {
 
     const paused = res.match[1] === 'pause';
     const alertId = res.match[2];
-    return grafana.post(`alerts/${alertId}/pause`, { paused }, (result) => {
-      robot.logger.debug(result);
-      if (result.message) {
-        return res.send(result.message);
-      }
-    });
+    const url = `alerts/${alertId}/pause`;
+
+    return grafana
+      .post(url, { paused })
+      .then((result) => {
+        robot.logger.debug(result);
+        if (result.message) {
+          res.send(result.message);
+        }
+      })
+      .catch((err) => {
+        robot.logger.error(err, 'Error for URL: ' + url);
+      });
   });
 
   // Pause/unpause all alerts
   // requires an API token with admin permissions
-  robot.respond(/(?:grafana|graph|graf) (unpause|pause) all(?:\s+alerts)?/i, (res) => {
+  robot.respond(/(?:grafana|graph|graf) (unpause|pause) all(?:\s+alerts)?/i, async (res) => {
     const grafana = createGrafanaClient(res);
     if (!grafana) return;
 
     const paused = res.match[1] === 'pause';
-    return grafana.call('alerts', (alerts) => {
-      robot.logger.debug(alerts);
-      let errored = 0;
-      if (!(alerts.length > 0)) {
-        return;
+
+    const alerts = await grafana.get('alerts');
+    if (alerts == null || alerts.length == 0) {
+      return;
+    }
+
+    let errored = 0;
+    for (const alert of Array.from(alerts)) {
+      const url = `alerts/${alert.id}/pause`;
+      try {
+        await grafana.post(url, { paused });
+      } catch (err) {
+        robot.logger.error(err, 'Error for URL: ' + url);
+        errored++;
       }
-      for (const alert of Array.from(alerts)) {
-        //TODO: don't know if this is tested
-        grafana.post(`alerts/${alert.id}/pause`, { paused }, (result) => {
-          robot.logger.debug(result);
-          if (result === false) {
-            return (errored += 1);
-          }
-        });
-      }
-      return res.send(
-        `Successfully tried to ${res.match[1]} *${alerts.length}* alerts.\n*Success: ${alerts.length - errored}*\n*Errored: ${errored}*`
-      );
-    });
+    }
+
+    res.send(`Successfully tried to ${res.match[1]} *${alerts.length}* alerts.\n*Success: ${alerts.length - errored}*\n*Errored: ${errored}*`);
   });
 
   // Send a list of alerts

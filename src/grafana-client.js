@@ -60,13 +60,18 @@ class GrafanaClient {
   /**
    * Creates a scoped HTTP client.
    * @param {string} url The URL.
+   * @param {boolean} isPost Indicates if the HTTP client should post.
    * @returns {ScopedClient}
    */
-  createHttpClient(url) {
+  createHttpClient(url, isPost = false) {
     // TODO: should we use robot.http or just fetch
     // currently we cannot switch because of nock testing
 
-    return this.res.http(`${this.endpoint.host}/api/${url}`).headers(grafanaHeaders(this.endpoint));
+    const fullUrl = `${this.endpoint.host}/api/${url}`;
+    const headers = grafanaHeaders(this.endpoint, isPost);
+    const client = this.res.http(fullUrl).headers(headers);
+
+    return client;
   }
 
   /**
@@ -81,13 +86,15 @@ class GrafanaClient {
       throw new Error('No Grafana endpoint configured.');
     }
 
-    return new Promise((done) => {
-      this.createHttpClient(url).get()((err, res, body) => {
+    let client = this.createHttpClient(url);
+    return new Promise((resolve) => {
+      client.get()((err, res, body) => {
         if (err) {
           throw err;
         }
         const data = JSON.parse(body);
-        return done(data);
+
+        return resolve(data);
       });
     });
   }
@@ -98,26 +105,27 @@ class GrafanaClient {
    * @param {Hubot.Response} res the Hubot context for which Grafana will be called.
    * @param {string} url The API sub URL
    * @param {Record<string, any>} data The data that will be sent.
-   * @param {(success: boolean, Record<string, any>)=>void} callback The callback.
-   * @returns
+   * @returns {Promise<any>}
    * TODO: figure out return type
    */
-  post(url, data, callback) {
+  post(url, data) {
     if (!this.endpoint) {
       throw new Error('No Grafana endpoint configured.');
     }
 
     const jsonPayload = JSON.stringify(data);
-    return this.res
-      .http(`${this.endpoint.host}/api/${url}`) // TODO: should we use robot.http or just fetch
-      .headers(grafanaHeaders(this.endpoint, true))
-      .post(jsonPayload)((err, res, body) => {
-      if (err) {
-        this.logger.error(err);
-        return callback(false);
-      }
-      data = JSON.parse(body);
-      return callback(data);
+    const http = this.createHttpClient(url, true);
+
+    return new Promise((resolve, reject) => {
+      http.post(jsonPayload)((err, res, body) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        data = JSON.parse(body);
+        resolve(data);
+      });
     });
   }
 
