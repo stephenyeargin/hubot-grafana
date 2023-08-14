@@ -87,7 +87,7 @@ describe('rocketchat', () => {
             done(err);
           }
         },
-        1000,
+        100,
       );
     });
   });
@@ -136,7 +136,7 @@ describe('rocketchat', () => {
             done(err);
           }
         },
-        1000,
+        100,
       );
     });
   });
