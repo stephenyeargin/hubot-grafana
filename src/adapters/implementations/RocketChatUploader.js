@@ -4,7 +4,7 @@ const { Uploader } = require('../Uploader');
 
 class RocketChatUploader extends Uploader {
   /**
-   * Creats a new instance.
+   * Creates a new instance.
    * @param {Hubot.Robot} robot the robot, TODO: let's see if we can refactor it out!
    * @param {Hubot.Log} logger the logger
    */
@@ -31,7 +31,15 @@ class RocketChatUploader extends Uploader {
     this.logger = logger;
   }
 
-  upload(msg, title, grafanaDashboardRequest, link) {
+    /**
+   * Uploads the a screenshot of the dashboards.
+   *
+   * @param {Hubot.Response} res the context.
+   * @param {string} title the title of the dashboard.
+   * @param {({ body: Buffer, contentType: string})=>void} grafanaDashboardRequest request for getting the screenshot.
+   * @param {string} grafanaChartLink link to the Grafana chart.
+   */
+  upload(res, title, grafanaDashboardRequest, grafanaChartLink) {
     const authData = {
       url: `${this.rocketchat_url}/api/v1/login`,
       form: {
@@ -44,7 +52,7 @@ class RocketChatUploader extends Uploader {
     return post(robot, authData, (err, rocketchatResBodyJson) => {
       if (err) {
         this.logger.error(err);
-        msg.send(`${title} - [Rocketchat auth Error - invalid url, user or password/can't access rocketchat api] - ${link}`);
+        res.send(`${title} - [Rocketchat auth Error - invalid url, user or password/can't access rocketchat api] - ${grafanaChartLink}`);
         return;
       }
       let errMsg;
@@ -52,7 +60,7 @@ class RocketChatUploader extends Uploader {
       if (status !== 'success') {
         errMsg = rocketchatResBodyJson.message;
         this.logger.error(errMsg);
-        msg.send(`${title} - [Rocketchat auth Error - ${errMsg}] - ${link}`);
+        res.send(`${title} - [Rocketchat auth Error - ${errMsg}] - ${grafanaChartLink}`);
         return;
       }
 
@@ -60,13 +68,13 @@ class RocketChatUploader extends Uploader {
 
       // fill in the POST request. This must be www-form/multipart
       const uploadData = {
-        url: `${this.rocketchat_url}/api/v1/rooms.upload/${msg.envelope.user.roomID}`,
+        url: `${this.rocketchat_url}/api/v1/rooms.upload/${res.envelope.user.roomID}`,
         headers: {
           'X-Auth-Token': auth.authToken,
           'X-User-Id': auth.userId,
         },
         formData: {
-          msg: `${title}: ${link}`,
+          msg: `${title}: ${grafanaChartLink}`,
           // grafanaDashboardRequest() is the method that downloads the .png
           file: {
             value: grafanaDashboardRequest(),
@@ -79,17 +87,17 @@ class RocketChatUploader extends Uploader {
       };
 
       // Try to upload the image to rocketchat else pass the link over
-      return post(this.robot, uploadData, (err, res) => {
+      return post(this.robot, uploadData, (err, body) => {
         // Error logging, we must also check the body response.
         // It will be something like: { "success": <boolean>, "error": <error message> }
         if (err) {
           this.logger.error(err);
-          return res.send(`${title} - [Upload Error] - ${link}`);
+          return res.send(`${title} - [Upload Error] - ${grafanaChartLink}`);
         }
-        if (!res.success) {
-          errMsg = res.error;
+        if (!body.success) {
+          errMsg = body.error;
           this.logger.error(`rocketchat service error while posting data:${errMsg}`);
-          return res.send(`${title} - [Form Error: can't upload file : ${errMsg}] - ${link}`);
+          return res.send(`${title} - [Form Error: can't upload file : ${errMsg}] - ${grafanaChartLink}`);
         }
       });
     });

@@ -1,13 +1,15 @@
 'strict';
 class Uploader {
+
   /**
+   * Uploads the a screenshot of the dashboards.
    *
-   * @param {Hubot.Response} msg the context
-   * @param {string} title
-   * @param {*} grafanaDashboardRequest
-   * @param {string} link
+   * @param {Hubot.Response} res the context
+   * @param {string} title the title of the dashboard.
+   * @param {({ body: Buffer, contentType: string})=>void} grafanaDashboardRequest request for getting the screenshot.
+   * @param {string} grafanaChartLink link to the Grafana chart.
    */
-  upload(msg, title, grafanaDashboardRequest, link) {
+  upload(res, title, grafanaDashboardRequest, grafanaChartLink) {
     throw new Error('Not supported');
   }
 }

@@ -6,6 +6,7 @@ const { Uploader } = require('../Uploader');
 
 class S3Uploader extends Uploader {
   /**
+   * Creates a new instance.
    *
    * @param {Responder} responder the responder, called when the upload completes
    * @param {Hubot.Log} logger the logger
@@ -29,7 +30,15 @@ class S3Uploader extends Uploader {
     this.s3_region = process.env.HUBOT_GRAFANA_S3_REGION || process.env.AWS_REGION || 'us-standard';
   }
 
-  upload(msg, title, grafanaDashboardRequest, link) {
+  /**
+   * Uploads the a screenshot of the dashboards.
+   *
+   * @param {Hubot.Response} res the context.
+   * @param {string} title the title of the dashboard.
+   * @param {({ body: Buffer, contentType: string})=>void} grafanaDashboardRequest request for getting the screenshot.
+   * @param {string} grafanaChartLink link to the Grafana chart.
+   */
+  upload(res, title, grafanaDashboardRequest, grafanaChartLink) {
     return grafanaDashboardRequest(async (download) => {
       // Pick a random filename
       const prefix = this.s3_prefix || 'grafana';
@@ -52,11 +61,11 @@ class S3Uploader extends Uploader {
 
       s3.send(command)
         .then(() => {
-          this.responder.send(msg, title, `https://${this.s3_bucket}.s3.${this.s3_region}.amazonaws.com/${params.Key}`, link);
+          this.responder.send(res, title, `https://${this.s3_bucket}.s3.${this.s3_region}.amazonaws.com/${params.Key}`, grafanaChartLink);
         })
         .catch((s3Err) => {
           this.logger.error(`Upload Error Code: ${s3Err}`);
-          return msg.send(`${title} - [Upload Error] - ${link}`);
+          return res.send(`${title} - [Upload Error] - ${grafanaChartLink}`);
         });
     });
   }

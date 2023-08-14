@@ -250,9 +250,9 @@ module.exports = (robot) => {
           if (query.orgId) {
             imageUrl += `&orgId=${encodeURIComponent(query.orgId)}`;
           }
-          const link = `${grafana.grafana_host}/d/${uid}/?panelId=${panel.id}&fullscreen&from=${timespan.from}&to=${timespan.to}${variables}`;
+          const grafanaChartLink = `${grafana.grafana_host}/d/${uid}/?panelId=${panel.id}&fullscreen&from=${timespan.from}&to=${timespan.to}${variables}`;
 
-          sendDashboardChart(msg, title, imageUrl, link);
+          sendDashboardChart(msg, title, imageUrl, grafanaChartLink);
           returnedCount += 1;
         }
       }
@@ -264,12 +264,12 @@ module.exports = (robot) => {
   });
 
   // Process the bot response
-  const sendDashboardChart = (msg, title, imageUrl, link) => {
+  const sendDashboardChart = (res, title, imageUrl, grafanaChartLink) => {
     if (adapter.isUploadSupported()) {
-      uploadChart(msg, title, imageUrl, link);
+      uploadChart(res, title, imageUrl, grafanaChartLink);
     }
     else {
-      adapter.responder.send(msg, title, imageUrl, link);
+      adapter.responder.send(res, title, imageUrl, grafanaChartLink);
     }
   };
 
@@ -501,8 +501,8 @@ module.exports = (robot) => {
   };
 
   // Fetch an image from provided URL, upload it to S3, returning the resulting URL
-  const uploadChart = (msg, title, url, link) => {
-    const grafana = createGrafanaClient(msg);
+  const uploadChart = (res, title, imageUrl, grafanaChartLink) => {
+    const grafana = createGrafanaClient(res);
     if (!grafana) return;
 
     /**
@@ -513,14 +513,14 @@ module.exports = (robot) => {
      */
     const grafanaDashboardRequest = (callback) => {
       grafana
-        .download(url)
+        .download(imageUrl)
         .then((r) => {
           if (callback) {
             callback(r);
           }
         })
         .catch((err) => {
-          sendError(err, msg);
+          sendError(err, res);
         });
     };
 
@@ -529,7 +529,7 @@ module.exports = (robot) => {
       title = 'Image';
     }
 
-    adapter.uploader.upload(msg, title, grafanaDashboardRequest, link);
+    adapter.uploader.upload(res, title, grafanaDashboardRequest, grafanaChartLink);
   };
 }
 
