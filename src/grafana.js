@@ -50,6 +50,7 @@
 const crypto = require('crypto');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { GrafanaClient } = require('./grafana-client');
+const { Adapter } = require('./adapter');
 
 /**
  * Adds the Grafana commands to Hubot.
@@ -75,23 +76,8 @@ module.exports = (robot) => {
     rocketchat_url = `http://${rocketchat_url}`;
   }
 
-  const site = () => {
-    // prioritize S3 if configured
-    if (s3_bucket) {
-      return 's3';
-    }
-    if (/slack/i.test(robot.adapterName)) {
-      return 'slack';
-    }
-    if (/rocketchat/i.test(robot.adapterName)) {
-      return 'rocketchat';
-    }
-    if (/telegram/i.test(robot.adapterName)) {
-      return 'telegram';
-    }
-    return '';
-  };
-  const isUploadSupported = site() !== '';
+  const adapter = new Adapter(robot);
+  const isUploadSupported = adapter.site !== '';
 
   // Set Grafana host/api_key
   robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) => {
@@ -295,9 +281,10 @@ module.exports = (robot) => {
   // Process the bot response
   const sendDashboardChart = (msg, title, imageUrl, link) => {
     if (isUploadSupported) {
-      return uploadChart(msg, title, imageUrl, link, site);
+      return uploadChart(msg, title, imageUrl, link);
     }
-    return sendRobotResponse(msg, title, imageUrl, link);
+
+    adapter.responder.send(msg, title, imageUrl, link);
   };
 
   // Get a list of available dashboards
@@ -527,61 +514,16 @@ module.exports = (robot) => {
     });
   };
 
-  // Send robot response
-  const sendRobotResponse = (res, title, image, link) => {
-    switch (robot.adapterName) {
-      // Slack
-      case 'slack':
-      case 'hubot-slack':
-      case '@hubot-friends/hubot-slack':
-        if (use_threads) {
-          res.message.thread_ts = res.message.rawMessage.ts;
-        }
-        return res.send({
-          attachments: [
-            {
-              fallback: `${title}: ${image} - ${link}`,
-              title,
-              title_link: link,
-              image_url: image,
-            },
-          ],
-          unfurl_links: false,
-        });
-      // Hipchat
-      case 'hipchat':
-      case 'hubot-hipchat':
-        return res.send(`${title}: ${link} - ${image}`);
-      // BearyChat
-      case 'hubot-bearychat':
-      case 'bearychat':
-        return robot.emit('bearychat.attachment', {
-          message: {
-            room: res.envelope.room,
-          },
-          text: `[${title}](${link})`,
-          attachments: [
-            {
-              fallback: `${title}: ${image} - ${link}`,
-              images: [{ url: image }],
-            },
-          ],
-        });
-      // Everything else
-      default:
-        return res.send(`${title}: ${image} - ${link}`);
-    }
-  };
-
-  // Pick a random filename
-  const uploadPath = () => {
-    const prefix = s3_prefix || 'grafana';
-    return `${prefix}/${crypto.randomBytes(20).toString('hex')}.png`;
-  };
-
   const uploadTo = {
     s3(msg, title, grafanaDashboardRequest, link) {
       return grafanaDashboardRequest(async (download) => {
+
+        // Pick a random filename
+        const uploadPath = () => {
+          const prefix = s3_prefix || 'grafana';
+          return `${prefix}/${crypto.randomBytes(20).toString('hex')}.png`;
+        };
+
         const s3 = new S3Client({
           apiVersion: '2006-03-01',
           region: s3_region,
@@ -599,7 +541,7 @@ module.exports = (robot) => {
 
         s3.send(command)
           .then(() => {
-            return sendRobotResponse(msg, title, `https://${s3_bucket}.s3.${s3_region}.amazonaws.com/${params.Key}`, link);
+            adapter.responder.send(msg, title, `https://${s3_bucket}.s3.${s3_region}.amazonaws.com/${params.Key}`, link);
           })
           .catch((s3Err) => {
             robot.logger.error(`Upload Error Code: ${s3Err}`);
@@ -729,7 +671,7 @@ module.exports = (robot) => {
   };
 
   // Fetch an image from provided URL, upload it to S3, returning the resulting URL
-  const uploadChart = (msg, title, url, link, site) => {
+  const uploadChart = (msg, title, url, link) => {
     const grafana = createGrafanaClient(msg);
     if (!grafana) return;
 
@@ -757,7 +699,7 @@ module.exports = (robot) => {
       title = 'Image';
     }
 
-    return uploadTo[site()](msg, title, grafanaDashboardRequest, link);
+    return uploadTo[adapter.site](msg, title, grafanaDashboardRequest, link);
   };
 };
 
