@@ -25,7 +25,15 @@ class SlackUploader extends Uploader {
     this.logger = logger;
   }
 
-  upload(msg, title, grafanaDashboardRequest, link) {
+  /**
+   * Uploads the a screenshot of the dashboards.
+   *
+   * @param {Hubot.Response} res the context.
+   * @param {string} title the title of the dashboard.
+   * @param {({ body: Buffer, contentType: string})=>void} grafanaDashboardRequest request for getting the screenshot.
+   * @param {string} grafanaChartLink link to the Grafana chart.
+   */
+  upload(res, title, grafanaDashboardRequest, grafanaChartLink) {
     const testAuthData = {
       url: 'https://slack.com/api/auth.test',
       formData: {
@@ -37,7 +45,7 @@ class SlackUploader extends Uploader {
     return post(this.robot, testAuthData, (err, slackResBodyJson) => {
       if (err) {
         this.logger.error(err);
-        msg.send(`${title} - [Slack auth.test Error - invalid token/can't fetch team url] - ${link}`);
+        res.send(`${title} - [Slack auth.test Error - invalid token/can't fetch team url] - ${grafanaChartLink}`);
         return;
       }
       const slack_url = slackResBodyJson.url;
@@ -47,7 +55,7 @@ class SlackUploader extends Uploader {
         url: `${slack_url.replace(/\/$/, '')}/api/files.upload`,
         formData: {
           title: `${title}`,
-          channels: msg.envelope.room,
+          channels: res.envelope.room,
           token: this.slack_token,
           // grafanaDashboardRequest() is the method that downloads the .png
           file: grafanaDashboardRequest(),
@@ -57,7 +65,7 @@ class SlackUploader extends Uploader {
 
       // Post images in thread if configured
       if (this.use_threads) {
-        uploadData.formData.thread_ts = msg.message.rawMessage.ts;
+        uploadData.formData.thread_ts = res.message.rawMessage.ts;
       }
 
       // Try to upload the image to slack else pass the link over
@@ -66,11 +74,11 @@ class SlackUploader extends Uploader {
         // It will be something like: { "ok": <boolean>, "error": <error message> }
         if (err) {
           this.logger.error(err);
-          return msg.send(`${title} - [Upload Error] - ${link}`);
+          return res.send(`${title} - [Upload Error] - ${grafanaChartLink}`);
         }
         if (!res.ok) {
           this.logger.error(`Slack service error while posting data:${res.error}`);
-          return msg.send(`${title} - [Form Error: can't upload file] - ${link}`);
+          return res.send(`${title} - [Form Error: can't upload file] - ${grafanaChartLink}`);
         }
       });
     });
