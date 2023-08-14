@@ -106,7 +106,7 @@ class GrafanaClient {
   /**
    * Downloads the given URL.
    * @param {string} url The URL.
-   * @returns {{ body: Buffer, contentType: string}}
+   * @returns {Promise<{ body: Buffer, contentType: string}>}
    */
   async download(url) {
     let client = this.createHttpClient(url, null, null);

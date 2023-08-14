@@ -1,5 +1,5 @@
 'strict';
-const { Responder } = require("./Responder");
+const { Responder } = require("../Responder");
 
 class HipChatResponder extends Responder {
   /**

@@ -47,10 +47,8 @@
 //   hubot graf unpause all alerts - Un-pause all alerts (admin permissions required)
 //
 
-const crypto = require('crypto');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { GrafanaClient } = require('./grafana-client');
-const { Adapter } = require('./adapter');
+const { Adapter } = require('./adapters/Adapter');
 
 /**
  * Adds the Grafana commands to Hubot.
@@ -62,22 +60,9 @@ module.exports = (robot) => {
   const grafana_api_key = process.env.HUBOT_GRAFANA_API_KEY;
   const grafana_per_room = process.env.HUBOT_GRAFANA_PER_ROOM;
   const grafana_query_time_range = process.env.HUBOT_GRAFANA_QUERY_TIME_RANGE || '6h';
-  const s3_bucket = process.env.HUBOT_GRAFANA_S3_BUCKET;
-  const s3_prefix = process.env.HUBOT_GRAFANA_S3_PREFIX;
-  const s3_region = process.env.HUBOT_GRAFANA_S3_REGION || process.env.AWS_REGION || 'us-standard';
-  const slack_token = process.env.HUBOT_SLACK_TOKEN;
-  let rocketchat_url = process.env.ROCKETCHAT_URL;
-  const rocketchat_user = process.env.ROCKETCHAT_USER;
-  const rocketchat_password = process.env.ROCKETCHAT_PASSWORD;
   const max_return_dashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS || 25;
-  const use_threads = process.env.HUBOT_GRAFANA_USE_THREADS || false;
-
-  if (rocketchat_url && !rocketchat_url.startsWith('http')) {
-    rocketchat_url = `http://${rocketchat_url}`;
-  }
 
   const adapter = new Adapter(robot);
-  const isUploadSupported = adapter.site !== '';
 
   // Set Grafana host/api_key
   robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) => {
@@ -280,11 +265,12 @@ module.exports = (robot) => {
 
   // Process the bot response
   const sendDashboardChart = (msg, title, imageUrl, link) => {
-    if (isUploadSupported) {
-      return uploadChart(msg, title, imageUrl, link);
+    if (adapter.isUploadSupported()) {
+      uploadChart(msg, title, imageUrl, link);
     }
-
-    adapter.responder.send(msg, title, imageUrl, link);
+    else {
+      adapter.responder.send(msg, title, imageUrl, link);
+    }
   };
 
   // Get a list of available dashboards
@@ -514,162 +500,6 @@ module.exports = (robot) => {
     });
   };
 
-  const uploadTo = {
-    s3(msg, title, grafanaDashboardRequest, link) {
-      return grafanaDashboardRequest(async (download) => {
-
-        // Pick a random filename
-        const uploadPath = () => {
-          const prefix = s3_prefix || 'grafana';
-          return `${prefix}/${crypto.randomBytes(20).toString('hex')}.png`;
-        };
-
-        const s3 = new S3Client({
-          apiVersion: '2006-03-01',
-          region: s3_region,
-        });
-
-        const params = {
-          Bucket: s3_bucket,
-          Key: uploadPath(),
-          Body: download.body,
-          ACL: 'public-read',
-          ContentLength: download.body.length,
-          ContentType: download.contentType,
-        };
-        const command = new PutObjectCommand(params);
-
-        s3.send(command)
-          .then(() => {
-            adapter.responder.send(msg, title, `https://${s3_bucket}.s3.${s3_region}.amazonaws.com/${params.Key}`, link);
-          })
-          .catch((s3Err) => {
-            robot.logger.error(`Upload Error Code: ${s3Err}`);
-            return msg.send(`${title} - [Upload Error] - ${link}`);
-          });
-      });
-    },
-
-    slack(msg, title, grafanaDashboardRequest, link) {
-      const testAuthData = {
-        url: 'https://slack.com/api/auth.test',
-        formData: {
-          token: slack_token,
-        },
-      };
-
-      // We test auth against slack to obtain the team URL
-      return post(robot, testAuthData, (err, slackResBodyJson) => {
-        if (err) {
-          robot.logger.error(err);
-          return msg.send(`${title} - [Slack auth.test Error - invalid token/can't fetch team url] - ${link}`);
-        }
-        const slack_url = slackResBodyJson.url;
-
-        // fill in the POST request. This must be www-form/multipart
-        const uploadData = {
-          url: `${slack_url.replace(/\/$/, '')}/api/files.upload`,
-          formData: {
-            title: `${title}`,
-            channels: msg.envelope.room,
-            token: slack_token,
-            // grafanaDashboardRequest() is the method that downloads the .png
-            file: grafanaDashboardRequest(),
-            filetype: 'png',
-          },
-        };
-
-        // Post images in thread if configured
-        if (use_threads) {
-          uploadData.formData.thread_ts = msg.message.rawMessage.ts;
-        }
-
-        // Try to upload the image to slack else pass the link over
-        return post(robot, uploadData, (err, res) => {
-          // Error logging, we must also check the body response.
-          // It will be something like: { "ok": <boolean>, "error": <error message> }
-          if (err) {
-            robot.logger.error(err);
-            return msg.send(`${title} - [Upload Error] - ${link}`);
-          }
-          if (!res.ok) {
-            robot.logger.error(`Slack service error while posting data:${res.error}`);
-            return msg.send(`${title} - [Form Error: can't upload file] - ${link}`);
-          }
-        });
-      });
-    },
-
-    rocketchat(msg, title, grafanaDashboardRequest, link) {
-      const authData = {
-        url: `${rocketchat_url}/api/v1/login`,
-        form: {
-          username: rocketchat_user,
-          password: rocketchat_password,
-        },
-      };
-
-      // We auth against rocketchat to obtain the auth token
-
-      return post(robot, authData, (err, rocketchatResBodyJson) => {
-        if (err) {
-          robot.logger.error(err);
-          return msg.send(`${title} - [Rocketchat auth Error - invalid url, user or password/can't access rocketchat api] - ${link}`);
-        }
-        let errMsg;
-        const { status } = rocketchatResBodyJson;
-        if (status !== 'success') {
-          errMsg = rocketchatResBodyJson.message;
-          robot.logger.error(errMsg);
-          msg.send(`${title} - [Rocketchat auth Error - ${errMsg}] - ${link}`);
-        }
-
-        const auth = rocketchatResBodyJson.data;
-
-        // fill in the POST request. This must be www-form/multipart
-        const uploadData = {
-          url: `${rocketchat_url}/api/v1/rooms.upload/${msg.envelope.user.roomID}`,
-          headers: {
-            'X-Auth-Token': auth.authToken,
-            'X-User-Id': auth.userId,
-          },
-          formData: {
-            msg: `${title}: ${link}`,
-            // grafanaDashboardRequest() is the method that downloads the .png
-            file: {
-              value: grafanaDashboardRequest(),
-              options: {
-                filename: `${title} ${Date()}.png`,
-                contentType: 'image/png',
-              },
-            },
-          },
-        };
-
-        // Try to upload the image to rocketchat else pass the link over
-        return post(robot, uploadData, (err, res) => {
-          // Error logging, we must also check the body response.
-          // It will be something like: { "success": <boolean>, "error": <error message> }
-          if (err) {
-            robot.logger.error(err);
-            return msg.send(`${title} - [Upload Error] - ${link}`);
-          }
-          if (!res.success) {
-            errMsg = res.error;
-            robot.logger.error(`rocketchat service error while posting data:${errMsg}`);
-            return msg.send(`${title} - [Form Error: can't upload file : ${errMsg}] - ${link}`);
-          }
-        });
-      });
-    },
-    telegram(msg, title, grafanaDashboardRequest, link) {
-      const caption = `${title}: ${link}`;
-      return msg.sendPhoto(msg.envelope.room, grafanaDashboardRequest(), {
-        caption,
-      });
-    },
-  };
-
   // Fetch an image from provided URL, upload it to S3, returning the resulting URL
   const uploadChart = (msg, title, url, link) => {
     const grafana = createGrafanaClient(msg);
@@ -699,27 +529,10 @@ module.exports = (robot) => {
       title = 'Image';
     }
 
-    return uploadTo[adapter.site](msg, title, grafanaDashboardRequest, link);
+    adapter.uploader.upload(msg, title, grafanaDashboardRequest, link);
   };
-};
-
-/**
- *
- * @param {Hubot.Robot} robot the robot, which will provide an HTTP
- * @param {{url: string, formData: Record<string, any>}} uploadData
- * @param {*} callback
- */
-function post(robot, uploadData, callback) {
-  robot.http(uploadData.url).post(uploadData.formData)((err, res, body) => {
-    if (err) {
-      callback(err, null);
-      return;
-    }
-
-    data = JSON.parse(body);
-    callback(null, data);
-  });
 }
+
 
 /**
  * Gets the room from the context.
