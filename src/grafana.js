@@ -33,6 +33,7 @@
 //   If you want to use the Slack adapter's "attachment" formatting:
 //     hubot: v2.7.2+
 //     hubot-slack: 4.0+
+//     @hubot-friends/hubot-slack: 1.0+
 //
 // Commands:
 //   hubot graf set `[host|api_key]` <value> - Setup Grafana host or API key
