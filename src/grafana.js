@@ -517,7 +517,6 @@ module.exports = (robot) => {
       return;
     }
 
-    //TODO: weird mesage for a downloader -- to have an upload file message
     robot.logger.debug(`Uploading file: ${file.body.length} bytes, content-type[${file.contentType}]`);
 
     adapter.uploader.upload(res, title || 'Image', file, grafanaChartLink);
