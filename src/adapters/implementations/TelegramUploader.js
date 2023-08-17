@@ -13,7 +13,7 @@ class TelegramUploader extends Uploader {
   upload(res, title, file, grafanaChartLink) {
     const caption = `${title}: ${grafanaChartLink}`;
 
-    //TODO: I donnot believe this will work, needs testing
+    // Check: https://github.com/lukefx/hubot-telegram/blob/master/src/TelegramMiddleware.ts#L19
     res.sendPhoto(res.envelope.room, file.body, {
       caption,
     });
