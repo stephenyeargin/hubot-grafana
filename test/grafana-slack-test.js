@@ -56,9 +56,7 @@ describe('slack', () => {
       ctx.robot.adapter.client = {
         web: {
           files: {
-            uploadV2(args) {
-              uploadResult.done(args);
-            },
+            uploadV2: uploadResult.set
           },
         },
       };
@@ -73,13 +71,14 @@ describe('slack', () => {
       let response = await uploadResult;
 
       expect(response).not.to.be.null;
-      expect(response.initial_comment).to.eql(
+      expect(response).to.be.of.length(1)
+      expect(response[0].initial_comment).to.eql(
         'logins: https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now'
       );
-      expect(response.channels).to.eql('#mocha');
-      expect(response.title).to.equal('dashboard');
-      expect(response.filename).to.eql('logins.png');
-      expect(response.file).not.to.be.null;
+      expect(response[0].channels).to.eql('#mocha');
+      expect(response[0].title).to.equal('dashboard');
+      expect(response[0].filename).to.eql('logins.png');
+      expect(response[0].file).not.to.be.null;
     });
   });
 });

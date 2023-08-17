@@ -38,7 +38,7 @@ class TestBotContext {
   }
 
   createAwaitableValue() {
-    return new AwaitableValue().asPromise();
+    return createAwaitableValue();
   }
 
   async wait(ms) {
@@ -68,33 +68,31 @@ class TestBotContext {
   }
 }
 
-class AwaitableValue {
-  /**
-   * Creates a promise that can be set from the outside
-   * with a value.
-   * @returns {Promise<T> & { done<T>(value:T):void }}
-   */
-  asPromise() {
-    var promise = new Promise((done) => {
-      if (this.value) {
-        return done(this.value);
-      }
+/**
+ * Creates a value that can be awaited and execute when the
+ * set function is called.
+ * @returns {Promise<any[]> & { set<any[]>(...value:any[]):void }}
+ */
+function createAwaitableValue() {
+  let value;
+  let resolve;
 
-      this.done = done;
-    });
-
-    promise.done = this.done;
-    return promise;
-  }
-
-  done(value) {
-    this.value = value;
-
-    if (this.done) {
-      this.done(value);
-      this.done = null;
+  const promise = new Promise((done) => {
+    if (value !== undefined) {
+      done(value);
+      return;
     }
-  }
+    resolve = done;
+  });
+
+  promise.set = function () {
+    value = arguments;
+    if (resolve !== undefined) {
+      resolve(value);
+    }
+  };
+
+  return promise;
 }
 
 function setupEnv(settings) {
@@ -172,7 +170,5 @@ async function createTestBot(settings = null) {
 module.exports = {
   createTestBot,
   TestBotContext,
-  createAwaitableValue: function () {
-    return new AwaitableValue().asPromise();
-  },
+  createAwaitableValue,
 };

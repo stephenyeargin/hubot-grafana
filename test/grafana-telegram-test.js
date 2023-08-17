@@ -38,9 +38,7 @@ describe('telegram', () => {
       let uploader = new TelegramUploader();
       let sendPhotoResult = createAwaitableValue();
       let res = {
-        sendPhoto: function () {
-          sendPhotoResult.done(arguments);
-        },
+        sendPhoto: sendPhotoResult.set,
         envelope: {
           room: '#mocha',
         },
