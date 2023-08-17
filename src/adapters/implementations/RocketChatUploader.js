@@ -31,15 +31,15 @@ class RocketChatUploader extends Uploader {
     this.logger = logger;
   }
 
-    /**
+  /**
    * Uploads the a screenshot of the dashboards.
    *
    * @param {Hubot.Response} res the context.
    * @param {string} title the title of the dashboard.
-   * @param {({ body: Buffer, contentType: string})=>void} grafanaDashboardRequest request for getting the screenshot.
+   * @param {{ body: Buffer, contentType: string}=>void} file the screenshot.
    * @param {string} grafanaChartLink link to the Grafana chart.
    */
-  upload(res, title, grafanaDashboardRequest, grafanaChartLink) {
+  upload(res, title, file, grafanaChartLink) {
     const authData = {
       url: `${this.rocketchat_url}/api/v1/login`,
       form: {
@@ -49,7 +49,7 @@ class RocketChatUploader extends Uploader {
     };
 
     // We auth against rocketchat to obtain the auth token
-    return post(robot, authData, (err, rocketchatResBodyJson) => {
+    post(robot, authData, async (err, rocketchatResBodyJson) => {
       if (err) {
         this.logger.error(err);
         res.send(`${title} - [Rocketchat auth Error - invalid url, user or password/can't access rocketchat api] - ${grafanaChartLink}`);
@@ -67,6 +67,7 @@ class RocketChatUploader extends Uploader {
       const auth = rocketchatResBodyJson.data;
 
       // fill in the POST request. This must be www-form/multipart
+      // TODO: needs some extra testing!
       const uploadData = {
         url: `${this.rocketchat_url}/api/v1/rooms.upload/${res.envelope.user.roomID}`,
         headers: {
@@ -77,7 +78,7 @@ class RocketChatUploader extends Uploader {
           msg: `${title}: ${grafanaChartLink}`,
           // grafanaDashboardRequest() is the method that downloads the .png
           file: {
-            value: grafanaDashboardRequest(),
+            value: file.body,
             options: {
               filename: `${title} ${Date()}.png`,
               contentType: 'image/png',
