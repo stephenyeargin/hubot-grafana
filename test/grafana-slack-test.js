@@ -1,5 +1,4 @@
-const chai = require('chai');
-const { expect } = chai;
+const { expect } = require('chai');
 const { createTestBot, TestBotContext } = require('./common/TestBot');
 
 describe('slack', () => {

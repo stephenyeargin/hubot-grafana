@@ -1,6 +1,4 @@
-const chai = require('chai');
-const { expect } = chai;
-
+const { expect } = require('chai');
 const { TestBotContext, createTestBot } = require('./common/TestBot');
 
 describe('retrieve graphs by timezone', function () {

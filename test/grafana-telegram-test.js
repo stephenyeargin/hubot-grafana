@@ -1,7 +1,5 @@
-const chai = require('chai');
-const { expect } = chai;
+const { expect } = require('chai');
 const { createTestBot, TestBotContext, createAwaitableValue } = require('./common/TestBot');
-const { Response } = require('hubot/src/response');
 const { TelegramUploader } = require('../src/adapters/implementations/TelegramUploader');
 
 describe('telegram', () => {
