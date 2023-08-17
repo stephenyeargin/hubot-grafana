@@ -74,11 +74,11 @@ class Adapter {
   get uploader() {
     switch (this.site) {
       case 's3':
-        return new S3Uploader(this.responder, this.logger);
+        return new S3Uploader(this.responder, this.robot.logger);
       case 'rocketchat':
-        return new RocketChatUploader(this.robot, this.logger);
+        return new RocketChatUploader(this.robot, this.robot.logger);
       case 'slack':
-        return new SlackUploader(this.robot, this.logger);
+        return new SlackUploader(this.robot, this.robot.logger, this.responder);
       case 'telegram':
         return new TelegramUploader()
     }

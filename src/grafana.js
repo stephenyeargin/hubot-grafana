@@ -25,7 +25,6 @@
 //   HUBOT_GRAFANA_S3_PREFIX - Optional; Bucket prefix (useful for shared buckets)
 //   HUBOT_GRAFANA_S3_REGION - Optional; Bucket region (defaults to us-standard)
 //   HUBOT_GRAFANA_USE_THREADS - Optional; When set to any value, graphs are sent in thread instead of as new message.
-//   HUBOT_SLACK_TOKEN - Optional; Token to connect to Slack (already configured with the adapter)
 //   ROCKETCHAT_URL - Optional; URL to your Rocket.Chat instance (already configured with the adapter)
 //   ROCKETCHAT_USER - Optional; Bot username (already configured with the adapter)
 //   ROCKETCHAT_PASSWORD - Optional; Bot password (already configured with the adapter)
@@ -267,8 +266,7 @@ module.exports = (robot) => {
   const sendDashboardChart = (res, title, imageUrl, grafanaChartLink) => {
     if (adapter.isUploadSupported()) {
       uploadChart(res, title, imageUrl, grafanaChartLink);
-    }
-    else {
+    } else {
       adapter.responder.send(res, title, imageUrl, grafanaChartLink);
     }
   };
@@ -414,7 +412,11 @@ module.exports = (robot) => {
       }
     }
 
-    msg.send(`Successfully tried to ${msg.match[1]} *${alerts.length}* alerts.\n*Success: ${alerts.length - errored}*\n*Errored: ${errored}*`);
+    msg.send(
+      `Successfully tried to ${msg.match[1]} *${alerts.length}* alerts.\n*Success: ${
+        alerts.length - errored
+      }*\n*Errored: ${errored}*`
+    );
   });
 
   // Send a list of alerts
@@ -501,38 +503,23 @@ module.exports = (robot) => {
   };
 
   // Fetch an image from provided URL, upload it to S3, returning the resulting URL
-  const uploadChart = (res, title, imageUrl, grafanaChartLink) => {
+  const uploadChart = async (res, title, imageUrl, grafanaChartLink) => {
     const grafana = createGrafanaClient(res);
     if (!grafana) return;
 
-    /**
-     * Pass this function along to the "registered" services that uploads the image.
-     * The function will download the .png image(s) dashboard. You must pass this
-     * function and use it inside your service upload implementation.
-     * @param {({ body: Buffer, contentType: string})=>void} callback
-     */
-    const grafanaDashboardRequest = (callback) => {
-      grafana
-        .download(imageUrl)
-        .then((r) => {
-          if (callback) {
-            callback(r);
-          }
-        })
-        .catch((err) => {
-          sendError(err, res);
-        });
-    };
+    //1. download the file
+    let file = null;
 
-    // Default title if none provided
-    if (!title) {
-      title = 'Image';
+    try {
+      file = await grafana.download(imageUrl);
+    } catch (err) {
+      sendError(err, res);
+      return;
     }
 
-    adapter.uploader.upload(res, title, grafanaDashboardRequest, grafanaChartLink);
+    adapter.uploader.upload(res, title || 'Image', file, grafanaChartLink);
   };
-}
-
+};
 
 /**
  * Gets the room from the context.
