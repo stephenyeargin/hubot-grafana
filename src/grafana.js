@@ -25,7 +25,6 @@
 //   HUBOT_GRAFANA_S3_PREFIX - Optional; Bucket prefix (useful for shared buckets)
 //   HUBOT_GRAFANA_S3_REGION - Optional; Bucket region (defaults to us-standard)
 //   HUBOT_GRAFANA_USE_THREADS - Optional; When set to any value, graphs are sent in thread instead of as new message.
-//   HUBOT_SLACK_TOKEN - Optional; Token to connect to Slack (already configured with the adapter)
 //   ROCKETCHAT_URL - Optional; URL to your Rocket.Chat instance (already configured with the adapter)
 //   ROCKETCHAT_USER - Optional; Bot username (already configured with the adapter)
 //   ROCKETCHAT_PASSWORD - Optional; Bot password (already configured with the adapter)
@@ -47,9 +46,8 @@
 //   hubot graf unpause all alerts - Un-pause all alerts (admin permissions required)
 //
 
-const crypto = require('crypto');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { GrafanaClient } = require('./grafana-client');
+const { Adapter } = require('./adapters/Adapter');
 
 /**
  * Adds the Grafana commands to Hubot.
@@ -61,37 +59,9 @@ module.exports = (robot) => {
   const grafana_api_key = process.env.HUBOT_GRAFANA_API_KEY;
   const grafana_per_room = process.env.HUBOT_GRAFANA_PER_ROOM;
   const grafana_query_time_range = process.env.HUBOT_GRAFANA_QUERY_TIME_RANGE || '6h';
-  const s3_bucket = process.env.HUBOT_GRAFANA_S3_BUCKET;
-  const s3_prefix = process.env.HUBOT_GRAFANA_S3_PREFIX;
-  const s3_region = process.env.HUBOT_GRAFANA_S3_REGION || process.env.AWS_REGION || 'us-standard';
-  const slack_token = process.env.HUBOT_SLACK_TOKEN;
-  let rocketchat_url = process.env.ROCKETCHAT_URL;
-  const rocketchat_user = process.env.ROCKETCHAT_USER;
-  const rocketchat_password = process.env.ROCKETCHAT_PASSWORD;
   const max_return_dashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS || 25;
-  const use_threads = process.env.HUBOT_GRAFANA_USE_THREADS || false;
 
-  if (rocketchat_url && !rocketchat_url.startsWith('http')) {
-    rocketchat_url = `http://${rocketchat_url}`;
-  }
-
-  const site = () => {
-    // prioritize S3 if configured
-    if (s3_bucket) {
-      return 's3';
-    }
-    if (/slack/i.test(robot.adapterName)) {
-      return 'slack';
-    }
-    if (/rocketchat/i.test(robot.adapterName)) {
-      return 'rocketchat';
-    }
-    if (/telegram/i.test(robot.adapterName)) {
-      return 'telegram';
-    }
-    return '';
-  };
-  const isUploadSupported = site() !== '';
+  const adapter = new Adapter(robot);
 
   // Set Grafana host/api_key
   robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) => {
@@ -279,9 +249,9 @@ module.exports = (robot) => {
           if (query.orgId) {
             imageUrl += `&orgId=${encodeURIComponent(query.orgId)}`;
           }
-          const link = `${grafana.grafana_host}/d/${uid}/?panelId=${panel.id}&fullscreen&from=${timespan.from}&to=${timespan.to}${variables}`;
+          const grafanaChartLink = `${grafana.grafana_host}/d/${uid}/?panelId=${panel.id}&fullscreen&from=${timespan.from}&to=${timespan.to}${variables}`;
 
-          sendDashboardChart(msg, title, imageUrl, link);
+          sendDashboardChart(msg, title, imageUrl, grafanaChartLink);
           returnedCount += 1;
         }
       }
@@ -293,11 +263,12 @@ module.exports = (robot) => {
   });
 
   // Process the bot response
-  const sendDashboardChart = (msg, title, imageUrl, link) => {
-    if (isUploadSupported) {
-      return uploadChart(msg, title, imageUrl, link, site);
+  const sendDashboardChart = (res, title, imageUrl, grafanaChartLink) => {
+    if (adapter.isUploadSupported()) {
+      uploadChart(res, title, imageUrl, grafanaChartLink);
+    } else {
+      adapter.responder.send(res, title, imageUrl, grafanaChartLink);
     }
-    return sendRobotResponse(msg, title, imageUrl, link);
   };
 
   // Get a list of available dashboards
@@ -441,7 +412,11 @@ module.exports = (robot) => {
       }
     }
 
-    msg.send(`Successfully tried to ${msg.match[1]} *${alerts.length}* alerts.\n*Success: ${alerts.length - errored}*\n*Errored: ${errored}*`);
+    msg.send(
+      `Successfully tried to ${msg.match[1]} *${alerts.length}* alerts.\n*Success: ${
+        alerts.length - errored
+      }*\n*Errored: ${errored}*`
+    );
   });
 
   // Send a list of alerts
@@ -527,257 +502,24 @@ module.exports = (robot) => {
     });
   };
 
-  // Send robot response
-  const sendRobotResponse = (res, title, image, link) => {
-    switch (robot.adapterName) {
-      // Slack
-      case 'slack':
-      case 'hubot-slack':
-      case '@hubot-friends/hubot-slack':
-        if (use_threads) {
-          res.message.thread_ts = res.message.rawMessage.ts;
-        }
-        return res.send({
-          attachments: [
-            {
-              fallback: `${title}: ${image} - ${link}`,
-              title,
-              title_link: link,
-              image_url: image,
-            },
-          ],
-          unfurl_links: false,
-        });
-      // Hipchat
-      case 'hipchat':
-      case 'hubot-hipchat':
-        return res.send(`${title}: ${link} - ${image}`);
-      // BearyChat
-      case 'hubot-bearychat':
-      case 'bearychat':
-        return robot.emit('bearychat.attachment', {
-          message: {
-            room: res.envelope.room,
-          },
-          text: `[${title}](${link})`,
-          attachments: [
-            {
-              fallback: `${title}: ${image} - ${link}`,
-              images: [{ url: image }],
-            },
-          ],
-        });
-      // Everything else
-      default:
-        return res.send(`${title}: ${image} - ${link}`);
-    }
-  };
-
-  // Pick a random filename
-  const uploadPath = () => {
-    const prefix = s3_prefix || 'grafana';
-    return `${prefix}/${crypto.randomBytes(20).toString('hex')}.png`;
-  };
-
-  const uploadTo = {
-    s3(msg, title, grafanaDashboardRequest, link) {
-      return grafanaDashboardRequest(async (download) => {
-        const s3 = new S3Client({
-          apiVersion: '2006-03-01',
-          region: s3_region,
-        });
-
-        const params = {
-          Bucket: s3_bucket,
-          Key: uploadPath(),
-          Body: download.body,
-          ACL: 'public-read',
-          ContentLength: download.body.length,
-          ContentType: download.contentType,
-        };
-        const command = new PutObjectCommand(params);
-
-        s3.send(command)
-          .then(() => {
-            return sendRobotResponse(msg, title, `https://${s3_bucket}.s3.${s3_region}.amazonaws.com/${params.Key}`, link);
-          })
-          .catch((s3Err) => {
-            robot.logger.error(`Upload Error Code: ${s3Err}`);
-            return msg.send(`${title} - [Upload Error] - ${link}`);
-          });
-      });
-    },
-
-    slack(msg, title, grafanaDashboardRequest, link) {
-      const testAuthData = {
-        url: 'https://slack.com/api/auth.test',
-        formData: {
-          token: slack_token,
-        },
-      };
-
-      // We test auth against slack to obtain the team URL
-      return post(robot, testAuthData, (err, slackResBodyJson) => {
-        if (err) {
-          robot.logger.error(err);
-          return msg.send(`${title} - [Slack auth.test Error - invalid token/can't fetch team url] - ${link}`);
-        }
-        const slack_url = slackResBodyJson.url;
-
-        // fill in the POST request. This must be www-form/multipart
-        const uploadData = {
-          url: `${slack_url.replace(/\/$/, '')}/api/files.upload`,
-          formData: {
-            title: `${title}`,
-            channels: msg.envelope.room,
-            token: slack_token,
-            // grafanaDashboardRequest() is the method that downloads the .png
-            file: grafanaDashboardRequest(),
-            filetype: 'png',
-          },
-        };
-
-        // Post images in thread if configured
-        if (use_threads) {
-          uploadData.formData.thread_ts = msg.message.rawMessage.ts;
-        }
-
-        // Try to upload the image to slack else pass the link over
-        return post(robot, uploadData, (err, res) => {
-          // Error logging, we must also check the body response.
-          // It will be something like: { "ok": <boolean>, "error": <error message> }
-          if (err) {
-            robot.logger.error(err);
-            return msg.send(`${title} - [Upload Error] - ${link}`);
-          }
-          if (!res.ok) {
-            robot.logger.error(`Slack service error while posting data:${res.error}`);
-            return msg.send(`${title} - [Form Error: can't upload file] - ${link}`);
-          }
-        });
-      });
-    },
-
-    rocketchat(msg, title, grafanaDashboardRequest, link) {
-      const authData = {
-        url: `${rocketchat_url}/api/v1/login`,
-        form: {
-          username: rocketchat_user,
-          password: rocketchat_password,
-        },
-      };
-
-      // We auth against rocketchat to obtain the auth token
-
-      return post(robot, authData, (err, rocketchatResBodyJson) => {
-        if (err) {
-          robot.logger.error(err);
-          return msg.send(`${title} - [Rocketchat auth Error - invalid url, user or password/can't access rocketchat api] - ${link}`);
-        }
-        let errMsg;
-        const { status } = rocketchatResBodyJson;
-        if (status !== 'success') {
-          errMsg = rocketchatResBodyJson.message;
-          robot.logger.error(errMsg);
-          msg.send(`${title} - [Rocketchat auth Error - ${errMsg}] - ${link}`);
-        }
-
-        const auth = rocketchatResBodyJson.data;
-
-        // fill in the POST request. This must be www-form/multipart
-        const uploadData = {
-          url: `${rocketchat_url}/api/v1/rooms.upload/${msg.envelope.user.roomID}`,
-          headers: {
-            'X-Auth-Token': auth.authToken,
-            'X-User-Id': auth.userId,
-          },
-          formData: {
-            msg: `${title}: ${link}`,
-            // grafanaDashboardRequest() is the method that downloads the .png
-            file: {
-              value: grafanaDashboardRequest(),
-              options: {
-                filename: `${title} ${Date()}.png`,
-                contentType: 'image/png',
-              },
-            },
-          },
-        };
-
-        // Try to upload the image to rocketchat else pass the link over
-        return post(robot, uploadData, (err, res) => {
-          // Error logging, we must also check the body response.
-          // It will be something like: { "success": <boolean>, "error": <error message> }
-          if (err) {
-            robot.logger.error(err);
-            return msg.send(`${title} - [Upload Error] - ${link}`);
-          }
-          if (!res.success) {
-            errMsg = res.error;
-            robot.logger.error(`rocketchat service error while posting data:${errMsg}`);
-            return msg.send(`${title} - [Form Error: can't upload file : ${errMsg}] - ${link}`);
-          }
-        });
-      });
-    },
-    telegram(msg, title, grafanaDashboardRequest, link) {
-      const caption = `${title}: ${link}`;
-      return msg.sendPhoto(msg.envelope.room, grafanaDashboardRequest(), {
-        caption,
-      });
-    },
-  };
-
   // Fetch an image from provided URL, upload it to S3, returning the resulting URL
-  const uploadChart = (msg, title, url, link, site) => {
-    const grafana = createGrafanaClient(msg);
+  const uploadChart = async (res, title, imageUrl, grafanaChartLink) => {
+    const grafana = createGrafanaClient(res);
     if (!grafana) return;
 
-    /**
-     * Pass this function along to the "registered" services that uploads the image.
-     * The function will download the .png image(s) dashboard. You must pass this
-     * function and use it inside your service upload implementation.
-     * @param {({ body: Buffer, contentType: string})=>void} callback
-     */
-    const grafanaDashboardRequest = (callback) => {
-      grafana
-        .download(url)
-        .then((r) => {
-          if (callback) {
-            callback(r);
-          }
-        })
-        .catch((err) => {
-          sendError(err, msg);
-        });
-    };
+    //1. download the file
+    let file = null;
 
-    // Default title if none provided
-    if (!title) {
-      title = 'Image';
-    }
-
-    return uploadTo[site()](msg, title, grafanaDashboardRequest, link);
-  };
-};
-
-/**
- *
- * @param {Hubot.Robot} robot the robot, which will provide an HTTP
- * @param {{url: string, formData: Record<string, any>}} uploadData
- * @param {*} callback
- */
-function post(robot, uploadData, callback) {
-  robot.http(uploadData.url).post(uploadData.formData)((err, res, body) => {
-    if (err) {
-      callback(err, null);
+    try {
+      file = await grafana.download(imageUrl);
+    } catch (err) {
+      sendError(err, res);
       return;
     }
 
-    data = JSON.parse(body);
-    callback(null, data);
-  });
-}
+    adapter.uploader.upload(res, title || 'Image', file, grafanaChartLink);
+  };
+};
 
 /**
  * Gets the room from the context.

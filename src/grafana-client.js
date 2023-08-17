@@ -1,6 +1,5 @@
 'strict';
-
-const { ScopedClient } = require('scoped-http-client');
+const fetch = require('node-fetch');
 
 class GrafanaClient {
   /**
@@ -106,28 +105,52 @@ class GrafanaClient {
   /**
    * Downloads the given URL.
    * @param {string} url The URL.
-   * @returns {{ body: Buffer, contentType: string}}
+   * @returns {Promise<{ body: Blob, contentType: string}>}
    */
   async download(url) {
-    let client = this.createHttpClient(url, null, null);
+    return await fetch(url, {
+      method: 'GET',
+      headers: grafanaHeaders(null, null),
+    }).then(async (res) => {
+      const contentType = res.headers.get('content-type');
+      const body = await res.arrayBuffer();
 
-    return new Promise((resolve, reject) => {
-      client.get()((err, res, body) => {
-        if (err) {
-          reject(err);
-          return;
-        }
+      //TODO: weird mesage for a downloader -- to have an upload file message
+      this.logger.debug(`Uploading file: ${body.size} bytes, content-type[${contentType}]`);
 
-        this.logger.debug(`Uploading file: ${body.length} bytes, content-type[${res.headers['content-type']}]`);
-
-        resolve({
-          body,
-          contentType: res.headers['content-type'],
-        });
-      });
+      return {
+        body: Buffer.from(body),
+        contentType: contentType,
+      };
     });
   }
 }
+
+//   /**
+//    * Downloads the given URL.
+//    * @param {string} url The URL.
+//    * @returns {Promise<{ body: Buffer, contentType: string}>}
+//    */
+//   async download(url) {
+//     let client = this.createHttpClient(url, null, null);
+
+//     return new Promise((resolve, reject) => {
+//       client.get()((err, res, body) => {
+//         if (err) {
+//           reject(err);
+//           return;
+//         }
+
+//         this.logger.debug(`Uploading file: ${body.length} bytes, content-type[${res.headers['content-type']}]`);
+
+//         resolve({
+//           body,
+//           contentType: res.headers['content-type'],
+//         });
+//       });
+//     });
+//   }
+// }
 
 /**
  * Create headers for the Grafana request.
