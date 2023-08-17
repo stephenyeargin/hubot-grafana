@@ -47,9 +47,6 @@ class GrafanaClient {
       throw new Error('No Grafana endpoint configured.');
     }
 
-    // TODO: should we use robot.http or just fetch
-    // currently we cannot switch because of nock testing
-
     // in case of a download we get a "full" URL
     const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `${this.grafana_host}/api/${url}`;
     const headers = grafanaHeaders(contentType, encoding, this.grafana_api_key);
@@ -83,7 +80,6 @@ class GrafanaClient {
    * @param {string} url The API sub URL
    * @param {Record<string, any>} data The data that will be sent.
    * @returns {Promise<any>}
-   * TODO: figure out return type
    */
   post(url, data) {
     const http = this.createHttpClient(url, 'application/json');
