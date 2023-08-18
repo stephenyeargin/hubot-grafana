@@ -39,7 +39,7 @@ class GrafanaClient {
    * Creates a scoped HTTP client.
    * @param {string} url The URL.
    * @param {string | null} contentType Indicates if the HTTP client should post.
-   * @param {encoding | false} encoding Incidates if an encoding should be set.
+   * @param {encoding | false} encoding Indicates if an encoding should be set.
    * @returns {ScopedClient}
    */
   createHttpClient(url, contentType = null, encoding = false) {
@@ -122,7 +122,7 @@ class GrafanaClient {
 /**
  * Create headers for the Grafana request.
  * @param {string | null} contentType Indicates if the HTTP client should post.
- * @param {string | false} encoding Incidates if an encoding should be set.
+ * @param {string | false} encoding Indicates if an encoding should be set.
  * @param {string | null} api_key The API key.
  * @returns {Record<string, string|null>}
  */
