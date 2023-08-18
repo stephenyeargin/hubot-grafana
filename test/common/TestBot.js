@@ -32,7 +32,12 @@ class TestBotContext {
 
   async send(message) {
     const id = (Math.random() + 1).toString(36).substring(7);
-    const textMessage = new TextMessage(this.user, message, id);
+    const textMessage = new TextMessage(this.user, "" + message, id);
+
+    if (message.rawMessage) {
+      textMessage.rawMessage = message.rawMessage;
+    }
+
     this.robot.adapter.receive(textMessage);
     await this.wait(1);
   }
@@ -109,7 +114,7 @@ function setupEnv(settings) {
   nock.cleanAll();
 }
 
-function setupNock() {
+function setupNock(settings) {
   nock('https://play.grafana.org')
     .get('/render/d-solo/97PlYC7Mk/?panelId=3&width=1000&height=500&from=now-6h&to=now')
     .replyWithFile(200, `${__dirname}/../fixtures/v8/dashboard-grafana-play.png`);
@@ -118,14 +123,14 @@ function setupNock() {
     .filteringPath(/[a-z0-9]+\.png/g, 'abdcdef0123456789.png')
     .put('/grafana/abdcdef0123456789.png')
     .query({ 'x-id': 'PutObject' })
-    .reply(200);
+    .reply(settings?.s3UploadStatusCode || 200);
 
   nock('https://graf.s3.us-standard.amazonaws.com')
     .filteringPath(/[a-z0-9]+\.png/g, 'abdcdef0123456789.png')
     .put('/grafana/abdcdef0123456789.png')
     .query({ 'x-id': 'PutObject' })
     .times(3)
-    .reply(200);
+    .reply(settings?.s3UploadStatusCode || 200);
 
   nock('https://play.grafana.org')
     .get('/api/dashboards/uid/97PlYC7Mk')
@@ -136,7 +141,7 @@ function setupNock() {
 
 async function createTestBot(settings = null) {
   setupEnv(settings);
-  setupNock();
+  setupNock(settings);
 
   return new Promise(async (done) => {
     // create new robot, without http, using the mock adapter

@@ -78,7 +78,7 @@ class Adapter {
       case 'rocketchat':
         return new RocketChatUploader(this.robot, this.robot.logger);
       case 'slack':
-        return new SlackUploader(this.robot, this.robot.logger, this.responder);
+        return new SlackUploader(this.robot, this.robot.logger);
       case 'telegram':
         return new TelegramUploader()
     }

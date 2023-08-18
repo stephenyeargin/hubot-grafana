@@ -1,16 +1,14 @@
 'strict';
 
 const { Uploader } = require('../Uploader');
-const { Responder } = require('../Responder');
 
 class SlackUploader extends Uploader {
   /**
    *
    * @param {Hubot.Robot} robot the robot, TODO: let's see if we can refactor it out!
    * @param {Hubot.Log} logger the logger
-   * @param {Responder} responder the responder, called when the upload completes
    */
-  constructor(robot, logger, responder) {
+  constructor(robot, logger) {
     super();
 
     /** @type {boolean} */
@@ -22,11 +20,7 @@ class SlackUploader extends Uploader {
     /** @type {Hubot.Log} */
     this.logger = logger;
 
-    /** @type {Responder} */
-    this.responder = responder;
   }
-
-  //this.robot.adapter.client.web
 
   /**
    * Uploads the a screenshot of the dashboards.
