@@ -244,8 +244,8 @@ module.exports = (robot) => {
           // Build links for message sending
           const title = formatTitleWithTemplate(panel.title, template_map);
           const { uid } = dashboard.dashboard;
-          const imageUrl = createImageUrl(grafana.grafana_host, query, uid, panel, timespan, variables);
-          const grafanaChartLink = `${grafana.grafana_host}/d/${uid}/?panelId=${panel.id}&fullscreen&from=${timespan.from}&to=${timespan.to}${variables}`;
+          const imageUrl = grafana.createImageUrl(query, uid, panel, timespan, variables);
+          const grafanaChartLink = grafana.createGrafanaChartLink(query, uid, panel, timespan, variables);
 
           sendDashboardChart(msg, title, imageUrl, grafanaChartLink);
           returnedCount += 1;
@@ -519,32 +519,6 @@ module.exports = (robot) => {
   };
 };
 
-function createImageUrl(host, query, uid, panel, timespan, variables) {
-  const url = new URL(`${host}/render/${query.apiEndpoint}/${uid}/`);
-
-  url.searchParams.set('panelId', panel.id);
-  url.searchParams.set('width', query.width);
-  url.searchParams.set('height', query.height);
-  url.searchParams.set('from', timespan.from);
-  url.searchParams.set('to', timespan.to);
-
-  // airs, merge it like this:
-  if (variables) {
-    const additionalParams = new URLSearchParams(variables);
-    for (const [key, value] of additionalParams) {
-      url.searchParams.append(key, value);
-    }
-  }
-
-  if (query.tz) {
-    url.searchParams.set('tz', query.tz);
-  }
-  if (query.orgId) {
-    url.searchParams.set('orgId', query.orgId);
-  }
-
-  return url.toString();
-}
 
 /**
  * Gets the room from the context.

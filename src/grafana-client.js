@@ -117,6 +117,58 @@ class GrafanaClient {
       };
     });
   }
+
+  createGrafanaChartLink(query, uid, panel, timespan, variables) {
+    const url = new URL(`${this.grafana_host}/d/${uid}/`);
+
+    url.searchParams.set('panelId', panel.id);
+    url.searchParams.set('fullscreen', '');
+    url.searchParams.set('from', timespan.from);
+    url.searchParams.set('to', timespan.to);
+
+    if (variables) {
+      const additionalParams = new URLSearchParams(variables);
+      for (const [key, value] of additionalParams) {
+        url.searchParams.append(key, value);
+      }
+    }
+
+    // TODO: should we add these?
+    // if (query.tz) {
+    //   url.searchParams.set('tz', query.tz);
+    // }
+    // if (query.orgId) {
+    //   url.searchParams.set('orgId', query.orgId);
+    // }
+
+    return url.toString().replace('fullscreen=&', 'fullscreen&');
+  }
+
+  createImageUrl(query, uid, panel, timespan, variables) {
+    const url = new URL(`${this.grafana_host}/render/${query.apiEndpoint}/${uid}/`);
+
+    url.searchParams.set('panelId', panel.id);
+    url.searchParams.set('width', query.width);
+    url.searchParams.set('height', query.height);
+    url.searchParams.set('from', timespan.from);
+    url.searchParams.set('to', timespan.to);
+
+    if (variables) {
+      const additionalParams = new URLSearchParams(variables);
+      for (const [key, value] of additionalParams) {
+        url.searchParams.append(key, value);
+      }
+    }
+
+    if (query.tz) {
+      url.searchParams.set('tz', query.tz);
+    }
+    if (query.orgId) {
+      url.searchParams.set('orgId', query.orgId);
+    }
+
+    return url.toString();
+  }
 }
 
 /**
