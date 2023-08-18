@@ -155,6 +155,38 @@ describe('slack', () => {
     });
   });
 
+  describe('and Slack upload with fail', () => {
+    /** @type {TestBotContext} */
+    let ctx;
+
+    beforeEach(async () => {
+      ctx = await createTestBot({
+        adapterName: 'hubot-slack',
+      });
+
+      ctx.robot.adapter.client = {
+        web: {
+          files: {
+            uploadV2: () => {
+              throw new Error('Fail');
+            },
+          },
+        },
+      };
+    });
+
+    afterEach(function () {
+      ctx?.shutdown();
+    });
+
+    it('should respond with an failed message ', async () => {
+      let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
+      expect(response).to.eql(
+        "logins - [Slack files.upload Error: can't upload file] - https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now"
+      );
+    });
+  });
+
   describe('and Slack upload in thread', () => {
     beforeEach(function () {
       process.env.HUBOT_GRAFANA_USE_THREADS = 1;
@@ -191,8 +223,8 @@ describe('slack', () => {
           },
         },
         envelope: {
-          room: "C1337"
-        }
+          room: 'C1337',
+        },
       };
 
       let uploader = new SlackUploader(robot, robot.logger);
