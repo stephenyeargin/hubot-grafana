@@ -49,7 +49,6 @@
 
 const { GrafanaClient } = require('./grafana-client');
 const { Adapter } = require('./adapters/Adapter');
-const { URL, URLSearchParams } = require('url');
 
 /**
  * Adds the Grafana commands to Hubot.

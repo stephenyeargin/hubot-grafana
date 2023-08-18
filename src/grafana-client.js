@@ -1,5 +1,6 @@
 'strict';
 const fetch = require('node-fetch');
+const { URL, URLSearchParams } = require('url');
 
 class GrafanaClient {
   /**
@@ -163,6 +164,9 @@ class GrafanaClient {
     if (query.tz) {
       url.searchParams.set('tz', query.tz);
     }
+
+
+    //TODO: currently not tested
     if (query.orgId) {
       url.searchParams.set('orgId', query.orgId);
     }
