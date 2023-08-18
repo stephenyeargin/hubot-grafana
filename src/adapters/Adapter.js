@@ -49,7 +49,7 @@ class Adapter {
   }
 
   /**
-   * The responder is responsable for sending a (platform specific) response.
+   * The responder is responsible for sending a (platform specific) response.
    */
   /** @type {Responder} */
   get responder() {
@@ -67,7 +67,7 @@ class Adapter {
   }
 
    /**
-   * The responder is responsable for doing a (platform specific) upload.
+   * The responder is responsible for doing a (platform specific) upload.
    * If an upload is not supported, the method will throw an error.
    */
   /** @type {Uploader} */
