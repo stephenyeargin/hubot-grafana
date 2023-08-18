@@ -49,6 +49,7 @@
 
 const { GrafanaClient } = require('./grafana-client');
 const { Adapter } = require('./adapters/Adapter');
+const { URL, URLSearchParams } = require('url');
 
 /**
  * Adds the Grafana commands to Hubot.
@@ -242,14 +243,8 @@ module.exports = (robot) => {
 
           // Build links for message sending
           const title = formatTitleWithTemplate(panel.title, template_map);
-          ({ uid } = dashboard.dashboard);
-          let imageUrl = `${grafana.grafana_host}/render/${query.apiEndpoint}/${uid}/?panelId=${panel.id}&width=${query.width}&height=${query.height}&from=${timespan.from}&to=${timespan.to}${variables}`;
-          if (query.tz) {
-            imageUrl += `&tz=${encodeURIComponent(query.tz)}`;
-          }
-          if (query.orgId) {
-            imageUrl += `&orgId=${encodeURIComponent(query.orgId)}`;
-          }
+          const { uid } = dashboard.dashboard;
+          const imageUrl = createImageUrl(grafana.grafana_host, query, uid, panel, timespan, variables);
           const grafanaChartLink = `${grafana.grafana_host}/d/${uid}/?panelId=${panel.id}&fullscreen&from=${timespan.from}&to=${timespan.to}${variables}`;
 
           sendDashboardChart(msg, title, imageUrl, grafanaChartLink);
@@ -483,7 +478,7 @@ module.exports = (robot) => {
   /**
    * *Sends an error message.
    * @param {string} message the error message.
-   * @param {Hubot.Response} res the resonse context.
+   * @param {Hubot.Response} res the response context.
    */
   const sendError = (message, res) => {
     robot.logger.error(message);
@@ -523,6 +518,33 @@ module.exports = (robot) => {
     adapter.uploader.upload(res, title || 'Image', file, grafanaChartLink);
   };
 };
+
+function createImageUrl(host, query, uid, panel, timespan, variables) {
+  const url = new URL(`${host}/render/${query.apiEndpoint}/${uid}/`);
+
+  url.searchParams.set('panelId', panel.id);
+  url.searchParams.set('width', query.width);
+  url.searchParams.set('height', query.height);
+  url.searchParams.set('from', timespan.from);
+  url.searchParams.set('to', timespan.to);
+
+  // airs, merge it like this:
+  if (variables) {
+    const additionalParams = new URLSearchParams(variables);
+    for (const [key, value] of additionalParams) {
+      url.searchParams.append(key, value);
+    }
+  }
+
+  if (query.tz) {
+    url.searchParams.set('tz', query.tz);
+  }
+  if (query.orgId) {
+    url.searchParams.set('orgId', query.orgId);
+  }
+
+  return url.toString();
+}
 
 /**
  * Gets the room from the context.
