@@ -20,7 +20,7 @@ class RocketChatUploader extends Uploader {
     /** @type {string} */
     this.rocketchat_url = process.env.ROCKETCHAT_URL;
 
-    if (this.rocketchat_url && !this.rocketchat_url.startsWith('http')) {
+    if (this.rocketchat_url && !this.rocketchat_url.startsWith('http://') && !this.rocketchat_url.startsWith('https://')) {
       this.rocketchat_url = `http://${rocketchat_url}`;
     }
 
