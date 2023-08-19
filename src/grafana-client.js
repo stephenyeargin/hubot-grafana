@@ -122,8 +122,11 @@ class GrafanaClient {
   createGrafanaChartLink(query, uid, panel, timespan, variables) {
     const url = new URL(`${this.grafana_host}/d/${uid}/`);
 
-    url.searchParams.set('panelId', panel.id);
-    url.searchParams.set('fullscreen', '');
+    if (panel) {
+      url.searchParams.set('panelId', panel.id);
+      url.searchParams.set('fullscreen', '');
+    }
+
     url.searchParams.set('from', timespan.from);
     url.searchParams.set('to', timespan.to);
 
@@ -148,7 +151,13 @@ class GrafanaClient {
   createImageUrl(query, uid, panel, timespan, variables) {
     const url = new URL(`${this.grafana_host}/render/${query.apiEndpoint}/${uid}/`);
 
-    url.searchParams.set('panelId', panel.id);
+    if (panel) {
+      url.searchParams.set('panelId', panel.id);
+    } else if (query.kiosk) {
+      url.searchParams.set('kiosk', '');
+      url.searchParams.set('autofitpanels', '');
+    }
+
     url.searchParams.set('width', query.width);
     url.searchParams.set('height', query.height);
     url.searchParams.set('from', timespan.from);
@@ -165,13 +174,12 @@ class GrafanaClient {
       url.searchParams.set('tz', query.tz);
     }
 
-
     //TODO: currently not tested
     if (query.orgId) {
       url.searchParams.set('orgId', query.orgId);
     }
 
-    return url.toString();
+    return url.toString().replace('kiosk=&', 'kiosk&').replace('autofitpanels=&', 'autofitpanels&');
   }
 }
 
