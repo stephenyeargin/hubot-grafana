@@ -96,6 +96,7 @@ module.exports = (robot) => {
       tz: process.env.HUBOT_GRAFANA_DEFAULT_TIME_ZONE || '',
       orgId: process.env.HUBOT_GRAFANA_ORG_ID || '',
       apiEndpoint: process.env.HUBOT_GRAFANA_API_ENDPOINT || 'd-solo',
+      kiosk: false,
     };
 
     // Parse out a specific panel
@@ -133,9 +134,11 @@ module.exports = (robot) => {
             name: part.split('=')[0],
             value: part.split('=')[1],
           });
-
-          // Only add to the timespan if we haven't already filled out from and to
-        } else if (timeFields.length > 0) {
+        } else if (part == 'kiosk') {
+          query.kiosk = true;
+        }
+        // Only add to the timespan if we haven't already filled out from and to
+        else if (timeFields.length > 0) {
           timespan[timeFields.shift()] = part.trim();
         }
       }
@@ -210,6 +213,15 @@ module.exports = (robot) => {
             }
           }
         }
+      }
+
+      if (query.kiosk) {
+        query.apiEndpoint = 'd';
+        const imageUrl = grafana.createImageUrl(query, uid, null, timespan, variables);
+        const grafanaChartLink = grafana.createGrafanaChartLink(query, uid, null, timespan, variables);
+        const title = dashboard.dashboard.title;
+        sendDashboardChart(msg, title, imageUrl, grafanaChartLink);
+        return;
       }
 
       // Return dashboard rows
@@ -517,7 +529,6 @@ module.exports = (robot) => {
     adapter.uploader.upload(res, title || 'Image', file, grafanaChartLink);
   };
 };
-
 
 /**
  * Gets the room from the context.
