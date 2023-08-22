@@ -1,94 +1,64 @@
-const Helper = require('hubot-test-helper');
-const chai = require('chai');
-const sinon = require('sinon');
-chai.use(require('sinon-chai'));
-const nock = require('nock');
-
-const helper = new Helper('./../src/grafana.js');
-
-const {
-  expect,
-} = chai;
+const { expect } = require('chai');
+const { createTestBot, TestBotContext } = require('./common/TestBot');
 
 describe('per room configuration', () => {
-  let room_one = null;
+  /** @type {TestBotContext} */
+  let ctx;
 
-  beforeEach(function () {
-    process.env.HUBOT_GRAFANA_HOST = 'https://play.grafana.org';
+  beforeEach(async () => {
     process.env.HUBOT_GRAFANA_PER_ROOM = '1';
-    room_one = helper.createRoom();
-    nock.disableNetConnect();
-
-    this.robot = {
-      respond: sinon.spy(),
-      hear: sinon.spy(),
-    };
-
-    return require('../src/grafana')(this.robot);
+    ctx = await createTestBot();
   });
 
-  afterEach(() => {
-    room_one.destroy();
-    nock.cleanAll();
-    delete process.env.HUBOT_GRAFANA_HOST;
+  afterEach(function () {
     delete process.env.HUBOT_GRAFANA_PER_ROOM;
+    ctx?.shutdown();
   });
 
-  context('ensure configuration listener is registered', () => it('register configuration listener', function () {
-    return expect(this.robot.respond).to.have.been.calledWith(/(?:grafana|graph|graf) set (host|api_key) (.+)/i);
-  }));
+  describe('ensure configuration listener is registered', () =>
+    it('register configuration listener', function () {
+      let regexes = ctx.robot.listeners.map((x) => x.regex.toString());
+      expect(regexes).includes('/^\\s*[@]?hubot[:,]?\\s*(?:(?:grafana|graph|graf) set (host|api_key) (.+))/i');
+    })
+  );
 
-  context('ask hubot to configure grafana host', () => {
-    beforeEach((done) => {
-      room_one.user.say('alice', 'hubot graf set host https://play.grafana.org');
-      setTimeout(done, 100);
-    });
-
-    it('hubot should respond it has configured the host', () => expect(room_one.messages).to.eql([
-      ['alice', 'hubot graf set host https://play.grafana.org'],
-      ['hubot', 'Value set for host'],
-    ]));
+  describe('ask hubot to configure grafana host', () => {
+    it('hubot should respond it has configured the host', async () => {
+      let response = await ctx.sendAndWaitForResponse('hubot graf set host https://play.grafana.org');
+      expect(response).to.eql('Value set for host');
+    })
   });
 
-  context('ask hubot to configure grafana api_key', () => {
-    beforeEach((done) => {
-      room_one.user.say('alice', 'hubot graf set api_key AABBCC');
-      setTimeout(done, 100);
-    });
-
-    it('hubot should respond it has configured the api_key', () => expect(room_one.messages).to.eql([
-      ['alice', 'hubot graf set api_key AABBCC'],
-      ['hubot', 'Value set for api_key'],
-    ]));
+  describe('ask hubot to configure grafana api_key', () => {
+    it('hubot should respond it has configured the api_key', async () => {
+      let response = await ctx.sendAndWaitForResponse('hubot graf set api_key AABBCC');
+      expect(response).to.eql('Value set for api_key');
+    })
   });
 
-  context('ask hubot to list dashboards filterd by tag', () => {
-    beforeEach((done) => {
-      room_one.user.say('alice', 'hubot graf list demo');
-      setTimeout(done, 100);
-    });
+  describe('ask hubot to list dashboards filterd by tag', () => {
+    it('hubot should respond that grafana endpoint is not configured', async () => {
+      let response = await ctx.sendAndWaitForResponse('hubot graf list demo');
+      expect(response).to.eql('No Grafana endpoint configured.');
+    })
+  })
 
-    it('hubot should respond that grafana endpoint is not configured', () => expect(room_one.messages).to.eql([
-      ['alice', 'hubot graf list demo'],
-      ['hubot', 'No Grafana endpoint configured.'],
-    ]));
-  });
-
-  context('ask hubot to configure host and then list dashboards filterd by tag', () => {
-    beforeEach((done) => {
-      nock('https://play.grafana.org')
+  describe('ask hubot to configure host and then list dashboards filterd by tag', () => {
+    beforeEach(() => {
+      ctx.nock('https://play.grafana.org')
         .get('/api/search?type=dash-db&tag=demo')
         .replyWithFile(200, `${__dirname}/fixtures/v8/search-tag.json`);
-      room_one.user.say('alice', 'hubot graf set host https://play.grafana.org');
-      room_one.user.say('alice', 'hubot graf list demo');
-      setTimeout(done, 1000);
     });
 
-    it('hubot should respond that grafana is configured and then with a list of dashboards with tag', () => expect(room_one.messages).to.eql([
-      ['alice', 'hubot graf set host https://play.grafana.org'],
-      ['alice', 'hubot graf list demo'],
-      ['hubot', 'Value set for host'],
-      ['hubot', 'Dashboards tagged `demo`:\n- 000000016: 1 -  Time series graphs\n- Zb3f4veGk: 2 - Stats\n- OhR1ID6Mk: 3 - Table\n- KIhkVD6Gk: 4 -  Gauges\n- ktMs4D6Mk: 5 - Bar charts and pie charts\n- qD-rVv6Mz: 6 - State timeline and Status history\n- 000000074: Alerting\n- 000000010: Annotations\n- vmie2cmWz: Bar Gauge\n- 3SWXxreWk: Grafana Dashboard\n- 37Dq903mk: Graph Gradient Area Fills\n- iRY1K9VZk: Lazy Loading\n- 6NmftOxZz: Logs Panel\n- 000000100: Mixed Datasources\n- U_bZIMRMk: Table Panel Showcase\n- 000000056: Templated dynamic dashboard\n- 000000109: The Four Golden Signals\n- 000000167: Threshold example\n- 000000041: Time range override'],
-    ]));
+    it('hubot should respond that grafana is configured and then with a list of dashboards with tag', async () => {
+
+      let response1 = await ctx.sendAndWaitForResponse('hubot graf set host https://play.grafana.org');
+      expect(response1).to.eql('Value set for host')
+
+      let response2 = await ctx.sendAndWaitForResponse('hubot graf list demo');
+      expect(response2).to.eql('Dashboards tagged `demo`:\n- 000000016: 1 -  Time series graphs\n- Zb3f4veGk: 2 - Stats\n- OhR1ID6Mk: 3 - Table\n- KIhkVD6Gk: 4 -  Gauges\n- ktMs4D6Mk: 5 - Bar charts and pie charts\n- qD-rVv6Mz: 6 - State timeline and Status history\n- 000000074: Alerting\n- 000000010: Annotations\n- vmie2cmWz: Bar Gauge\n- 3SWXxreWk: Grafana Dashboard\n- 37Dq903mk: Graph Gradient Area Fills\n- iRY1K9VZk: Lazy Loading\n- 6NmftOxZz: Logs Panel\n- 000000100: Mixed Datasources\n- U_bZIMRMk: Table Panel Showcase\n- 000000056: Templated dynamic dashboard\n- 000000109: The Four Golden Signals\n- 000000167: Threshold example\n- 000000041: Time range override');
+
+    });
   });
 });
+
