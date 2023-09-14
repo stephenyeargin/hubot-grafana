@@ -107,7 +107,7 @@ class GrafanaClient {
   async download(url) {
     return await fetch(url, {
       method: 'GET',
-      headers: grafanaHeaders(null, null),
+      headers: grafanaHeaders(null, null, this.grafana_api_key),
     }).then(async (res) => {
       const contentType = res.headers.get('content-type');
       const body = await res.arrayBuffer();
