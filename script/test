@@ -3,4 +3,4 @@
 # bootstrap environment
 source script/bootstrap
 
-mocha
+mocha \"test/**/*.js\" --reporter spec
