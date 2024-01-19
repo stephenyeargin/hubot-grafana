@@ -117,6 +117,7 @@ function setupEnv(settings) {
 function setupNock(settings) {
   nock('https://play.grafana.org')
     .get('/render/d-solo/97PlYC7Mk/?panelId=3&width=1000&height=500&from=now-6h&to=now')
+    .matchHeader('authorization', 'Bearer xxxxxxxxxxxxxxxxxxxxxxxxx')
     .replyWithFile(200, `${__dirname}/../fixtures/v8/dashboard-grafana-play.png`);
 
   nock('https://graf.s3.us-west-2.amazonaws.com')
@@ -134,6 +135,7 @@ function setupNock(settings) {
 
   nock('https://play.grafana.org')
     .get('/api/dashboards/uid/97PlYC7Mk')
+    .matchHeader('authorization', 'Bearer xxxxxxxxxxxxxxxxxxxxxxxxx')
     .replyWithFile(200, `${__dirname}/../fixtures/v8/dashboard-grafana-play.json`);
 
   nock.disableNetConnect();
