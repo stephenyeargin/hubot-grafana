@@ -224,6 +224,22 @@ describe('grafana v8', () => {
     });
   });
 
+  describe('ask hubot to return a specific panel with a custom time range', () => {
+    beforeEach(async () => {
+      ctx
+        .nock('https://play.grafana.org')
+        .get('/api/dashboards/uid/97PlYC7Mk')
+        .replyWithFile(200, `${__dirname}/fixtures/v8/dashboard-grafana-play.json`);
+    });
+
+    it('hubot should respond with a resized image specified in request', async () => {
+      let response = await ctx.sendAndWaitForResponse('hubot graf db 97PlYC7Mk:3 from=1705569109372 to=1705572545230');
+      expect(response).to.eql(
+        'client side full page load: https://play.grafana.org/render/d-solo/97PlYC7Mk/?panelId=5&width=1000&height=500&from=1705569109372&to=1705572545230 - https://play.grafana.org/d/97PlYC7Mk/?panelId=5&fullscreen&from=1705569109372&to=1705572545230'
+      );
+    });
+  });
+
   describe('ask hubot for templated dashboard', () => {
     beforeEach(async () => {
       ctx

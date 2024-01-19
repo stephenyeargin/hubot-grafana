@@ -122,17 +122,28 @@ module.exports = (robot) => {
 
       for (const part of Array.from(remainder.trim().split(' '))) {
         // Check if it's a variable or part of the timespan
+
         if (part.indexOf('=') >= 0) {
           // put query stuff into its own dict
-          if (part.split('=')[0] in query) {
-            query[part.split('=')[0]] = part.split('=')[1];
+          const [partName, partValue] = part.split('=')
+
+          if (partName in query) {
+            query[partName] = partValue;
+            continue;
+          }
+          else if (partName == "from") {
+            timespan.from = partValue;
+            continue;
+          }
+          else if (partName == "to") {
+            timespan.to = partValue;
             continue;
           }
 
           variables = `${variables}&var-${part}`;
           template_params.push({
-            name: part.split('=')[0],
-            value: part.split('=')[1],
+            name: partName,
+            value: partValue,
           });
         } else if (part == 'kiosk') {
           query.kiosk = true;
@@ -420,8 +431,7 @@ module.exports = (robot) => {
     }
 
     msg.send(
-      `Successfully tried to ${msg.match[1]} *${alerts.length}* alerts.\n*Success: ${
-        alerts.length - errored
+      `Successfully tried to ${msg.match[1]} *${alerts.length}* alerts.\n*Success: ${alerts.length - errored
       }*\n*Errored: ${errored}*`
     );
   });
