@@ -178,21 +178,21 @@ module.exports = (robot) => {
       }
 
       if (dashboard.message) {
-        // Search for URL slug to offer help
-        if (dashboard.message == 'Dashboard not found') {
-          grafana.get('search?type=dash-db').then((results) => {
-            for (const item of Array.from(results)) {
-              if (item.url.match(new RegExp(`\/d\/[a-z0-9\-]+\/${uid}$`, 'i'))) {
-                sendError(`Try your query again with \`${item.uid}\` instead of \`${uid}\``, msg);
-                return;
-              }
-            }
-            return sendError(dashboard.message, msg);
-          });
-        } else {
-          sendError(dashboard.message, msg);
+        if (dashboard.message !== 'Dashboard not found') {
+          return sendError(dashboard.message, msg);
         }
-        return;
+
+        // Search for URL slug to offer help
+        return grafana.get('search?type=dash-db').then((results) => {
+          let errorMessage = dashboard.message;
+          for (const item of Array.from(results)) {
+            if (item.url.match(new RegExp(`\/d\/[a-z0-9\-]+\/${uid}$`, 'i'))) {
+              errorMessage = `Try your query again with \`${item.uid}\` instead of \`${uid}\``;
+              break;
+            }
+          }
+          return sendError(errorMessage, msg);
+        });
       }
 
       // Defaults
@@ -490,14 +490,12 @@ module.exports = (robot) => {
     const grafana = factory.createByResponse(res);
     if (!grafana) return;
 
-    //1. download the file
     let file = null;
 
     try {
       file = await grafana.download(imageUrl);
     } catch (err) {
-      sendError(err, res);
-      return;
+      return sendError(err, res);
     }
 
     robot.logger.debug(`Uploading file: ${file.body.length} bytes, content-type[${file.contentType}]`);
