@@ -32,6 +32,6 @@ jobs:
     - name: npm test
       run: |
         npm run bootstrap
-        npm test
+        npm test -- --forbid-only --forbid-pending
       env:
         CI: true
