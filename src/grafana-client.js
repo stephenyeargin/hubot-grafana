@@ -6,11 +6,11 @@ class GrafanaClient {
   /**
    * Creates a new instance.
    * @param {(url: string, options?: HttpOptions)=>ScopedClient} http the HTTP client.
-   * @param {Hubot.Log} res the logger.
-   * @param {string} grafana_host the host.
-   * @param {string} grafana_api_key the api key.
+   * @param {Hubot.Log} logger the logger.
+   * @param {string} host the host.
+   * @param {string} apiKey the api key.
    */
-  constructor(http, logger, grafana_host, grafana_api_key) {
+  constructor(http, logger, host, apiKey) {
     /**
      * The HTTP client
      * @type {(url: string, options?: HttpOptions)=>ScopedClient}
@@ -27,13 +27,13 @@ class GrafanaClient {
      * The host.
      * @type {string | null}
      */
-    this.grafana_host = grafana_host;
+    this.host = host;
 
     /**
      * The API key.
      * @type {string | null}
      */
-    this.grafana_api_key = grafana_api_key;
+    this.apiKey = apiKey;
   }
 
   /**
@@ -44,13 +44,13 @@ class GrafanaClient {
    * @returns {ScopedClient}
    */
   createHttpClient(url, contentType = null, encoding = false) {
-    if (!url.startsWith('http://') && !url.startsWith('https://') && !this.grafana_host) {
+    if (!url.startsWith('http://') && !url.startsWith('https://') && !this.host) {
       throw new Error('No Grafana endpoint configured.');
     }
 
     // in case of a download we get a "full" URL
-    const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `${this.grafana_host}/api/${url}`;
-    const headers = grafanaHeaders(contentType, encoding, this.grafana_api_key);
+    const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `${this.host}/api/${url}`;
+    const headers = grafanaHeaders(contentType, encoding, this.apiKey);
     const client = this.http(fullUrl).headers(headers);
 
     return client;
@@ -107,7 +107,7 @@ class GrafanaClient {
   async download(url) {
     return await fetch(url, {
       method: 'GET',
-      headers: grafanaHeaders(null, null, this.grafana_api_key),
+      headers: grafanaHeaders(null, null, this.apiKey),
     }).then(async (res) => {
       const contentType = res.headers.get('content-type');
       const body = await res.arrayBuffer();
@@ -120,7 +120,7 @@ class GrafanaClient {
   }
 
   createGrafanaChartLink(query, uid, panel, timespan, variables) {
-    const url = new URL(`${this.grafana_host}/d/${uid}/`);
+    const url = new URL(`${this.host}/d/${uid}/`);
 
     if (panel) {
       url.searchParams.set('panelId', panel.id);
@@ -149,7 +149,7 @@ class GrafanaClient {
   }
 
   createImageUrl(query, uid, panel, timespan, variables) {
-    const url = new URL(`${this.grafana_host}/render/${query.apiEndpoint}/${uid}/`);
+    const url = new URL(`${this.host}/render/${query.apiEndpoint}/${uid}/`);
 
     if (panel) {
       url.searchParams.set('panelId', panel.id);

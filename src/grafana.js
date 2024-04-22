@@ -47,8 +47,9 @@
 //   hubot graf unpause all alerts - Un-pause all alerts (admin permissions required)
 //
 
-const { GrafanaClient } = require('./grafana-client');
 const { Adapter } = require('./adapters/Adapter');
+const { GrafanaClientFactory } = require('./grafana-client-factory');
+const { sendError } = require('./common');
 
 /**
  * Adds the Grafana commands to Hubot.
@@ -56,13 +57,12 @@ const { Adapter } = require('./adapters/Adapter');
  */
 module.exports = (robot) => {
   // Various configuration options stored in environment variables
-  const grafana_host = process.env.HUBOT_GRAFANA_HOST;
-  const grafana_api_key = process.env.HUBOT_GRAFANA_API_KEY;
   const grafana_per_room = process.env.HUBOT_GRAFANA_PER_ROOM;
   const grafana_query_time_range = process.env.HUBOT_GRAFANA_QUERY_TIME_RANGE || '6h';
   const max_return_dashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS || 25;
 
   const adapter = new Adapter(robot);
+  const factory = new GrafanaClientFactory();
 
   // Set Grafana host/api_key
   robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) => {
@@ -76,7 +76,8 @@ module.exports = (robot) => {
 
   // Get a specific dashboard with options
   robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) => {
-    const grafana = createGrafanaClient(msg);
+    const grafana = factory.createByResponse(msg);
+
     if (!grafana) return;
 
     let uid = msg.match[1].trim();
@@ -291,7 +292,7 @@ module.exports = (robot) => {
 
   // Get a list of available dashboards
   robot.respond(/(?:grafana|graph|graf) list\s?(.+)?/i, (msg) => {
-    const grafana = createGrafanaClient(msg);
+    const grafana = factory.createByResponse(msg);
     if (!grafana) return;
 
     let url = 'search?type=dash-db';
@@ -313,35 +314,10 @@ module.exports = (robot) => {
       });
   });
 
-  /**
-   * Creates a Grafana client based on the context. If it can't create one
-   * it will echo an error to the user.
-   * @param {Hubot.Response} res the context.
-   * @returns {GrafanaClient | null}
-   */
-  function createGrafanaClient(res) {
-    let api_key = grafana_api_key;
-    let host = grafana_host;
-
-    if (grafana_per_room === '1') {
-      const room = get_room(res);
-      host = robot.brain.get(`grafana_host_${room}`);
-      api_key = robot.brain.get(`grafana_api_key_${room}`);
-    }
-
-    if (host == null) {
-      sendError('No Grafana endpoint configured.', res);
-      return null;
-    }
-
-    let grafana = new GrafanaClient(robot.http, robot.logger, host, api_key);
-
-    return grafana;
-  }
 
   // Search dashboards
   robot.respond(/(?:grafana|graph|graf) search (.+)/i, (msg) => {
-    const grafana = createGrafanaClient(msg);
+    const grafana = factory.createByResponse(msg);
     if (!grafana) return;
 
     const query = msg.match[1].trim();
@@ -358,7 +334,7 @@ module.exports = (robot) => {
 
   // Show alerts
   robot.respond(/(?:grafana|graph|graf) alerts\s?(.+)?/i, async (msg) => {
-    const grafana = createGrafanaClient(msg);
+    const grafana = factory.createByResponse(msg);
     if (!grafana) return;
 
     let url = 'alerts';
@@ -386,7 +362,7 @@ module.exports = (robot) => {
 
   // Pause/unpause an alert
   robot.respond(/(?:grafana|graph|graf) (unpause|pause)\salert\s(\d+)/i, (msg) => {
-    const grafana = createGrafanaClient(msg);
+    const grafana = factory.createByResponse(msg);
     if (!grafana) return;
 
     const paused = msg.match[1] === 'pause';
@@ -409,7 +385,7 @@ module.exports = (robot) => {
   // Pause/unpause all alerts
   // requires an API token with admin permissions
   robot.respond(/(?:grafana|graph|graf) (unpause|pause) all(?:\s+alerts)?/i, async (msg) => {
-    const grafana = createGrafanaClient(msg);
+    const grafana = factory.createByResponse(msg);
     if (!grafana) return;
 
     const paused = msg.match[1] === 'pause';
@@ -496,15 +472,7 @@ module.exports = (robot) => {
 
   // Handle generic errors
 
-  /**
-   * *Sends an error message.
-   * @param {string} message the error message.
-   * @param {Hubot.Response} res the response context.
-   */
-  const sendError = (message, res) => {
-    robot.logger.error(message);
-    res.send(message);
-  };
+
 
   // Format the title with template vars
   const formatTitleWithTemplate = (title, template_map) => {
@@ -521,7 +489,7 @@ module.exports = (robot) => {
 
   // Fetch an image from provided URL, upload it to S3, returning the resulting URL
   const uploadChart = async (res, title, imageUrl, grafanaChartLink) => {
-    const grafana = createGrafanaClient(res);
+    const grafana = factory.createByResponse(res);
     if (!grafana) return;
 
     //1. download the file
@@ -539,14 +507,3 @@ module.exports = (robot) => {
     adapter.uploader.upload(res, title || 'Image', file, grafanaChartLink);
   };
 };
-
-/**
- * Gets the room from the context.
- * @param {Hubot.Response} res The context.
- * @returns {string}
- */
-function get_room(res) {
-  // placeholder for further adapter support (i.e. MS Teams) as then room also
-  // contains thread conversation id
-  return res.envelope.room;
-}

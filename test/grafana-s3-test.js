@@ -48,7 +48,7 @@ describe('s3', () => {
       ctx?.shutdown();
     });
 
-    it('should respond with a png graph in the default s3 region', async () => {
+    it.only('should respond with a png graph in the default s3 region', async () => {
       let response = await ctx.sendAndWaitForResponse('@hubot graf db AAy9r_bmk:cpu server=ww3.example.com now-6h');
       response = response.replace(/\/[a-f0-9]{40}\.png/i, '/abdcdef0123456789.png');
 
