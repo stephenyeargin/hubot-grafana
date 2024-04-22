@@ -66,12 +66,14 @@ module.exports = (robot) => {
 
   // Set Grafana host/api_key
   robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) => {
-    if (grafana_per_room === '1') {
-      const context = msg.message.user.room.split('@')[0];
-      robot.brain.set(`grafana_${msg.match[1]}_${context}`, msg.match[2]);
-      return msg.send(`Value set for ${msg.match[1]}`);
+
+    if (grafana_per_room !== '1') {
+      return sendError('Set HUBOT_GRAFANA_PER_ROOM=1 to use multiple configurations.', msg);
     }
-    return sendError('Set HUBOT_GRAFANA_PER_ROOM=1 to use multiple configurations.', msg);
+
+    const context = msg.message.user.room.split('@')[0];
+    robot.brain.set(`grafana_${msg.match[1]}_${context}`, msg.match[2]);
+    return msg.send(`Value set for ${msg.match[1]}`);
   });
 
   // Get a specific dashboard with options
@@ -469,10 +471,6 @@ module.exports = (robot) => {
 
     return res.send(title + list.join('\n'));
   };
-
-  // Handle generic errors
-
-
 
   // Format the title with template vars
   const formatTitleWithTemplate = (title, template_map) => {
