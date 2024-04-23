@@ -48,28 +48,37 @@
 //
 
 const { Adapter } = require('./adapters/Adapter');
-const { GrafanaClientFactory } = require('./grafana-client-factory');
+const { GrafanaClientFactory } = require('./client/GrafanaClientFactory');
+const { GrafanaService } = require('./service/GrafanaService');
 const { sendError } = require('./common');
-const { GrafanService } = require('./grafana-service');
 
 /**
  * Adds the Grafana commands to Hubot.
  * @param {Hubot.Robot} robot
  */
 module.exports = (robot) => {
-
   // Various configuration options stored in environment variables
-  const grafana_per_room = process.env.HUBOT_GRAFANA_PER_ROOM;
-  const grafana_query_time_range = process.env.HUBOT_GRAFANA_QUERY_TIME_RANGE || '6h';
-  const max_return_dashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS || 25;
+  const grafanaPerRoom = process.env.HUBOT_GRAFANA_PER_ROOM;
+  const maxReturnDashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS || 25;
 
   const adapter = new Adapter(robot);
   const clientFactory = new GrafanaClientFactory();
 
+  /**
+   * Creates a Grafana service using the provided message.
+   *
+   * @param {Hubot.Response} context - The context object.
+   * @returns {GrafanaService|null} The created Grafana service, or null if the client is not available.
+   */
+  function createService(msg) {
+    const client = clientFactory.createByResponse(msg);
+    if (!client) return null;
+    return new GrafanaService(client);
+  }
+
   // Set Grafana host/api_key
   robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) => {
-
-    if (grafana_per_room !== '1') {
+    if (grafanaPerRoom !== '1') {
       return sendError('Set HUBOT_GRAFANA_PER_ROOM=1 to use multiple configurations.', msg);
     }
 
@@ -80,108 +89,25 @@ module.exports = (robot) => {
 
   // Get a specific dashboard with options
   robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, async (msg) => {
-    const grafana = clientFactory.createByResponse(msg);
-
-    if (!grafana) return;
-
-    let uid = msg.match[1].trim();
-    const remainder = msg.match[2];
-    const timespan = {
-      from: `now-${grafana_query_time_range}`,
-      to: 'now',
-    };
-    let variables = '';
-    const template_params = [];
-    let visualPanelId = false;
-    let apiPanelId = false;
-    let pname = false;
-    const query = {
-      width: parseInt(process.env.HUBOT_GRAFANA_DEFAULT_WIDTH) || 1000,
-      height: parseInt(process.env.HUBOT_GRAFANA_DEFAULT_HEIGHT) || 500,
-      tz: process.env.HUBOT_GRAFANA_DEFAULT_TIME_ZONE || '',
-      orgId: process.env.HUBOT_GRAFANA_ORG_ID || '',
-      apiEndpoint: process.env.HUBOT_GRAFANA_API_ENDPOINT || 'd-solo',
-      kiosk: false,
-    };
-
-    // Parse out a specific panel
-    if (/\:/.test(uid)) {
-      let parts = uid.split(':');
-      uid = parts[0];
-      visualPanelId = parseInt(parts[1], 10);
-      if (isNaN(visualPanelId)) {
-        visualPanelId = false;
-        pname = parts[1].toLowerCase();
-      }
-      if (/panel-[0-9]+/.test(pname)) {
-        parts = pname.split('panel-');
-        apiPanelId = parseInt(parts[1], 10);
-        pname = false;
-      }
-    }
-
-    // Check if we have any extra fields
-    if (remainder && remainder.trim() !== '') {
-      // The order we apply non-variables in
-      const timeFields = ['from', 'to'];
-
-      for (const part of Array.from(remainder.trim().split(' '))) {
-        // Check if it's a variable or part of the timespan
-
-        if (part.indexOf('=') >= 0) {
-          // put query stuff into its own dict
-          const [partName, partValue] = part.split('=')
-
-          if (partName in query) {
-            query[partName] = partValue;
-            continue;
-          }
-          else if (partName == "from") {
-            timespan.from = partValue;
-            continue;
-          }
-          else if (partName == "to") {
-            timespan.to = partValue;
-            continue;
-          }
-
-          variables = `${variables}&var-${part}`;
-          template_params.push({
-            name: partName,
-            value: partValue,
-          });
-        } else if (part == 'kiosk') {
-          query.kiosk = true;
-        }
-        // Only add to the timespan if we haven't already filled out from and to
-        else if (timeFields.length > 0) {
-          timespan[timeFields.shift()] = part.trim();
-        }
-      }
-    }
-
-    robot.logger.debug(msg.match);
-    robot.logger.debug(uid);
-    robot.logger.debug(timespan);
-    robot.logger.debug(variables);
-    robot.logger.debug(template_params);
-    robot.logger.debug(visualPanelId);
-    robot.logger.debug(apiPanelId);
-    robot.logger.debug(pname);
-
-    let service = createService(msg);
+    const service = createService(msg);
     if (!service) return;
 
-    let dashboard = await service.getDashboard(uid);
+    let str = msg.match[1].trim();
+    if (msg.match[2]) {
+      str += ' ' + msg.match[2].trim();
+    }
+
+    const req = service.parseToGrafanaDashboardRequest(str);
+    const dashboard = await service.getDashboard(req.uid);
 
     // Check dashboard information
     if (!dashboard) {
       sendError('An error ocurred. Check your logs for more details.', msg);
       return;
     }
-
     if (dashboard.message) {
-      return sendError(dashboard.message, msg);
+      sendError(dashboard.message, msg);
+      return;
     }
 
     // Defaults
@@ -189,79 +115,18 @@ module.exports = (robot) => {
 
     // Handle empty dashboard
     if (data.rows == null) {
-      return sendError('Dashboard empty.', msg);
-    }
-
-    // Support for templated dashboards
-    let template_map;
-    robot.logger.debug(data.templating.list);
-    if (data.templating.list) {
-      template_map = [];
-      for (const template of Array.from(data.templating.list)) {
-        robot.logger.debug(template);
-        if (!template.current) {
-          continue;
-        }
-        for (const _param of Array.from(template_params)) {
-          if (template.name === _param.name) {
-            template_map[`$${template.name}`] = _param.value;
-          } else {
-            template_map[`$${template.name}`] = template.current.text;
-          }
-        }
-      }
-    }
-
-    if (query.kiosk) {
-      query.apiEndpoint = 'd';
-      const imageUrl = grafana.createImageUrl(query, uid, null, timespan, variables);
-      const grafanaChartLink = grafana.createGrafanaChartLink(query, uid, null, timespan, variables);
-      const title = dashboard.dashboard.title;
-      sendDashboardChart(msg, title, imageUrl, grafanaChartLink);
+      sendError('Dashboard empty.', msg);
       return;
     }
 
-    // Return dashboard rows
-    let panelNumber = 0;
-    let returnedCount = 0;
-    for (const row of Array.from(data.rows)) {
-      for (const panel of Array.from(row.panels)) {
-        robot.logger.debug(panel);
-
-        panelNumber += 1;
-        // Skip if visual panel ID was specified and didn't match
-        if (visualPanelId && visualPanelId !== panelNumber) {
-          continue;
-        }
-
-        // Skip if API panel ID was specified and didn't match
-        if (apiPanelId && apiPanelId !== panel.id) {
-          continue;
-        }
-
-        // Skip if panel name was specified any didn't match
-        if (pname && panel.title.toLowerCase().indexOf(pname) === -1) {
-          continue;
-        }
-
-        // Skip if we have already returned max count of dashboards
-        if (returnedCount > max_return_dashboards) {
-          continue;
-        }
-
-        // Build links for message sending
-        const title = formatTitleWithTemplate(panel.title, template_map);
-        const { uid } = dashboard.dashboard;
-        const imageUrl = grafana.createImageUrl(query, uid, panel, timespan, variables);
-        const grafanaChartLink = grafana.createGrafanaChartLink(query, uid, panel, timespan, variables);
-
-        sendDashboardChart(msg, title, imageUrl, grafanaChartLink);
-        returnedCount += 1;
-      }
+    const dashboards = await service.getScreenshotUrls(req, dashboard, maxReturnDashboards);
+    if (dashboards == null || dashboards.length === 0) {
+      sendError('Could not locate desired panel.', msg);
+      return;
     }
 
-    if (returnedCount === 0) {
-      return sendError('Could not locate desired panel.', msg);
+    for (let d of dashboards) {
+      sendDashboardChart(msg, d.title, d.imageUrl, d.grafanaChartLink);
     }
   });
 
@@ -363,29 +228,16 @@ module.exports = (robot) => {
     const service = createService(msg);
     if (!service) return;
 
-    const command = msg.match[1]
+    const command = msg.match[1];
     const paused = command === 'pause';
     const result = await service.pauseAllAlerts(paused);
 
     if (result.total == 0) return;
 
     msg.send(
-      `Successfully tried to ${command} *${result.total}* alerts.\n*Success: ${result.success
-      }*\n*Errored: ${result.errored}*`
+      `Successfully tried to ${command} *${result.total}* alerts.\n*Success: ${result.success}*\n*Errored: ${result.errored}*`
     );
   });
-
-  /**
-   * Creates a Grafana service using the provided message.
-   *
-   * @param {Hubot.Response} context - The context object.
-   * @returns {GrafanService|null} The created Grafana service, or null if the client is not available.
-   */
-  function createService(msg) {
-    const client = clientFactory.createByResponse(msg);
-    if (!client) return null;
-    return new GrafanService(client);
-  }
 
   /**
    * Sends the list of dashboards.
@@ -401,9 +253,9 @@ module.exports = (robot) => {
     }
 
     remaining = 0;
-    if (dashboards.length > max_return_dashboards) {
-      remaining = dashboards.length - max_return_dashboards;
-      dashboards = dashboards.slice(0, max_return_dashboards - 1);
+    if (dashboards.length > maxReturnDashboards) {
+      remaining = dashboards.length - maxReturnDashboards;
+      dashboards = dashboards.slice(0, maxReturnDashboards - 1);
     }
 
     const list = [];
@@ -418,19 +270,6 @@ module.exports = (robot) => {
     res.send(title + list.join('\n'));
   };
 
-  // Format the title with template vars
-  const formatTitleWithTemplate = (title, template_map) => {
-    if (!title) {
-      title = '';
-    }
-    return title.replace(/\$\w+/g, (match) => {
-      if (template_map[match]) {
-        return template_map[match];
-      }
-      return match;
-    });
-  };
-
   // Fetch an image from provided URL, upload it to S3, returning the resulting URL
   const uploadChart = async (res, title, imageUrl, grafanaChartLink) => {
     const client = clientFactory.createByResponse(res);
@@ -441,11 +280,11 @@ module.exports = (robot) => {
     try {
       file = await client.download(imageUrl);
     } catch (err) {
-      return sendError(err, res);
+      sendError(err, res);
+      return;
     }
 
     robot.logger.debug(`Uploading file: ${file.body.length} bytes, content-type[${file.contentType}]`);
     adapter.uploader.upload(res, title || 'Image', file, grafanaChartLink);
   };
 };
-
