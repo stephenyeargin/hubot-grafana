@@ -24,6 +24,28 @@ class GrafanaService {
   }
 
   /**
+   * Processes the given string and returns an array of screenshot URLs for the requested dashboards.
+   *
+   * @param {string} str - The string to be processed.
+   * @param {number} maxReturnDashboards - The maximum number of dashboard screenshots to return.
+   * @returns {Array<DashboardResponse>|null} An array of DashboardResponse objects containing the screenshot URLs.
+   */
+  async process(str, maxReturnDashboards){
+    const request = this.parseToGrafanaDashboardRequest(str);
+    if (!request) {
+      return null;
+    }
+
+    const dashboard = await this.getDashboard(request.uid);
+    if (!dashboard) {
+      return null;
+    }
+
+    const responses = await this.getScreenshotUrls(request, dashboard, maxReturnDashboards);
+    return responses;
+  }
+
+  /**
    * Parses a string into a GrafanaDashboardRequest object.
    * @param {string} str - The string to parse.
    * @returns {GrafanaDashboardResponse.Response|null} - The parsed GrafanaDashboardRequest object, or null if the string cannot be parsed.
@@ -109,7 +131,7 @@ class GrafanaService {
    * @param {GrafanaDashboardRequest} req - The request object.
    * @param {GrafanaDashboardResponse.Response} dashboardResponse - The dashboard response object.
    * @param {number} maxReturnDashboards - The maximum number of dashboards to return.
-   * @returns {Array<DashboardResponse>} An array of DashboardResponse objects containing the screenshot URLs.
+   * @returns {Array<DashboardResponse>|null} An array of DashboardResponse objects containing the screenshot URLs.
    */
   async getScreenshotUrls(req, dashboardResponse, maxReturnDashboards) {
     if (!dashboardResponse || dashboardResponse.message) return null;
