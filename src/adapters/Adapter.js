@@ -66,7 +66,7 @@ class Adapter {
     return new Responder();
   }
 
-   /**
+  /**
    * The responder is responsible for doing a (platform specific) upload.
    * If an upload is not supported, the method will throw an error.
    */
@@ -80,7 +80,7 @@ class Adapter {
       case 'slack':
         return new SlackUploader(this.robot, this.robot.logger);
       case 'telegram':
-        return new TelegramUploader()
+        return new TelegramUploader();
     }
 
     throw new Error(`Upload not supported for '${this.robot.adapterName}'`);
