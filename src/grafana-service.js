@@ -16,6 +16,26 @@ class GrafanService {
     this.client = client;
   }
 
+  /**
+   * 
+   * @param {string} state
+   * @returns {Promise<Array<{ name: string, id: number, state: string, newStateDate?: string, executionError?: string >|null}>} 
+   */
+  async queryAlerts(state){
+    let url = 'alerts';
+    if (state) {
+      url = `alerts?state=${state}`;
+    }
+    try{
+    let result = await this.client.get(url);
+    return result;
+    }
+    catch (err) {
+      robot.logger.error(err, 'Error while getting alerts on URL: ' + url);
+      return null;
+    }
+  }
+
 
   /**
    * Pauses or resumes a single alert.

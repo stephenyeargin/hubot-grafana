@@ -337,41 +337,48 @@ module.exports = (robot) => {
 
   // Show alerts
   robot.respond(/(?:grafana|graph|graf) alerts\s?(.+)?/i, async (msg) => {
-    const grafana = clientFactory.createByResponse(msg);
-    if (!grafana) return;
+    const service = createService(msg);
+    if (!service) return;
 
-    let url = 'alerts';
     let title = 'All alerts:\n';
+    let state = null;
 
     // all alerts of a specific type
     if (msg.match[1]) {
-      const state = msg.match[1].trim();
-      url = `alerts?state=${state}`;
+      state = msg.match[1].trim();
       title = `Alerts with state '${state}':\n`;
     }
 
     robot.logger.debug(title.trim());
 
-    await grafana
-      .get(url)
-      .then((alerts) => {
-        robot.logger.debug(alerts);
-        sendAlerts(alerts, title, msg);
-      })
-      .catch((err) => {
-        robot.logger.error(err, 'Error while getting alerts on URL: ' + url);
-      });
+    let alerts = await service.queryAlerts(state);
+    if (alerts == null) return;
+
+    robot.logger.debug(alerts);
+
+    let text = title;
+
+    for (const alert of alerts) {
+      let line = `- *${alert.name}* (${alert.id}): \`${alert.state}\``;
+      if (alert.newStateDate) {
+        line += `\n  last state change: ${alert.newStateDate}`;
+      }
+      if (alert.executionError) {
+        line += `\n  execution error: ${alert.executionError}`;
+      }
+      text += line + `\n`;
+    }
+    msg.send(text.trim());
   });
 
   // Pause/unpause an alert
   robot.respond(/(?:grafana|graph|graf) (unpause|pause)\salert\s(\d+)/i, (msg) => {
-    const client = clientFactory.createByResponse(msg);
-    if (!client) return;
+    const service = createService(msg);
+    if (!service) return;
 
     const paused = msg.match[1] === 'pause';
     const alertId = msg.match[2];
 
-    const service = new GrafanService(client);
     const message = service.pauseSingleAlert(alertId, paused);
 
     if (message) {
@@ -382,10 +389,9 @@ module.exports = (robot) => {
   // Pause/unpause all alerts
   // requires an API token with admin permissions
   robot.respond(/(?:grafana|graph|graf) (unpause|pause) all(?:\s+alerts)?/i, async (msg) => {
-    const client = clientFactory.createByResponse(msg);
-    if (!client) return;
+    const service = createService(msg);
+    if (!service) return;
 
-    const service = new GrafanService(client);
     const command = msg.match[1]
     const paused = command === 'pause';
     const result = await service.pauseAllAlerts(paused);
@@ -398,11 +404,23 @@ module.exports = (robot) => {
     );
   });
 
+  /**
+   * Creates a Grafana service using the provided message.
+   *
+   * @param {Hubot.Response} context - The context object.
+   * @returns {GrafanService|null} The created Grafana service, or null if the client is not available.
+   */
+  function createService(msg) {
+    const client = clientFactory.createByResponse(msg);
+    if (!client) return null;
+    return new GrafanService(client);
+  }
+
   // Send a list of alerts
 
   /**
    *
-   * @param {any[]} alerts list of alerts
+   * @param {Array<{ name: string, id: number, state: string, newStateDate?: string, executionError?: string }>} alerts list of alerts
    * @param {string} title the title
    * @param {Hubot.Response} res the context
    * @returns
@@ -411,7 +429,7 @@ module.exports = (robot) => {
     if (!(alerts.length > 0)) {
       return;
     }
-    for (const alert of Array.from(alerts)) {
+    for (const alert of alerts) {
       let line = `- *${alert.name}* (${alert.id}): \`${alert.state}\``;
       if (alert.newStateDate) {
         line += `\n  last state change: ${alert.newStateDate}`;
