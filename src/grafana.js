@@ -57,6 +57,7 @@ const { GrafanService } = require('./grafana-service');
  * @param {Hubot.Robot} robot
  */
 module.exports = (robot) => {
+
   // Various configuration options stored in environment variables
   const grafana_per_room = process.env.HUBOT_GRAFANA_PER_ROOM;
   const grafana_query_time_range = process.env.HUBOT_GRAFANA_QUERY_TIME_RANGE || '6h';
@@ -78,7 +79,7 @@ module.exports = (robot) => {
   });
 
   // Get a specific dashboard with options
-  robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) => {
+  robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, async (msg) => {
     const grafana = clientFactory.createByResponse(msg);
 
     if (!grafana) return;
@@ -168,120 +169,100 @@ module.exports = (robot) => {
     robot.logger.debug(apiPanelId);
     robot.logger.debug(pname);
 
-    // Call the API to get information about this dashboard
-    return grafana.get(`dashboards/uid/${uid}`).then((dashboard) => {
-      robot.logger.debug(dashboard);
+    let service = createService(msg);
+    if (!service) return;
 
-      // Check dashboard information
-      if (!dashboard) {
-        sendError('An error ocurred. Check your logs for more details.', msg);
-        return;
-      }
+    let dashboard = await service.getDashboard(uid);
 
-      if (dashboard.message) {
-        if (dashboard.message !== 'Dashboard not found') {
-          return sendError(dashboard.message, msg);
+    // Check dashboard information
+    if (!dashboard) {
+      sendError('An error ocurred. Check your logs for more details.', msg);
+      return;
+    }
+
+    if (dashboard.message) {
+      return sendError(dashboard.message, msg);
+    }
+
+    // Defaults
+    const data = dashboard.dashboard;
+
+    // Handle empty dashboard
+    if (data.rows == null) {
+      return sendError('Dashboard empty.', msg);
+    }
+
+    // Support for templated dashboards
+    let template_map;
+    robot.logger.debug(data.templating.list);
+    if (data.templating.list) {
+      template_map = [];
+      for (const template of Array.from(data.templating.list)) {
+        robot.logger.debug(template);
+        if (!template.current) {
+          continue;
         }
-
-        // Search for URL slug to offer help
-        return grafana.get('search?type=dash-db').then((results) => {
-          let errorMessage = dashboard.message;
-          for (const item of Array.from(results)) {
-            if (item.url.match(new RegExp(`\/d\/[a-z0-9\-]+\/${uid}$`, 'i'))) {
-              errorMessage = `Try your query again with \`${item.uid}\` instead of \`${uid}\``;
-              break;
-            }
-          }
-          return sendError(errorMessage, msg);
-        });
-      }
-
-      // Defaults
-      const data = dashboard.dashboard;
-
-      // Handle refactor done for version 5.0.0+
-      if (dashboard.dashboard.panels) {
-        // Concept of "rows" was replaced by coordinate system
-        data.rows = [dashboard.dashboard];
-      }
-
-      // Handle empty dashboard
-      if (data.rows == null) {
-        return sendError('Dashboard empty.', msg);
-      }
-
-      // Support for templated dashboards
-      let template_map;
-      robot.logger.debug(data.templating.list);
-      if (data.templating.list) {
-        template_map = [];
-        for (const template of Array.from(data.templating.list)) {
-          robot.logger.debug(template);
-          if (!template.current) {
-            continue;
-          }
-          for (const _param of Array.from(template_params)) {
-            if (template.name === _param.name) {
-              template_map[`$${template.name}`] = _param.value;
-            } else {
-              template_map[`$${template.name}`] = template.current.text;
-            }
+        for (const _param of Array.from(template_params)) {
+          if (template.name === _param.name) {
+            template_map[`$${template.name}`] = _param.value;
+          } else {
+            template_map[`$${template.name}`] = template.current.text;
           }
         }
       }
+    }
 
-      if (query.kiosk) {
-        query.apiEndpoint = 'd';
-        const imageUrl = grafana.createImageUrl(query, uid, null, timespan, variables);
-        const grafanaChartLink = grafana.createGrafanaChartLink(query, uid, null, timespan, variables);
-        const title = dashboard.dashboard.title;
+    if (query.kiosk) {
+      query.apiEndpoint = 'd';
+      const imageUrl = grafana.createImageUrl(query, uid, null, timespan, variables);
+      const grafanaChartLink = grafana.createGrafanaChartLink(query, uid, null, timespan, variables);
+      const title = dashboard.dashboard.title;
+      sendDashboardChart(msg, title, imageUrl, grafanaChartLink);
+      return;
+    }
+
+    // Return dashboard rows
+    let panelNumber = 0;
+    let returnedCount = 0;
+    for (const row of Array.from(data.rows)) {
+      for (const panel of Array.from(row.panels)) {
+        robot.logger.debug(panel);
+
+        panelNumber += 1;
+        // Skip if visual panel ID was specified and didn't match
+        if (visualPanelId && visualPanelId !== panelNumber) {
+          continue;
+        }
+
+        // Skip if API panel ID was specified and didn't match
+        if (apiPanelId && apiPanelId !== panel.id) {
+          continue;
+        }
+
+        // Skip if panel name was specified any didn't match
+        if (pname && panel.title.toLowerCase().indexOf(pname) === -1) {
+          continue;
+        }
+
+        // Skip if we have already returned max count of dashboards
+        if (returnedCount > max_return_dashboards) {
+          continue;
+        }
+
+        // Build links for message sending
+        const title = formatTitleWithTemplate(panel.title, template_map);
+        const { uid } = dashboard.dashboard;
+        const imageUrl = grafana.createImageUrl(query, uid, panel, timespan, variables);
+        const grafanaChartLink = grafana.createGrafanaChartLink(query, uid, panel, timespan, variables);
+
         sendDashboardChart(msg, title, imageUrl, grafanaChartLink);
-        return;
+        returnedCount += 1;
       }
+    }
 
-      // Return dashboard rows
-      let panelNumber = 0;
-      let returnedCount = 0;
-      for (const row of Array.from(data.rows)) {
-        for (const panel of Array.from(row.panels)) {
-          robot.logger.debug(panel);
-
-          panelNumber += 1;
-          // Skip if visual panel ID was specified and didn't match
-          if (visualPanelId && visualPanelId !== panelNumber) {
-            continue;
-          }
-
-          // Skip if API panel ID was specified and didn't match
-          if (apiPanelId && apiPanelId !== panel.id) {
-            continue;
-          }
-
-          // Skip if panel name was specified any didn't match
-          if (pname && panel.title.toLowerCase().indexOf(pname) === -1) {
-            continue;
-          }
-
-          // Skip if we have already returned max count of dashboards
-          if (returnedCount > max_return_dashboards) {
-            continue;
-          }
-
-          // Build links for message sending
-          const title = formatTitleWithTemplate(panel.title, template_map);
-          const { uid } = dashboard.dashboard;
-          const imageUrl = grafana.createImageUrl(query, uid, panel, timespan, variables);
-          const grafanaChartLink = grafana.createGrafanaChartLink(query, uid, panel, timespan, variables);
-
-          sendDashboardChart(msg, title, imageUrl, grafanaChartLink);
-          returnedCount += 1;
-        }
-      }
-
-      if (returnedCount === 0) {
-        return sendError('Could not locate desired panel.', msg);
-      }
-    });
+    if (returnedCount === 0) {
+      return sendError('Could not locate desired panel.', msg);
+    }
   });
 
   // Process the bot response
@@ -304,9 +285,9 @@ module.exports = (robot) => {
       tag = msg.match[1].trim();
       title = `Dashboards tagged \`${tag}\`:\n`;
     }
-    
+
     const dashboards = await service.search(null, tag);
-    if(dashboards == null) return;
+    if (dashboards == null) return;
     sendDashboardList(dashboards, title, msg);
   });
 
@@ -319,7 +300,7 @@ module.exports = (robot) => {
     robot.logger.debug(query);
 
     const dashboards = await service.search(query);
-    if(dashboards == null) return;
+    if (dashboards == null) return;
 
     const title = `Dashboards matching \`${query}\`:\n`;
     sendDashboardList(dashboards, title, msg);

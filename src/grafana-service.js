@@ -1,5 +1,24 @@
 const { GrafanaClient } = require("./grafana-client");
 
+class GrafanaDashboardQuery {
+  constructor() {
+
+
+    this.width = parseInt(process.env.HUBOT_GRAFANA_DEFAULT_WIDTH) || 1000,
+      this.height = parseInt(process.env.HUBOT_GRAFANA_DEFAULT_HEIGHT) || 500,
+      this.tz = process.env.HUBOT_GRAFANA_DEFAULT_TIME_ZONE || '',
+      this.orgId = process.env.HUBOT_GRAFANA_ORG_ID || '',
+      this.apiEndpoint = process.env.HUBOT_GRAFANA_API_ENDPOINT || 'd-solo',
+      this.kiosk = false
+  }
+}
+
+class GrafanaDashboardRequest{
+  constructor(){
+    this.query = new GrafanaDashboardQuery();
+  }
+}
+
 
 class GrafanService {
   /**
@@ -20,6 +39,44 @@ class GrafanService {
      * @type {Hubot.Log}
      */
     this.logger = client.logger;
+  }
+
+  /**
+   * Retrieves a dashboard from Grafana based on the provided UID.
+   * @param {string} uid - The UID of the dashboard to retrieve.
+   * @returns {Promise<Object|null>} - A promise that resolves to the retrieved dashboard object, or null if the dashboard is not found or an error occurs.
+   */
+  async getDashboard(uid) {
+    const url = `dashboards/uid/${uid}`;
+    let dashboard = null;
+    try {
+      dashboard = await this.client.get(url);
+    }
+    catch (err) {
+      this.logger.error(err, 'Error while getting dashboard on URL: ' + url);
+      return null;
+    }
+
+    this.logger.debug(dashboard);
+
+    // check if we can improve the error message
+    if (dashboard && dashboard.message === 'Dashboard not found') {
+      const dashboards = await this.client.get('search?type=dash-db');
+      for (const item of Array.from(dashboards)) {
+        if (item.url.match(new RegExp(`\/d\/[a-z0-9\-]+\/${uid}$`, 'i'))) {
+          dashboard.message = `Try your query again with \`${item.uid}\` instead of \`${uid}\``;
+          break;
+        }
+      }
+    }
+
+    // Handle refactor done for version 5.0.0+
+    if (dashboard && dashboard.dashboard && dashboard.dashboard.panels) {
+      // Concept of "rows" was replaced by coordinate system
+      dashboard.dashboard.rows = [dashboard.dashboard];
+    }
+
+    return dashboard;
   }
 
   /**
@@ -137,5 +194,6 @@ class GrafanService {
 }
 
 module.exports = {
-  GrafanService
+  GrafanService,
+  GrafanaDashboardQuery
 }
