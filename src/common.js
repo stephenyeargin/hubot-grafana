@@ -4,8 +4,8 @@
  * @param {Hubot.Response} res The context.
  */
 const sendError = (message, res) => {
-    res.robot.logger.error(message);
-    res.send(message);
+  res.robot.logger.error(message);
+  res.send(message);
 };
 
 /**
@@ -14,13 +14,10 @@ const sendError = (message, res) => {
  * @returns {string}
  */
 function getRoom(res) {
-    // placeholder for further adapter support (i.e. MS Teams) as then room also
-    // contains thread conversation id
-    return res.envelope.room;
+  // placeholder for further adapter support (i.e. MS Teams) as then room also
+  // contains thread conversation id
+  return res.envelope.room;
 }
 
-
-module.exports = {
-    sendError,
-    getRoom
-}
+exports.sendError = sendError;
+exports.getRoom = getRoom;
