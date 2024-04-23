@@ -299,4 +299,50 @@ describe('grafana v8', () => {
       expect(response).to.eql('alert un-paused');
     });
   });
+
+  describe('ask hubot to pause all alerts', () => {
+    beforeEach(async () => {
+      ctx
+        .nock('https://play.grafana.org')
+        .get('/api/alerts')
+        .reply(200, [{ id: 1 }]);
+
+      ctx
+        .nock('https://play.grafana.org')
+        .post('/api/alerts/1/pause', { paused: true })
+        .reply(200, { alertId: 1, message: 'alert paused' });
+    });
+
+    it('hubot should respond with a successful paused response', async () => {
+      let response = await ctx.sendAndWaitForResponse('hubot graf pause all alerts');
+      expect(response).to.eql(
+        "Successfully tried to pause *1* alerts.\n" +
+        "*Success: 1*\n" +
+        "*Errored: 0*"
+      );
+    });
+  });
+
+  describe('ask hubot to un-pause all alerts', () => {
+    beforeEach(async () => {
+      ctx
+        .nock('https://play.grafana.org')
+        .get('/api/alerts')
+        .reply(200, [{ id: 1 }]);
+
+      ctx
+        .nock('https://play.grafana.org')
+        .post('/api/alerts/1/pause', { paused: false })
+        .reply(200, { alertId: 1, message: 'alert un-paused' });
+    });
+
+    it('hubot should respond with a successful un-paused response', async () => {
+      let response = await ctx.sendAndWaitForResponse('hubot graf unpause all alerts');
+      expect(response).to.eql(
+        "Successfully tried to unpause *1* alerts.\n" +
+        "*Success: 1*\n" +
+        "*Errored: 0*"
+      );
+    });
+  });
 });
