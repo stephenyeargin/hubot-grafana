@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [16.x, 18.x, 20.x]
+        node-version: [18.x, 20.x]
 
     steps:
     - uses: actions/checkout@v3
@@ -24,13 +24,14 @@ jobs:
 
     - name: npm install, build
       run: |
-        npm ci
+        npm run bootstrap
         npm run build --if-present
       env:
         CI: true
 
     - name: npm test
       run: |
-        npm test
+        npm run bootstrap
+        npm test -- --forbid-only --forbid-pending
       env:
         CI: true

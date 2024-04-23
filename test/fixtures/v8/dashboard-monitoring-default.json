@@ -1,1 +1,938 @@
-{"meta":{"type":"db","canSave":false,"canEdit":true,"canAdmin":false,"canStar":false,"slug":"influxdb-server-monitoring","url":"/d/AAy9r_bmk/influxdb-server-monitoring","expires":"0001-01-01T00:00:00Z","created":"2018-10-26T12:12:26Z","updated":"2018-12-07T10:20:43Z","updatedBy":"peter.hlmbrg@gmail.com","createdBy":"torkel.odegaard@gmail.com","version":5,"hasAcl":false,"isFolder":false,"folderId":461,"folderUid":"KbH7u4Pmz","folderTitle":"Data source: Influx DB","folderUrl":"/dashboards/f/KbH7u4Pmz/data-source-influx-db","provisioned":false,"provisionedExternalId":""},"dashboard":{"annotations":{"enable":false,"list":[{"builtIn":1,"datasource":"-- Grafana --","enable":true,"hide":true,"iconColor":"rgba(0, 211, 255, 1)","name":"Annotations \u0026 Alerts","type":"dashboard"}]},"editable":true,"gnetId":null,"graphTooltip":0,"id":443,"links":[],"panels":[{"cacheTimeout":null,"colorBackground":false,"colorValue":true,"colors":["#299c46","rgba(237, 129, 40, 0.89)","#d44a3a"],"datasource":"InfluxDB","format":"percent","gauge":{"maxValue":100,"minValue":0,"show":false,"thresholdLabels":false,"thresholdMarkers":true},"gridPos":{"h":4,"w":8,"x":0,"y":0},"id":3,"interval":null,"links":[],"mappingType":1,"mappingTypes":[{"name":"value to text","value":1},{"name":"range to text","value":2}],"maxDataPoints":100,"nullPointMode":"connected","nullText":null,"postfix":"","postfixFontSize":"50%","prefix":"$host ","prefixFontSize":"80%","rangeMaps":[{"from":"null","text":"N/A","to":"null"}],"repeat":"host","repeatDirection":"h","scopedVars":{"host":{"selected":true,"text":"server1","value":"server1"}},"sparkline":{"fillColor":"rgba(31, 118, 189, 0.18)","full":false,"lineColor":"rgb(31, 120, 193)","show":true},"tableColumn":"","targets":[{"groupBy":[{"params":["$__interval"],"type":"time"},{"params":["null"],"type":"fill"}],"measurement":"logins.count","orderByTime":"ASC","policy":"default","refId":"A","resultFormat":"time_series","select":[[{"params":["value"],"type":"field"},{"params":[],"type":"mean"},{"params":[" / 100"],"type":"math"}]],"tags":[{"key":"datacenter","operator":"=~","value":"/^$datacenter$/"},{"condition":"AND","key":"hostname","operator":"=~","value":"/^$host$/"}],"target":""}],"thresholds":"50,90","title":"CPU","type":"singlestat","valueFontSize":"80%","valueMaps":[{"op":"=","text":"N/A","value":"null"}],"valueName":"avg"},{"cacheTimeout":null,"colorBackground":false,"colorValue":true,"colors":["#299c46","rgba(237, 129, 40, 0.89)","#d44a3a"],"datasource":"InfluxDB","format":"percent","gauge":{"maxValue":100,"minValue":0,"show":false,"thresholdLabels":false,"thresholdMarkers":true},"gridPos":{"h":4,"w":8,"x":8,"y":0},"id":7,"interval":null,"links":[],"mappingType":1,"mappingTypes":[{"name":"value to text","value":1},{"name":"range to text","value":2}],"maxDataPoints":100,"nullPointMode":"connected","nullText":null,"postfix":"","postfixFontSize":"50%","prefix":"$host ","prefixFontSize":"80%","rangeMaps":[{"from":"null","text":"N/A","to":"null"}],"repeat":null,"repeatDirection":"h","repeatIteration":1541083165909,"repeatPanelId":3,"scopedVars":{"host":{"selected":true,"text":"server2","value":"server2"}},"sparkline":{"fillColor":"rgba(31, 118, 189, 0.18)","full":false,"lineColor":"rgb(31, 120, 193)","show":true},"tableColumn":"","targets":[{"groupBy":[{"params":["$__interval"],"type":"time"},{"params":["null"],"type":"fill"}],"measurement":"logins.count","orderByTime":"ASC","policy":"default","refId":"A","resultFormat":"time_series","select":[[{"params":["value"],"type":"field"},{"params":[],"type":"mean"},{"params":[" / 100"],"type":"math"}]],"tags":[{"key":"datacenter","operator":"=~","value":"/^$datacenter$/"},{"condition":"AND","key":"hostname","operator":"=~","value":"/^$host$/"}],"target":""}],"thresholds":"50,90","title":"CPU","type":"singlestat","valueFontSize":"80%","valueMaps":[{"op":"=","text":"N/A","value":"null"}],"valueName":"avg"},{"cacheTimeout":null,"colorBackground":false,"colorValue":true,"colors":["#299c46","rgba(237, 129, 40, 0.89)","#d44a3a"],"datasource":"InfluxDB","format":"percent","gauge":{"maxValue":100,"minValue":0,"show":false,"thresholdLabels":false,"thresholdMarkers":true},"gridPos":{"h":4,"w":8,"x":16,"y":0},"id":8,"interval":null,"links":[],"mappingType":1,"mappingTypes":[{"name":"value to text","value":1},{"name":"range to text","value":2}],"maxDataPoints":100,"nullPointMode":"connected","nullText":null,"postfix":"","postfixFontSize":"50%","prefix":"$host ","prefixFontSize":"80%","rangeMaps":[{"from":"null","text":"N/A","to":"null"}],"repeat":null,"repeatDirection":"h","repeatIteration":1541083165909,"repeatPanelId":3,"scopedVars":{"host":{"selected":true,"text":"10.1.100.1","value":"10.1.100.1"}},"sparkline":{"fillColor":"rgba(31, 118, 189, 0.18)","full":false,"lineColor":"rgb(31, 120, 193)","show":true},"tableColumn":"","targets":[{"groupBy":[{"params":["$__interval"],"type":"time"},{"params":["null"],"type":"fill"}],"measurement":"logins.count","orderByTime":"ASC","policy":"default","refId":"A","resultFormat":"time_series","select":[[{"params":["value"],"type":"field"},{"params":[],"type":"mean"},{"params":[" / 100"],"type":"math"}]],"tags":[{"key":"datacenter","operator":"=~","value":"/^$datacenter$/"},{"condition":"AND","key":"hostname","operator":"=~","value":"/^$host$/"}],"target":""}],"thresholds":"50,90","title":"CPU","type":"singlestat","valueFontSize":"80%","valueMaps":[{"op":"=","text":"N/A","value":"null"}],"valueName":"avg"},{"aliasColors":{},"annotate":{"enable":false},"bars":false,"dashLength":10,"dashes":false,"datasource":"InfluxDB","editable":true,"error":false,"fill":2,"grid":{},"gridPos":{"h":8,"w":12,"x":0,"y":4},"id":1,"interval":"$summarize","legend":{"alignAsTable":true,"avg":false,"current":false,"max":false,"min":false,"rightSide":true,"show":true,"total":false,"values":false},"lines":true,"linewidth":1,"links":[],"nullPointMode":"connected","percentage":false,"pointradius":5,"points":false,"renderer":"flot","resolution":100,"scale":1,"seriesOverrides":[],"spaceLength":10,"stack":true,"steppedLine":false,"targets":[{"alias":"$tag_hostname","dsType":"influxdb","groupBy":[{"params":["auto"],"type":"time"},{"params":["hostname"],"type":"tag"}],"measurement":"logins.count","orderByTime":"ASC","policy":"default","query":"SELECT mean(\"value\") FROM \"logins.count\" WHERE \"hostname\" =~ /$Hostname$/ AND $timeFilter GROUP BY time($interval), \"hostname\"","refId":"A","resultFormat":"time_series","select":[[{"params":["value"],"type":"field"},{"params":[],"type":"mean"}]],"tags":[{"key":"datacenter","operator":"=~","value":"/^$datacenter$/"},{"condition":"AND","key":"hostname","operator":"=~","value":"/^$host$/"}],"target":""}],"thresholds":[],"timeFrom":null,"timeShift":null,"title":"Nginx Req/s","tooltip":{"msResolution":false,"query_as_alias":true,"shared":false,"sort":0,"value_type":"cumulative"},"type":"graph","xaxis":{"buckets":null,"mode":"time","name":null,"show":true,"values":[]},"yaxes":[{"format":"short","logBase":1,"max":null,"min":null,"show":true},{"format":"short","logBase":1,"max":null,"min":null,"show":true}],"yaxis":{"align":false,"alignLevel":null},"zerofill":true},{"aliasColors":{},"bars":false,"dashLength":10,"dashes":false,"datasource":"InfluxDB","fill":1,"gridPos":{"h":8,"w":12,"x":12,"y":4},"id":6,"legend":{"alignAsTable":true,"avg":false,"current":true,"max":false,"min":false,"rightSide":false,"show":true,"total":false,"values":true},"lines":true,"linewidth":1,"links":[],"nullPointMode":"null","percentage":false,"pointradius":5,"points":false,"renderer":"flot","seriesOverrides":[],"spaceLength":10,"stack":false,"steppedLine":false,"targets":[{"alias":"$tag_hostname","groupBy":[{"params":["$__interval"],"type":"time"},{"params":["hostname"],"type":"tag"},{"params":["null"],"type":"fill"}],"measurement":"logins.count","orderByTime":"ASC","policy":"default","refId":"A","resultFormat":"time_series","select":[[{"params":["value"],"type":"field"},{"params":[],"type":"mean"},{"params":["10s"],"type":"non_negative_derivative"},{"params":["*1000000000"],"type":"math"}]],"tags":[],"target":""}],"thresholds":[],"timeFrom":null,"timeShift":null,"title":"Free memory","tooltip":{"shared":true,"sort":0,"value_type":"individual"},"type":"graph","xaxis":{"buckets":null,"mode":"time","name":null,"show":true,"values":[]},"yaxes":[{"format":"bytes","label":null,"logBase":1,"max":null,"min":null,"show":true},{"format":"short","label":null,"logBase":1,"max":null,"min":null,"show":true}],"yaxis":{"align":false,"alignLevel":null}}],"refresh":false,"schemaVersion":16,"style":"dark","tags":["influxdb","templated","presentation"],"templating":{"list":[{"allValue":null,"current":{"tags":[],"text":"America","value":"America"},"datasource":"InfluxDB","hide":0,"includeAll":false,"label":null,"multi":false,"name":"datacenter","options":[],"query":"SHOW TAG VALUES  WITH KEY = \"datacenter\" ","refresh":1,"regex":"","skipUrlSync":false,"sort":0,"tagValuesQuery":null,"tags":[],"tagsQuery":null,"type":"query","useTags":false},{"allFormat":"regex values","allValue":null,"current":{"selected":false,"tags":[],"text":"server1 + server2 + 10.1.100.1","value":["server1","server2","10.1.100.1"]},"datasource":"InfluxDB","hide":0,"includeAll":true,"label":null,"multi":true,"multiFormat":"regex values","name":"host","options":[],"query":"SHOW TAG VALUES WITH KEY = \"hostname\" WHERE \"datacenter\" =~ /^$datacenter$/","refresh":1,"refresh_on_load":false,"regex":"","skipUrlSync":false,"sort":0,"tagValuesQuery":null,"tags":[],"tagsQuery":null,"type":"query","useTags":false},{"allFormat":"glob","auto":true,"auto_count":5,"auto_min":"10s","current":{"tags":[],"text":"auto","value":"$__auto_interval_summarize"},"datasource":null,"hide":0,"includeAll":false,"label":"","name":"summarize","options":[{"selected":true,"text":"auto","value":"$__auto_interval_summarize"},{"selected":false,"text":"1m","value":"1m"},{"selected":false,"text":"10m","value":"10m"},{"selected":false,"text":"30m","value":"30m"},{"selected":false,"text":"1h","value":"1h"},{"selected":false,"text":"6h","value":"6h"},{"selected":false,"text":"12h","value":"12h"},{"selected":false,"text":"1d","value":"1d"},{"selected":false,"text":"7d","value":"7d"},{"selected":false,"text":"14d","value":"14d"},{"selected":false,"text":"30d","value":"30d"}],"query":"1m,10m,30m,1h,6h,12h,1d,7d,14d,30d","refresh":2,"refresh_on_load":false,"skipUrlSync":false,"type":"interval"},{"datasource":"InfluxDB","filters":[],"hide":0,"label":null,"name":"adhoc","skipUrlSync":false,"type":"adhoc"}]},"time":{"from":"now-1h","to":"now"},"timepicker":{"collapse":false,"enable":true,"notice":false,"now":true,"refresh_intervals":["5s","10s","30s","1m","5m","15m","30m","1h","2h","1d"],"status":"Stable","time_options":["5m","15m","1h","6h","12h","24h","2d","7d","30d"],"type":"timepicker"},"timezone":"browser","title":"InfluxDB Server Monitoring","uid":"AAy9r_bmk","version":5}}
+{
+    "meta": {
+        "type": "db",
+        "canSave": false,
+        "canEdit": true,
+        "canAdmin": false,
+        "canStar": false,
+        "slug": "influxdb-server-monitoring",
+        "url": "/d/AAy9r_bmk/influxdb-server-monitoring",
+        "expires": "0001-01-01T00:00:00Z",
+        "created": "2018-10-26T12:12:26Z",
+        "updated": "2018-12-07T10:20:43Z",
+        "updatedBy": "peter.hlmbrg@gmail.com",
+        "createdBy": "torkel.odegaard@gmail.com",
+        "version": 5,
+        "hasAcl": false,
+        "isFolder": false,
+        "folderId": 461,
+        "folderUid": "KbH7u4Pmz",
+        "folderTitle": "Data source: Influx DB",
+        "folderUrl": "/dashboards/f/KbH7u4Pmz/data-source-influx-db",
+        "provisioned": false,
+        "provisionedExternalId": ""
+    },
+    "dashboard": {
+        "annotations": {
+            "enable": false,
+            "list": [
+                {
+                    "builtIn": 1,
+                    "datasource": "-- Grafana --",
+                    "enable": true,
+                    "hide": true,
+                    "iconColor": "rgba(0, 211, 255, 1)",
+                    "name": "Annotations \u0026 Alerts",
+                    "type": "dashboard"
+                }
+            ]
+        },
+        "editable": true,
+        "gnetId": null,
+        "graphTooltip": 0,
+        "id": 443,
+        "links": [],
+        "panels": [
+            {
+                "cacheTimeout": null,
+                "colorBackground": false,
+                "colorValue": true,
+                "colors": [
+                    "#299c46",
+                    "rgba(237, 129, 40, 0.89)",
+                    "#d44a3a"
+                ],
+                "datasource": "InfluxDB",
+                "format": "percent",
+                "gauge": {
+                    "maxValue": 100,
+                    "minValue": 0,
+                    "show": false,
+                    "thresholdLabels": false,
+                    "thresholdMarkers": true
+                },
+                "gridPos": {
+                    "h": 4,
+                    "w": 8,
+                    "x": 0,
+                    "y": 0
+                },
+                "id": 3,
+                "interval": null,
+                "links": [],
+                "mappingType": 1,
+                "mappingTypes": [
+                    {
+                        "name": "value to text",
+                        "value": 1
+                    },
+                    {
+                        "name": "range to text",
+                        "value": 2
+                    }
+                ],
+                "maxDataPoints": 100,
+                "nullPointMode": "connected",
+                "nullText": null,
+                "postfix": "",
+                "postfixFontSize": "50%",
+                "prefix": "$host ",
+                "prefixFontSize": "80%",
+                "rangeMaps": [
+                    {
+                        "from": "null",
+                        "text": "N/A",
+                        "to": "null"
+                    }
+                ],
+                "repeat": "host",
+                "repeatDirection": "h",
+                "scopedVars": {
+                    "host": {
+                        "selected": true,
+                        "text": "server1",
+                        "value": "server1"
+                    }
+                },
+                "sparkline": {
+                    "fillColor": "rgba(31, 118, 189, 0.18)",
+                    "full": false,
+                    "lineColor": "rgb(31, 120, 193)",
+                    "show": true
+                },
+                "tableColumn": "",
+                "targets": [
+                    {
+                        "groupBy": [
+                            {
+                                "params": [
+                                    "$__interval"
+                                ],
+                                "type": "time"
+                            },
+                            {
+                                "params": [
+                                    "null"
+                                ],
+                                "type": "fill"
+                            }
+                        ],
+                        "measurement": "logins.count",
+                        "orderByTime": "ASC",
+                        "policy": "default",
+                        "refId": "A",
+                        "resultFormat": "time_series",
+                        "select": [
+                            [
+                                {
+                                    "params": [
+                                        "value"
+                                    ],
+                                    "type": "field"
+                                },
+                                {
+                                    "params": [],
+                                    "type": "mean"
+                                },
+                                {
+                                    "params": [
+                                        " / 100"
+                                    ],
+                                    "type": "math"
+                                }
+                            ]
+                        ],
+                        "tags": [
+                            {
+                                "key": "datacenter",
+                                "operator": "=~",
+                                "value": "/^$datacenter$/"
+                            },
+                            {
+                                "condition": "AND",
+                                "key": "hostname",
+                                "operator": "=~",
+                                "value": "/^$host$/"
+                            }
+                        ],
+                        "target": ""
+                    }
+                ],
+                "thresholds": "50,90",
+                "title": "CPU",
+                "type": "singlestat",
+                "valueFontSize": "80%",
+                "valueMaps": [
+                    {
+                        "op": "=",
+                        "text": "N/A",
+                        "value": "null"
+                    }
+                ],
+                "valueName": "avg"
+            },
+            {
+                "cacheTimeout": null,
+                "colorBackground": false,
+                "colorValue": true,
+                "colors": [
+                    "#299c46",
+                    "rgba(237, 129, 40, 0.89)",
+                    "#d44a3a"
+                ],
+                "datasource": "InfluxDB",
+                "format": "percent",
+                "gauge": {
+                    "maxValue": 100,
+                    "minValue": 0,
+                    "show": false,
+                    "thresholdLabels": false,
+                    "thresholdMarkers": true
+                },
+                "gridPos": {
+                    "h": 4,
+                    "w": 8,
+                    "x": 8,
+                    "y": 0
+                },
+                "id": 7,
+                "interval": null,
+                "links": [],
+                "mappingType": 1,
+                "mappingTypes": [
+                    {
+                        "name": "value to text",
+                        "value": 1
+                    },
+                    {
+                        "name": "range to text",
+                        "value": 2
+                    }
+                ],
+                "maxDataPoints": 100,
+                "nullPointMode": "connected",
+                "nullText": null,
+                "postfix": "",
+                "postfixFontSize": "50%",
+                "prefix": "$host ",
+                "prefixFontSize": "80%",
+                "rangeMaps": [
+                    {
+                        "from": "null",
+                        "text": "N/A",
+                        "to": "null"
+                    }
+                ],
+                "repeat": null,
+                "repeatDirection": "h",
+                "repeatIteration": 1541083165909,
+                "repeatPanelId": 3,
+                "scopedVars": {
+                    "host": {
+                        "selected": true,
+                        "text": "server2",
+                        "value": "server2"
+                    }
+                },
+                "sparkline": {
+                    "fillColor": "rgba(31, 118, 189, 0.18)",
+                    "full": false,
+                    "lineColor": "rgb(31, 120, 193)",
+                    "show": true
+                },
+                "tableColumn": "",
+                "targets": [
+                    {
+                        "groupBy": [
+                            {
+                                "params": [
+                                    "$__interval"
+                                ],
+                                "type": "time"
+                            },
+                            {
+                                "params": [
+                                    "null"
+                                ],
+                                "type": "fill"
+                            }
+                        ],
+                        "measurement": "logins.count",
+                        "orderByTime": "ASC",
+                        "policy": "default",
+                        "refId": "A",
+                        "resultFormat": "time_series",
+                        "select": [
+                            [
+                                {
+                                    "params": [
+                                        "value"
+                                    ],
+                                    "type": "field"
+                                },
+                                {
+                                    "params": [],
+                                    "type": "mean"
+                                },
+                                {
+                                    "params": [
+                                        " / 100"
+                                    ],
+                                    "type": "math"
+                                }
+                            ]
+                        ],
+                        "tags": [
+                            {
+                                "key": "datacenter",
+                                "operator": "=~",
+                                "value": "/^$datacenter$/"
+                            },
+                            {
+                                "condition": "AND",
+                                "key": "hostname",
+                                "operator": "=~",
+                                "value": "/^$host$/"
+                            }
+                        ],
+                        "target": ""
+                    }
+                ],
+                "thresholds": "50,90",
+                "title": "CPU",
+                "type": "singlestat",
+                "valueFontSize": "80%",
+                "valueMaps": [
+                    {
+                        "op": "=",
+                        "text": "N/A",
+                        "value": "null"
+                    }
+                ],
+                "valueName": "avg"
+            },
+            {
+                "cacheTimeout": null,
+                "colorBackground": false,
+                "colorValue": true,
+                "colors": [
+                    "#299c46",
+                    "rgba(237, 129, 40, 0.89)",
+                    "#d44a3a"
+                ],
+                "datasource": "InfluxDB",
+                "format": "percent",
+                "gauge": {
+                    "maxValue": 100,
+                    "minValue": 0,
+                    "show": false,
+                    "thresholdLabels": false,
+                    "thresholdMarkers": true
+                },
+                "gridPos": {
+                    "h": 4,
+                    "w": 8,
+                    "x": 16,
+                    "y": 0
+                },
+                "id": 8,
+                "interval": null,
+                "links": [],
+                "mappingType": 1,
+                "mappingTypes": [
+                    {
+                        "name": "value to text",
+                        "value": 1
+                    },
+                    {
+                        "name": "range to text",
+                        "value": 2
+                    }
+                ],
+                "maxDataPoints": 100,
+                "nullPointMode": "connected",
+                "nullText": null,
+                "postfix": "",
+                "postfixFontSize": "50%",
+                "prefix": "$host ",
+                "prefixFontSize": "80%",
+                "rangeMaps": [
+                    {
+                        "from": "null",
+                        "text": "N/A",
+                        "to": "null"
+                    }
+                ],
+                "repeat": null,
+                "repeatDirection": "h",
+                "repeatIteration": 1541083165909,
+                "repeatPanelId": 3,
+                "scopedVars": {
+                    "host": {
+                        "selected": true,
+                        "text": "10.1.100.1",
+                        "value": "10.1.100.1"
+                    }
+                },
+                "sparkline": {
+                    "fillColor": "rgba(31, 118, 189, 0.18)",
+                    "full": false,
+                    "lineColor": "rgb(31, 120, 193)",
+                    "show": true
+                },
+                "tableColumn": "",
+                "targets": [
+                    {
+                        "groupBy": [
+                            {
+                                "params": [
+                                    "$__interval"
+                                ],
+                                "type": "time"
+                            },
+                            {
+                                "params": [
+                                    "null"
+                                ],
+                                "type": "fill"
+                            }
+                        ],
+                        "measurement": "logins.count",
+                        "orderByTime": "ASC",
+                        "policy": "default",
+                        "refId": "A",
+                        "resultFormat": "time_series",
+                        "select": [
+                            [
+                                {
+                                    "params": [
+                                        "value"
+                                    ],
+                                    "type": "field"
+                                },
+                                {
+                                    "params": [],
+                                    "type": "mean"
+                                },
+                                {
+                                    "params": [
+                                        " / 100"
+                                    ],
+                                    "type": "math"
+                                }
+                            ]
+                        ],
+                        "tags": [
+                            {
+                                "key": "datacenter",
+                                "operator": "=~",
+                                "value": "/^$datacenter$/"
+                            },
+                            {
+                                "condition": "AND",
+                                "key": "hostname",
+                                "operator": "=~",
+                                "value": "/^$host$/"
+                            }
+                        ],
+                        "target": ""
+                    }
+                ],
+                "thresholds": "50,90",
+                "title": "CPU",
+                "type": "singlestat",
+                "valueFontSize": "80%",
+                "valueMaps": [
+                    {
+                        "op": "=",
+                        "text": "N/A",
+                        "value": "null"
+                    }
+                ],
+                "valueName": "avg"
+            },
+            {
+                "aliasColors": {},
+                "annotate": {
+                    "enable": false
+                },
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
+                "datasource": "InfluxDB",
+                "editable": true,
+                "error": false,
+                "fill": 2,
+                "grid": {},
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 0,
+                    "y": 4
+                },
+                "id": 1,
+                "interval": "$summarize",
+                "legend": {
+                    "alignAsTable": true,
+                    "avg": false,
+                    "current": false,
+                    "max": false,
+                    "min": false,
+                    "rightSide": true,
+                    "show": true,
+                    "total": false,
+                    "values": false
+                },
+                "lines": true,
+                "linewidth": 1,
+                "links": [],
+                "nullPointMode": "connected",
+                "percentage": false,
+                "pointradius": 5,
+                "points": false,
+                "renderer": "flot",
+                "resolution": 100,
+                "scale": 1,
+                "seriesOverrides": [],
+                "spaceLength": 10,
+                "stack": true,
+                "steppedLine": false,
+                "targets": [
+                    {
+                        "alias": "$tag_hostname",
+                        "dsType": "influxdb",
+                        "groupBy": [
+                            {
+                                "params": [
+                                    "auto"
+                                ],
+                                "type": "time"
+                            },
+                            {
+                                "params": [
+                                    "hostname"
+                                ],
+                                "type": "tag"
+                            }
+                        ],
+                        "measurement": "logins.count",
+                        "orderByTime": "ASC",
+                        "policy": "default",
+                        "query": "SELECT mean(\"value\") FROM \"logins.count\" WHERE \"hostname\" =~ /$Hostname$/ AND $timeFilter GROUP BY time($interval), \"hostname\"",
+                        "refId": "A",
+                        "resultFormat": "time_series",
+                        "select": [
+                            [
+                                {
+                                    "params": [
+                                        "value"
+                                    ],
+                                    "type": "field"
+                                },
+                                {
+                                    "params": [],
+                                    "type": "mean"
+                                }
+                            ]
+                        ],
+                        "tags": [
+                            {
+                                "key": "datacenter",
+                                "operator": "=~",
+                                "value": "/^$datacenter$/"
+                            },
+                            {
+                                "condition": "AND",
+                                "key": "hostname",
+                                "operator": "=~",
+                                "value": "/^$host$/"
+                            }
+                        ],
+                        "target": ""
+                    }
+                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeShift": null,
+                "title": "Nginx Req/s",
+                "tooltip": {
+                    "msResolution": false,
+                    "query_as_alias": true,
+                    "shared": false,
+                    "sort": 0,
+                    "value_type": "cumulative"
+                },
+                "type": "graph",
+                "xaxis": {
+                    "buckets": null,
+                    "mode": "time",
+                    "name": null,
+                    "show": true,
+                    "values": []
+                },
+                "yaxes": [
+                    {
+                        "format": "short",
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    },
+                    {
+                        "format": "short",
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    }
+                ],
+                "yaxis": {
+                    "align": false,
+                    "alignLevel": null
+                },
+                "zerofill": true
+            },
+            {
+                "aliasColors": {},
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
+                "datasource": "InfluxDB",
+                "fill": 1,
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 12,
+                    "y": 4
+                },
+                "id": 6,
+                "legend": {
+                    "alignAsTable": true,
+                    "avg": false,
+                    "current": true,
+                    "max": false,
+                    "min": false,
+                    "rightSide": false,
+                    "show": true,
+                    "total": false,
+                    "values": true
+                },
+                "lines": true,
+                "linewidth": 1,
+                "links": [],
+                "nullPointMode": "null",
+                "percentage": false,
+                "pointradius": 5,
+                "points": false,
+                "renderer": "flot",
+                "seriesOverrides": [],
+                "spaceLength": 10,
+                "stack": false,
+                "steppedLine": false,
+                "targets": [
+                    {
+                        "alias": "$tag_hostname",
+                        "groupBy": [
+                            {
+                                "params": [
+                                    "$__interval"
+                                ],
+                                "type": "time"
+                            },
+                            {
+                                "params": [
+                                    "hostname"
+                                ],
+                                "type": "tag"
+                            },
+                            {
+                                "params": [
+                                    "null"
+                                ],
+                                "type": "fill"
+                            }
+                        ],
+                        "measurement": "logins.count",
+                        "orderByTime": "ASC",
+                        "policy": "default",
+                        "refId": "A",
+                        "resultFormat": "time_series",
+                        "select": [
+                            [
+                                {
+                                    "params": [
+                                        "value"
+                                    ],
+                                    "type": "field"
+                                },
+                                {
+                                    "params": [],
+                                    "type": "mean"
+                                },
+                                {
+                                    "params": [
+                                        "10s"
+                                    ],
+                                    "type": "non_negative_derivative"
+                                },
+                                {
+                                    "params": [
+                                        "*1000000000"
+                                    ],
+                                    "type": "math"
+                                }
+                            ]
+                        ],
+                        "tags": [],
+                        "target": ""
+                    }
+                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeShift": null,
+                "title": "Free memory",
+                "tooltip": {
+                    "shared": true,
+                    "sort": 0,
+                    "value_type": "individual"
+                },
+                "type": "graph",
+                "xaxis": {
+                    "buckets": null,
+                    "mode": "time",
+                    "name": null,
+                    "show": true,
+                    "values": []
+                },
+                "yaxes": [
+                    {
+                        "format": "bytes",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    },
+                    {
+                        "format": "short",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    }
+                ],
+                "yaxis": {
+                    "align": false,
+                    "alignLevel": null
+                }
+            }
+        ],
+        "refresh": false,
+        "schemaVersion": 16,
+        "style": "dark",
+        "tags": [
+            "influxdb",
+            "templated",
+            "presentation"
+        ],
+        "templating": {
+            "list": [
+                {
+                    "allValue": null,
+                    "current": {
+                        "tags": [],
+                        "text": "America",
+                        "value": "America"
+                    },
+                    "datasource": "InfluxDB",
+                    "hide": 0,
+                    "includeAll": false,
+                    "label": null,
+                    "multi": false,
+                    "name": "datacenter",
+                    "options": [],
+                    "query": "SHOW TAG VALUES  WITH KEY = \"datacenter\" ",
+                    "refresh": 1,
+                    "regex": "",
+                    "skipUrlSync": false,
+                    "sort": 0,
+                    "tagValuesQuery": null,
+                    "tags": [],
+                    "tagsQuery": null,
+                    "type": "query",
+                    "useTags": false
+                },
+                {
+                    "allFormat": "regex values",
+                    "allValue": null,
+                    "current": {
+                        "selected": false,
+                        "tags": [],
+                        "text": "server1 + server2 + 10.1.100.1",
+                        "value": [
+                            "server1",
+                            "server2",
+                            "10.1.100.1"
+                        ]
+                    },
+                    "datasource": "InfluxDB",
+                    "hide": 0,
+                    "includeAll": true,
+                    "label": null,
+                    "multi": true,
+                    "multiFormat": "regex values",
+                    "name": "host",
+                    "options": [],
+                    "query": "SHOW TAG VALUES WITH KEY = \"hostname\" WHERE \"datacenter\" =~ /^$datacenter$/",
+                    "refresh": 1,
+                    "refresh_on_load": false,
+                    "regex": "",
+                    "skipUrlSync": false,
+                    "sort": 0,
+                    "tagValuesQuery": null,
+                    "tags": [],
+                    "tagsQuery": null,
+                    "type": "query",
+                    "useTags": false
+                },
+                {
+                    "allFormat": "glob",
+                    "auto": true,
+                    "auto_count": 5,
+                    "auto_min": "10s",
+                    "current": {
+                        "tags": [],
+                        "text": "auto",
+                        "value": "$__auto_interval_summarize"
+                    },
+                    "datasource": null,
+                    "hide": 0,
+                    "includeAll": false,
+                    "label": "",
+                    "name": "summarize",
+                    "options": [
+                        {
+                            "selected": true,
+                            "text": "auto",
+                            "value": "$__auto_interval_summarize"
+                        },
+                        {
+                            "selected": false,
+                            "text": "1m",
+                            "value": "1m"
+                        },
+                        {
+                            "selected": false,
+                            "text": "10m",
+                            "value": "10m"
+                        },
+                        {
+                            "selected": false,
+                            "text": "30m",
+                            "value": "30m"
+                        },
+                        {
+                            "selected": false,
+                            "text": "1h",
+                            "value": "1h"
+                        },
+                        {
+                            "selected": false,
+                            "text": "6h",
+                            "value": "6h"
+                        },
+                        {
+                            "selected": false,
+                            "text": "12h",
+                            "value": "12h"
+                        },
+                        {
+                            "selected": false,
+                            "text": "1d",
+                            "value": "1d"
+                        },
+                        {
+                            "selected": false,
+                            "text": "7d",
+                            "value": "7d"
+                        },
+                        {
+                            "selected": false,
+                            "text": "14d",
+                            "value": "14d"
+                        },
+                        {
+                            "selected": false,
+                            "text": "30d",
+                            "value": "30d"
+                        }
+                    ],
+                    "query": "1m,10m,30m,1h,6h,12h,1d,7d,14d,30d",
+                    "refresh": 2,
+                    "refresh_on_load": false,
+                    "skipUrlSync": false,
+                    "type": "interval"
+                },
+                {
+                    "datasource": "InfluxDB",
+                    "filters": [],
+                    "hide": 0,
+                    "label": null,
+                    "name": "adhoc",
+                    "skipUrlSync": false,
+                    "type": "adhoc"
+                }
+            ]
+        },
+        "time": {
+            "from": "now-1h",
+            "to": "now"
+        },
+        "timepicker": {
+            "collapse": false,
+            "enable": true,
+            "notice": false,
+            "now": true,
+            "refresh_intervals": [
+                "5s",
+                "10s",
+                "30s",
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "2h",
+                "1d"
+            ],
+            "status": "Stable",
+            "time_options": [
+                "5m",
+                "15m",
+                "1h",
+                "6h",
+                "12h",
+                "24h",
+                "2d",
+                "7d",
+                "30d"
+            ],
+            "type": "timepicker"
+        },
+        "timezone": "browser",
+        "title": "InfluxDB Server Monitoring",
+        "uid": "AAy9r_bmk",
+        "version": 5
+    }
+}

@@ -12,4 +12,4 @@ if [ -f .env.${NODE_ENV} ]; then
   source .env.${NODE_ENV}
 fi
 
-npm install
+npm ci

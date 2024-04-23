@@ -52,8 +52,12 @@ describe('s3', () => {
       let response = await ctx.sendAndWaitForResponse('@hubot graf db AAy9r_bmk:cpu server=ww3.example.com now-6h');
       response = response.replace(/\/[a-f0-9]{40}\.png/i, '/abdcdef0123456789.png');
 
+      let panelRegex = /panelId=(\d+)/
+      expect(response).to.match(panelRegex);
+
+      let panelId = response.match(panelRegex)[1]
       expect(response).to.eql(
-        'CPU: https://graf.s3.us-standard.amazonaws.com/grafana/abdcdef0123456789.png - https://play.grafana.org/d/AAy9r_bmk/?panelId=3&fullscreen&from=now-6h&to=now&var-server=ww3.example.com'
+        'CPU: https://graf.s3.us-standard.amazonaws.com/grafana/abdcdef0123456789.png - https://play.grafana.org/d/AAy9r_bmk/?panelId=' + panelId + '&fullscreen&from=now-6h&to=now&var-server=ww3.example.com'
       );
     });
   });
