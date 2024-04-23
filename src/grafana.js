@@ -50,6 +50,7 @@
 const { Adapter } = require('./adapters/Adapter');
 const { GrafanaClientFactory } = require('./grafana-client-factory');
 const { sendError } = require('./common');
+const { GrafanService } = require('./grafana-service');
 
 /**
  * Adds the Grafana commands to Hubot.
@@ -62,7 +63,7 @@ module.exports = (robot) => {
   const max_return_dashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS || 25;
 
   const adapter = new Adapter(robot);
-  const factory = new GrafanaClientFactory();
+  const clientFactory = new GrafanaClientFactory();
 
   // Set Grafana host/api_key
   robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) => {
@@ -78,7 +79,7 @@ module.exports = (robot) => {
 
   // Get a specific dashboard with options
   robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (msg) => {
-    const grafana = factory.createByResponse(msg);
+    const grafana = clientFactory.createByResponse(msg);
 
     if (!grafana) return;
 
@@ -294,7 +295,7 @@ module.exports = (robot) => {
 
   // Get a list of available dashboards
   robot.respond(/(?:grafana|graph|graf) list\s?(.+)?/i, (msg) => {
-    const grafana = factory.createByResponse(msg);
+    const grafana = clientFactory.createByResponse(msg);
     if (!grafana) return;
 
     let url = 'search?type=dash-db';
@@ -319,7 +320,7 @@ module.exports = (robot) => {
 
   // Search dashboards
   robot.respond(/(?:grafana|graph|graf) search (.+)/i, (msg) => {
-    const grafana = factory.createByResponse(msg);
+    const grafana = clientFactory.createByResponse(msg);
     if (!grafana) return;
 
     const query = msg.match[1].trim();
@@ -336,7 +337,7 @@ module.exports = (robot) => {
 
   // Show alerts
   robot.respond(/(?:grafana|graph|graf) alerts\s?(.+)?/i, async (msg) => {
-    const grafana = factory.createByResponse(msg);
+    const grafana = clientFactory.createByResponse(msg);
     if (!grafana) return;
 
     let url = 'alerts';
@@ -364,7 +365,7 @@ module.exports = (robot) => {
 
   // Pause/unpause an alert
   robot.respond(/(?:grafana|graph|graf) (unpause|pause)\salert\s(\d+)/i, (msg) => {
-    const grafana = factory.createByResponse(msg);
+    const grafana = clientFactory.createByResponse(msg);
     if (!grafana) return;
 
     const paused = msg.match[1] === 'pause';
@@ -387,30 +388,19 @@ module.exports = (robot) => {
   // Pause/unpause all alerts
   // requires an API token with admin permissions
   robot.respond(/(?:grafana|graph|graf) (unpause|pause) all(?:\s+alerts)?/i, async (msg) => {
-    const grafana = factory.createByResponse(msg);
-    if (!grafana) return;
+    const client = clientFactory.createByResponse(msg);
+    if (!client) return;
 
-    const paused = msg.match[1] === 'pause';
+    const service = new GrafanService(client);
+    const command = msg.match[1]
+    const paused = command === 'pause';
+    const result = await service.pauseAlerts(paused);
 
-    const alerts = await grafana.get('alerts');
-    if (alerts == null || alerts.length == 0) {
-      return;
-    }
-
-    let errored = 0;
-    for (const alert of Array.from(alerts)) {
-      const url = `alerts/${alert.id}/pause`;
-      try {
-        await grafana.post(url, { paused });
-      } catch (err) {
-        robot.logger.error(err, 'Error for URL: ' + url);
-        errored++;
-      }
-    }
+    if (result.total == 0) return;
 
     msg.send(
-      `Successfully tried to ${msg.match[1]} *${alerts.length}* alerts.\n*Success: ${alerts.length - errored
-      }*\n*Errored: ${errored}*`
+      `Successfully tried to ${command} *${result.total}* alerts.\n*Success: ${result.success
+      }*\n*Errored: ${result.errored}*`
     );
   });
 
@@ -487,19 +477,19 @@ module.exports = (robot) => {
 
   // Fetch an image from provided URL, upload it to S3, returning the resulting URL
   const uploadChart = async (res, title, imageUrl, grafanaChartLink) => {
-    const grafana = factory.createByResponse(res);
-    if (!grafana) return;
+    const client = clientFactory.createByResponse(res);
+    if (!client) return;
 
     let file = null;
 
     try {
-      file = await grafana.download(imageUrl);
+      file = await client.download(imageUrl);
     } catch (err) {
       return sendError(err, res);
     }
 
     robot.logger.debug(`Uploading file: ${file.body.length} bytes, content-type[${file.contentType}]`);
-
     adapter.uploader.upload(res, title || 'Image', file, grafanaChartLink);
   };
 };
+
