@@ -365,24 +365,18 @@ module.exports = (robot) => {
 
   // Pause/unpause an alert
   robot.respond(/(?:grafana|graph|graf) (unpause|pause)\salert\s(\d+)/i, (msg) => {
-    const grafana = clientFactory.createByResponse(msg);
-    if (!grafana) return;
+    const client = clientFactory.createByResponse(msg);
+    if (!client) return;
 
     const paused = msg.match[1] === 'pause';
     const alertId = msg.match[2];
-    const url = `alerts/${alertId}/pause`;
 
-    return grafana
-      .post(url, { paused })
-      .then((result) => {
-        robot.logger.debug(result);
-        if (result.message) {
-          msg.send(result.message);
-        }
-      })
-      .catch((err) => {
-        robot.logger.error(err, 'Error for URL: ' + url);
-      });
+    const service = new GrafanService(client);
+    const message = service.pauseSingleAlert(alertId, paused);
+
+    if (message) {
+      msg.send(message);
+    }
   });
 
   // Pause/unpause all alerts
@@ -394,7 +388,7 @@ module.exports = (robot) => {
     const service = new GrafanService(client);
     const command = msg.match[1]
     const paused = command === 'pause';
-    const result = await service.pauseAlerts(paused);
+    const result = await service.pauseAllAlerts(paused);
 
     if (result.total == 0) return;
 
