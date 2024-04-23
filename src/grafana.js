@@ -91,8 +91,8 @@ module.exports = (robot) => {
     let apiPanelId = false;
     let pname = false;
     const query = {
-      width: parseInt(process.env.HUBOT_GRAFANA_DEFAULT_WIDTH) || 1000,
-      height: parseInt(process.env.HUBOT_GRAFANA_DEFAULT_HEIGHT) || 500,
+      width: parseInt(process.env.HUBOT_GRAFANA_DEFAULT_WIDTH, 10) || 1000,
+      height: parseInt(process.env.HUBOT_GRAFANA_DEFAULT_HEIGHT, 10) || 500,
       tz: process.env.HUBOT_GRAFANA_DEFAULT_TIME_ZONE || '',
       orgId: process.env.HUBOT_GRAFANA_ORG_ID || '',
       apiEndpoint: process.env.HUBOT_GRAFANA_API_ENDPOINT || 'd-solo',
