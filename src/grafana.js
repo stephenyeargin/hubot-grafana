@@ -47,9 +47,7 @@
 //   hubot graf unpause all alerts - Un-pause all alerts (admin permissions required)
 //
 
-const { Adapter } = require('./adapters/Adapter');
-const { GrafanaClientFactory } = require('./client/GrafanaClientFactory');
-const { GrafanaService } = require('./service/GrafanaService');
+const { Bot } = require('./bot');
 const { sendError } = require('./common');
 
 /**
@@ -60,21 +58,7 @@ module.exports = (robot) => {
   // Various configuration options stored in environment variables
   const grafanaPerRoom = process.env.HUBOT_GRAFANA_PER_ROOM;
   const maxReturnDashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS || 25;
-
-  const adapter = new Adapter(robot);
-  const clientFactory = new GrafanaClientFactory();
-
-  /**
-   * Creates a Grafana service using the provided message.
-   *
-   * @param {Hubot.Response} context - The context object.
-   * @returns {GrafanaService|null} The created Grafana service, or null if the client is not available.
-   */
-  function createService(msg) {
-    const client = clientFactory.createByResponse(msg);
-    if (!client) return null;
-    return new GrafanaService(client);
-  }
+  const bot = new Bot(robot);
 
   // Set Grafana host/api_key
   robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) => {
@@ -89,7 +73,7 @@ module.exports = (robot) => {
 
   // Get a specific dashboard with options
   robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, async (msg) => {
-    const service = createService(msg);
+    const service = bot.createService(msg);
     if (!service) return;
 
     let str = msg.match[1].trim();
@@ -126,22 +110,13 @@ module.exports = (robot) => {
     }
 
     for (let d of dashboards) {
-      sendDashboardChart(msg, d.title, d.imageUrl, d.grafanaChartLink);
+      await bot.sendDashboardChart(msg, d);
     }
   });
 
-  // Process the bot response
-  const sendDashboardChart = (res, title, imageUrl, grafanaChartLink) => {
-    if (adapter.isUploadSupported()) {
-      uploadChart(res, title, imageUrl, grafanaChartLink);
-    } else {
-      adapter.responder.send(res, title, imageUrl, grafanaChartLink);
-    }
-  };
-
   // Get a list of available dashboards
   robot.respond(/(?:grafana|graph|graf) list\s?(.+)?/i, async (msg) => {
-    const service = createService(msg);
+    const service = bot.createService(msg);
     if (!service) return;
 
     let title = 'Available dashboards:\n';
@@ -158,7 +133,7 @@ module.exports = (robot) => {
 
   // Search dashboards
   robot.respond(/(?:grafana|graph|graf) search (.+)/i, async (msg) => {
-    const service = createService(msg);
+    const service = bot.createService(msg);
     if (!service) return;
 
     const query = msg.match[1].trim();
@@ -173,7 +148,7 @@ module.exports = (robot) => {
 
   // Show alerts
   robot.respond(/(?:grafana|graph|graf) alerts\s?(.+)?/i, async (msg) => {
-    const service = createService(msg);
+    const service = bot.createService(msg);
     if (!service) return;
 
     let title = 'All alerts:\n';
@@ -209,7 +184,7 @@ module.exports = (robot) => {
 
   // Pause/unpause an alert
   robot.respond(/(?:grafana|graph|graf) (unpause|pause)\salert\s(\d+)/i, (msg) => {
-    const service = createService(msg);
+    const service = bot.createService(msg);
     if (!service) return;
 
     const paused = msg.match[1] === 'pause';
@@ -225,7 +200,7 @@ module.exports = (robot) => {
   // Pause/unpause all alerts
   // requires an API token with admin permissions
   robot.respond(/(?:grafana|graph|graf) (unpause|pause) all(?:\s+alerts)?/i, async (msg) => {
-    const service = createService(msg);
+    const service = bot.createService(msg);
     if (!service) return;
 
     const command = msg.match[1];
@@ -245,7 +220,7 @@ module.exports = (robot) => {
    * @param {string} title the title that is printed before the result
    * @param {Hubot.Response} res the context.
    */
-  const sendDashboardList = (dashboards, title, res) => {
+  async function sendDashboardList(dashboards, title, res) {
     let remaining;
     robot.logger.debug(dashboards);
     if (!(dashboards.length > 0)) {
@@ -268,23 +243,5 @@ module.exports = (robot) => {
     }
 
     res.send(title + list.join('\n'));
-  };
-
-  // Fetch an image from provided URL, upload it to S3, returning the resulting URL
-  const uploadChart = async (res, title, imageUrl, grafanaChartLink) => {
-    const client = clientFactory.createByResponse(res);
-    if (!client) return;
-
-    let file = null;
-
-    try {
-      file = await client.download(imageUrl);
-    } catch (err) {
-      sendError(err, res);
-      return;
-    }
-
-    robot.logger.debug(`Uploading file: ${file.body.length} bytes, content-type[${file.contentType}]`);
-    adapter.uploader.upload(res, title || 'Image', file, grafanaChartLink);
-  };
+  }
 };
