@@ -14,6 +14,46 @@ class GrafanService {
      * @type {GrafanaClient}
      */
     this.client = client;
+
+    /**
+     * The logger.
+     * @type {Hubot.Log}
+     */
+    this.logger = client.logger;
+  }
+
+  /**
+   * Searches for dashboards based on the provided query.
+   *
+   * @param {string?} query - The search query.
+   * @param {string?} tag - The tag.
+   * @returns {Promise<Array<{uid: string, title: string}>|null>} - A promise that resolves into dashboards.
+   */
+  async search(query, tag) {
+
+    const search = new URLSearchParams();
+    search.append('type', 'dash-db');
+    if (query) {
+      this.logger.debug(query);
+      search.append('query', query);
+    }
+    if (tag) {
+      this.logger.debug(tag);
+      search.append('tag', tag);
+    }
+
+    const url = `search?${search.toString()}`;
+
+    try {
+      let result = await this.client.get(url);
+      return result;
+    }
+    catch {
+      let errorTitle = query ? 'Error while searching dashboards' : 'Error while listing dashboards';
+      errorTitle += ", URL: " + url;
+      this.robot.logger.error(err, errorTitle)
+      return null;
+    }
   }
 
   /**
@@ -21,21 +61,20 @@ class GrafanService {
    * @param {string} state
    * @returns {Promise<Array<{ name: string, id: number, state: string, newStateDate?: string, executionError?: string >|null}>} 
    */
-  async queryAlerts(state){
+  async queryAlerts(state) {
     let url = 'alerts';
     if (state) {
       url = `alerts?state=${state}`;
     }
-    try{
-    let result = await this.client.get(url);
-    return result;
+    try {
+      let result = await this.client.get(url);
+      return result;
     }
     catch (err) {
       robot.logger.error(err, 'Error while getting alerts on URL: ' + url);
       return null;
     }
   }
-
 
   /**
    * Pauses or resumes a single alert.
@@ -50,11 +89,11 @@ class GrafanService {
 
     try {
       const result = await this.client.post(url, { paused });
-      this.client.logger.debug(result);
+      this.logger.debug(result);
       return result.message;
     }
     catch (err) {
-      this.client.logger.error(err, 'Error for URL: ' + url);
+      this.logger.error(err, 'Error for URL: ' + url);
       return null;
     }
   }
@@ -86,7 +125,7 @@ class GrafanService {
         await client.post(url, { paused });
         result.success++;
       } catch (err) {
-        this.client.logger.error(err, 'Error for URL: ' + url);
+        this.logger.error(err, 'Error for URL: ' + url);
         result.errored++;
       }
     }

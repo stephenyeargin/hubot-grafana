@@ -294,45 +294,35 @@ module.exports = (robot) => {
   };
 
   // Get a list of available dashboards
-  robot.respond(/(?:grafana|graph|graf) list\s?(.+)?/i, (msg) => {
-    const grafana = clientFactory.createByResponse(msg);
-    if (!grafana) return;
+  robot.respond(/(?:grafana|graph|graf) list\s?(.+)?/i, async (msg) => {
+    const service = createService(msg);
+    if (!service) return;
 
-    let url = 'search?type=dash-db';
     let title = 'Available dashboards:\n';
+    let tag = null;
     if (msg.match[1]) {
-      const tag = msg.match[1].trim();
-      url += `&tag=${tag}`;
+      tag = msg.match[1].trim();
       title = `Dashboards tagged \`${tag}\`:\n`;
     }
-
-    return grafana
-      .get(url)
-      .then((dashboards) => {
-        robot.logger.debug(dashboards);
-        return sendDashboardList(dashboards, title, msg);
-      })
-      .catch((err) => {
-        robot.logger.error(err, 'Error while listing dashboards, url: ' + url);
-      });
+    
+    const dashboards = await service.search(null, tag);
+    if(dashboards == null) return;
+    sendDashboardList(dashboards, title, msg);
   });
 
-
   // Search dashboards
-  robot.respond(/(?:grafana|graph|graf) search (.+)/i, (msg) => {
-    const grafana = clientFactory.createByResponse(msg);
-    if (!grafana) return;
+  robot.respond(/(?:grafana|graph|graf) search (.+)/i, async (msg) => {
+    const service = createService(msg);
+    if (!service) return;
 
     const query = msg.match[1].trim();
     robot.logger.debug(query);
 
-    return grafana
-      .get(`search?type=dash-db&query=${query}`)
-      .then((dashboards) => {
-        const title = `Dashboards matching \`${query}\`:\n`;
-        sendDashboardList(dashboards, title, msg);
-      })
-      .catch((err) => this.robot.logger.error(err, 'Error searching for dashboard.'));
+    const dashboards = await service.search(query);
+    if(dashboards == null) return;
+
+    const title = `Dashboards matching \`${query}\`:\n`;
+    sendDashboardList(dashboards, title, msg);
   });
 
   // Show alerts
@@ -421,7 +411,6 @@ module.exports = (robot) => {
    * @param {Array<{title: string, uid: string}>} dashboards the list of dashboards
    * @param {string} title the title that is printed before the result
    * @param {Hubot.Response} res the context.
-   * @returns
    */
   const sendDashboardList = (dashboards, title, res) => {
     let remaining;
@@ -445,7 +434,7 @@ module.exports = (robot) => {
       list.push(` (and ${remaining} more)`);
     }
 
-    return res.send(title + list.join('\n'));
+    res.send(title + list.join('\n'));
   };
 
   // Format the title with template vars
