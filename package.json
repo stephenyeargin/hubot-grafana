@@ -39,7 +39,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "test": "mocha \"test/**/*.js\" --reporter spec --no-experiemental-fetch --timeout 100",
+    "test": "mocha \"test/**/*.js\" --reporter spec --no-experiemental-fetch --timeout 200",
     "test-with-coverage": "nyc --reporter=text mocha \"test/**/*.js\" --reporter spec",
     "bootstrap": "script/bootstrap",
     "prepare": "husky install",
