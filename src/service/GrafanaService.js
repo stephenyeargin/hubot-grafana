@@ -28,9 +28,9 @@ class GrafanaService {
    *
    * @param {string} str - The string to be processed.
    * @param {number} maxReturnDashboards - The maximum number of dashboard screenshots to return.
-   * @returns {Array<DashboardResponse>|null} An array of DashboardResponse objects containing the screenshot URLs.
+   * @returns {Promise<Array<DashboardResponse>|null>} An array of DashboardResponse objects containing the screenshot URLs.
    */
-  async process(str, maxReturnDashboards){
+  async process(str, maxReturnDashboards) {
     const request = this.parseToGrafanaDashboardRequest(str);
     if (!request) {
       return null;
@@ -364,7 +364,6 @@ class GrafanaService {
     return result;
   }
 }
-
 
 /**
  * Formats the title with the provided template map.
