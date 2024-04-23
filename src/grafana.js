@@ -416,35 +416,9 @@ module.exports = (robot) => {
     return new GrafanService(client);
   }
 
-  // Send a list of alerts
-
-  /**
-   *
-   * @param {Array<{ name: string, id: number, state: string, newStateDate?: string, executionError?: string }>} alerts list of alerts
-   * @param {string} title the title
-   * @param {Hubot.Response} res the context
-   * @returns
-   */
-  const sendAlerts = (alerts, title, res) => {
-    if (!(alerts.length > 0)) {
-      return;
-    }
-    for (const alert of alerts) {
-      let line = `- *${alert.name}* (${alert.id}): \`${alert.state}\``;
-      if (alert.newStateDate) {
-        line += `\n  last state change: ${alert.newStateDate}`;
-      }
-      if (alert.executionError) {
-        line += `\n  execution error: ${alert.executionError}`;
-      }
-      title = `${title + line}\n`;
-    }
-    res.send(title.trim());
-  };
-
   /**
    * Sends the list of dashboards.
-   * @param {any} dashboards the list of dashboards
+   * @param {Array<{title: string, uid: string}>} dashboards the list of dashboards
    * @param {string} title the title that is printed before the result
    * @param {Hubot.Response} res the context.
    * @returns
