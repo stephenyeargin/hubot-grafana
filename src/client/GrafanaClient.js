@@ -1,3 +1,5 @@
+/// <reference path="../../types.d.ts"/>
+
 const fetch = require('node-fetch');
 const { URL, URLSearchParams } = require('url');
 
@@ -101,7 +103,7 @@ class GrafanaClient {
   /**
    * Downloads the given URL.
    * @param {string} url The URL.
-   * @returns {Promise<{ body: Buffer, contentType: string}>}
+   * @returns {Promise<DownloadedFile>}
    */
   async download(url) {
     return await fetch(url, {

@@ -3,8 +3,11 @@ const { sendError, getRoom } = require('../common');
 
 class GrafanaClientFactory {
   constructor() {
+    /** @type {string} */
     this.grafana_host = process.env.HUBOT_GRAFANA_HOST;
+    /** @type {string} */
     this.grafana_api_key = process.env.HUBOT_GRAFANA_API_KEY;
+    /** @type {string} */
     this.grafana_per_room = process.env.HUBOT_GRAFANA_PER_ROOM;
   }
 
@@ -38,6 +41,7 @@ class GrafanaClientFactory {
    * @param {Hubot.Robot} robot the logger.
    * @param {string?} host the host. If no host is provided, the one from the environment will be taken.
    * @param {string?} apiKey the api key. If no apiKey is provided, the one from the environment will be taken.
+   * @returns {GrafanaClient|null} - The created Grafana client instance, or null if no Grafana endpoint is configured.
    */
   createByRobot(robot, host, apiKey) {
     return this.create(robot.http, robot.logger, host, apiKey);
@@ -49,6 +53,7 @@ class GrafanaClientFactory {
    * @param {Hubot.Log} logger the logger.
    * @param {string?} host the host. If no host is provided, the one from the environment will be taken.
    * @param {string?} apiKey the api key. If no apiKey is provided, the one from the environment will be taken.
+   * @returns {GrafanaClient|null} - The created Grafana client instance, or null if no Grafana endpoint is configured.
    */
   create(http, logger, host, apiKey) {
     host = host || this.grafana_host;

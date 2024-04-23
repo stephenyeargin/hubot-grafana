@@ -29,26 +29,34 @@ class Bot {
     return new GrafanaService(client);
   }
 
-  async sendDashboardChart(res, dashboard) {
+  /**
+   * Sends a dashboard chart.
+   *
+   * @param {Hubot.Response} context - The context object.
+   * @param {GrafanaDashboardResponse.Dashboard} dashboard - The dashboard object.
+   * @returns {Promise<void>} - A promise that resolves when the chart is sent.
+   */
+  async sendDashboardChart(context, dashboard) {
     if (!this.adapter.isUploadSupported()) {
-      this.adapter.responder.send(res, dashboard.title, dashboard.imageUrl, dashboard.grafanaChartLink);
+      this.adapter.responder.send(context, dashboard.title, dashboard.imageUrl, dashboard.grafanaChartLink);
       return;
     }
 
-    const client = this.clientFactory.createByResponse(res);
+    const client = this.clientFactory.createByResponse(context);
     if (!client) return;
 
+    /** @type {DownloadedFile|null} */
     let file = null;
 
     try {
       file = await client.download(dashboard.imageUrl);
     } catch (err) {
-      sendError(err, res);
+      sendError(err, context);
       return;
     }
 
     this.logger.debug(`Uploading file: ${file.body.length} bytes, content-type[${file.contentType}]`);
-    this.adapter.uploader.upload(res, dashboard.title || 'Image', file, dashboard.grafanaChartLink);
+    this.adapter.uploader.upload(context, dashboard.title || 'Image', file, dashboard.grafanaChartLink);
   }
 }
 

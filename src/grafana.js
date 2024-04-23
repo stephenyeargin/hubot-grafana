@@ -47,6 +47,8 @@
 //   hubot graf unpause all alerts - Un-pause all alerts (admin permissions required)
 //
 
+/// <reference path="../types.d.ts"/>
+
 const { Bot } = require('./bot');
 const { sendError } = require('./common');
 
@@ -216,7 +218,7 @@ module.exports = (robot) => {
 
   /**
    * Sends the list of dashboards.
-   * @param {Array<{title: string, uid: string}>} dashboards the list of dashboards
+   * @param {Array<GrafanaSearchResponse>} dashboards the list of dashboards
    * @param {string} title the title that is printed before the result
    * @param {Hubot.Response} res the context.
    */

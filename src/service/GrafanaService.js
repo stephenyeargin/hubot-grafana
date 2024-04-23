@@ -1,5 +1,6 @@
+/// <reference path="../../types.d.ts"/>
+
 const { GrafanaDashboardRequest } = require('./query/GrafanaDashboardRequest');
-const { DashboardResponse } = require('./query/DashboardResponse');
 const { GrafanaClient } = require('../client/GrafanaClient');
 
 class GrafanaService {
@@ -25,7 +26,7 @@ class GrafanaService {
   /**
    * Parses a string into a GrafanaDashboardRequest object.
    * @param {string} str - The string to parse.
-   * @returns {GrafanaDashboardRequest|null} - The parsed GrafanaDashboardRequest object, or null if the string cannot be parsed.
+   * @returns {GrafanaDashboardResponse.Response|null} - The parsed GrafanaDashboardRequest object, or null if the string cannot be parsed.
    */
   parseToGrafanaDashboardRequest(str) {
     const match = str.match(/([A-Za-z0-9\-\:_]+)(.*)/);
@@ -106,14 +107,14 @@ class GrafanaService {
    * Retrieves the screenshot URLs for the specified dashboard.
    *
    * @param {GrafanaDashboardRequest} req - The request object.
-   * @param {Object} dashboard - The dashboard object.
-   * @param {number} max_return_dashboards - The maximum number of dashboards to return.
+   * @param {GrafanaDashboardResponse.Response} dashboardResponse - The dashboard response object.
+   * @param {number} maxReturnDashboards - The maximum number of dashboards to return.
    * @returns {Array<DashboardResponse>} An array of DashboardResponse objects containing the screenshot URLs.
    */
-  async getScreenshotUrls(req, dashboard, max_return_dashboards) {
-    if (dashboard == null || dashboard.message) return null;
+  async getScreenshotUrls(req, dashboardResponse, maxReturnDashboards) {
+    if (!dashboardResponse || dashboardResponse.message) return null;
 
-    dashboard = dashboard.dashboard;
+    let dashboard = dashboardResponse.dashboard;
 
     if (req.query.kiosk) {
       req.query.apiEndpoint = 'd';
@@ -127,15 +128,14 @@ class GrafanaService {
       );
       const title = dashboard.title;
 
-      const response = new DashboardResponse(imageUrl, grafanaChartLink, title);
+      const response = { imageUrl, grafanaChartLink, title };
       return [response];
     }
 
     // Support for templated dashboards
-    let templateMap = null;
+    let templateMap = {};
     this.logger.debug(dashboard.templating.list);
     if (dashboard.templating.list) {
-      templateMap = [];
       for (const template of Array.from(dashboard.templating.list)) {
         this.logger.debug(template);
         if (!template.current) {
@@ -155,7 +155,6 @@ class GrafanaService {
 
     // Return dashboard rows
     let panelNumber = 0;
-    const returnedCount = 0;
     for (const row of Array.from(dashboard.rows)) {
       for (const panel of Array.from(row.panels)) {
         this.logger.debug(panel);
@@ -187,10 +186,10 @@ class GrafanaService {
           req.variables
         );
 
-        responses.push(new DashboardResponse(imageUrl, grafanaChartLink, title));
+        responses.push({ imageUrl, grafanaChartLink, title });
 
         // Skip if we have already returned max count of dashboards
-        if (responses.length == max_return_dashboards) {
+        if (responses.length == maxReturnDashboards) {
           break;
         }
       }
@@ -202,10 +201,12 @@ class GrafanaService {
   /**
    * Retrieves a dashboard from Grafana based on the provided UID.
    * @param {string} uid - The UID of the dashboard to retrieve.
-   * @returns {Promise<Object|null>} - A promise that resolves to the retrieved dashboard object, or null if the dashboard is not found or an error occurs.
+   * @returns {Promise<GrafanaDashboardResponse.Response|null>} - A promise that resolves to the retrieved dashboard object, or null if the dashboard is not found or an error occurs.
    */
   async getDashboard(uid) {
     const url = `dashboards/uid/${uid}`;
+
+    /** @type {GrafanaDashboardResponse.Response|null} */
     let dashboard = null;
     try {
       dashboard = await this.client.get(url);
@@ -241,7 +242,7 @@ class GrafanaService {
    *
    * @param {string?} query - The search query.
    * @param {string?} tag - The tag.
-   * @returns {Promise<Array<{uid: string, title: string}>|null>} - A promise that resolves into dashboards.
+   * @returns {Promise<Array<GrafanaSearchResponse>|null>} - A promise that resolves into dashboards.
    */
   async search(query, tag) {
     const search = new URLSearchParams();
@@ -342,14 +343,21 @@ class GrafanaService {
   }
 }
 
-// Format the title with template vars
-function formatTitleWithTemplate(title, template_map) {
+
+/**
+ * Formats the title with the provided template map.
+ *
+ * @param {string} title - The title to be formatted.
+ * @param {Record<string, string>} templateMap - The map containing the template values.
+ * @returns {string} - The formatted title.
+ */
+function formatTitleWithTemplate(title, templateMap) {
   if (!title) {
     title = '';
   }
   return title.replace(/\$\w+/g, (match) => {
-    if (template_map[match]) {
-      return template_map[match];
+    if (templateMap[match]) {
+      return templateMap[match];
     }
     return match;
   });
