@@ -163,13 +163,9 @@ class GrafanaService {
         if (!template.current) {
           continue;
         }
-        for (const p of req.template_map) {
-          if (template.name === p.name) {
-            templateMap[`$${template.name}`] = p.value;
-          } else {
-            templateMap[`$${template.name}`] = template.current.text;
-          }
-        }
+
+        const _param = req.template_params.find((param) => param.name === template.name);
+        templateMap[`$${template.name}`] = _param ? _param.value : template.current.text;
       }
     }
 

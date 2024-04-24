@@ -251,7 +251,7 @@ describe('grafana v8', () => {
     it('hubot should respond with a templated graph', async () => {
       let response = await ctx.sendAndWaitForResponse('hubot graf db 000000091:graph server=backend_01 now-6h');
       expect(response).to.eql(
-        'Graph: https://play.grafana.org/render/d-solo/000000091/?panelId=1&width=1000&height=500&from=now-6h&to=now&var-server=backend_01 - https://play.grafana.org/d/000000091/?panelId=1&fullscreen&from=now-6h&to=now&var-server=backend_01'
+        'Graph for backend_01: https://play.grafana.org/render/d-solo/000000091/?panelId=1&width=1000&height=500&from=now-6h&to=now&var-server=backend_01 - https://play.grafana.org/d/000000091/?panelId=1&fullscreen&from=now-6h&to=now&var-server=backend_01'
       );
     });
   });

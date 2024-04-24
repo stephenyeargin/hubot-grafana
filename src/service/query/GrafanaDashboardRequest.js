@@ -46,14 +46,9 @@ class GrafanaDashboardRequest {
     this.query = new GrafanaDashboardQuery();
 
     /**
-     * @type {Array<string>}
+     * @type {Array<{name: string, value: string}>}
      */
     this.template_params = [];
-
-    /**
-     * @type {Array<string>}
-     */
-    this.template_map = [];
   }
 }
 
