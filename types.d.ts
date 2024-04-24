@@ -1,4 +1,4 @@
-type DashboardResponse = {
+type DashboardChart = {
   imageUrl: string;
   grafanaChartLink: grafanaChartLink;
   title: string;

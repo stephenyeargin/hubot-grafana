@@ -105,7 +105,7 @@ module.exports = (robot) => {
       return;
     }
 
-    const dashboards = await service.getScreenshotUrls(req, dashboard, maxReturnDashboards);
+    const dashboards = await service.getDashboardCharts(req, dashboard, maxReturnDashboards);
     if (dashboards == null || dashboards.length === 0) {
       sendError('Could not locate desired panel.', msg);
       return;

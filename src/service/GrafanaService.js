@@ -28,7 +28,7 @@ class GrafanaService {
    *
    * @param {string} str - The string to be processed.
    * @param {number} maxReturnDashboards - The maximum number of dashboard screenshots to return.
-   * @returns {Promise<Array<DashboardResponse>|null>} An array of DashboardResponse objects containing the screenshot URLs.
+   * @returns {Promise<Array<DashboardChart>|null>} An array of DashboardResponse objects containing the screenshot URLs.
    */
   async process(str, maxReturnDashboards) {
     const request = this.parseToGrafanaDashboardRequest(str);
@@ -41,7 +41,7 @@ class GrafanaService {
       return null;
     }
 
-    const responses = await this.getScreenshotUrls(request, dashboard, maxReturnDashboards);
+    const responses = await this.getDashboardCharts(request, dashboard, maxReturnDashboards);
     return responses;
   }
 
@@ -126,14 +126,14 @@ class GrafanaService {
   }
 
   /**
-   * Retrieves the screenshot URLs for the specified dashboard.
+   * Retrieves the dashboard chart URLs for the specified request.
    *
    * @param {GrafanaDashboardRequest} req - The request object.
    * @param {GrafanaDashboardResponse.Response} dashboardResponse - The dashboard response object.
    * @param {number} maxReturnDashboards - The maximum number of dashboards to return.
-   * @returns {Array<DashboardResponse>|null} An array of DashboardResponse objects containing the screenshot URLs.
+   * @returns {Array<DashboardChart>|null} An array of DashboardResponse objects containing the screenshot URLs.
    */
-  async getScreenshotUrls(req, dashboardResponse, maxReturnDashboards) {
+  async getDashboardCharts(req, dashboardResponse, maxReturnDashboards) {
     if (!dashboardResponse || dashboardResponse.message) return null;
 
     let dashboard = dashboardResponse.dashboard;
