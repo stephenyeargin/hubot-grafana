@@ -109,8 +109,7 @@ describe('grafana v8', () => {
         .reply(404, { message: 'Dashboard not found' });
       ctx
         .nock('https://play.grafana.org')
-        .get('/api/search')
-        .query({ type: 'dash-db' })
+        .get(/\/api\/search/)
         .replyWithFile(200, `${__dirname}/fixtures/v8/search.json`);
       ctx
         .nock('https://play.grafana.org')

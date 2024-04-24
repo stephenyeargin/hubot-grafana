@@ -217,6 +217,44 @@ class GrafanaService {
   }
 
   /**
+   * Retrieves the UID of a dashboard by its slug.
+   *
+   * @param {string} slug - The slug of the dashboard.
+   * @returns {Promise<string|null>} The UID of the dashboard, or undefined if not found.
+   */
+  async getUidBySlug(slug) {
+    let client = this.client;
+
+    const pageSize = 5000;
+    let page = 1;
+
+    while (true) {
+      const url = `search?limit=${pageSize}&page=${encodeURIComponent(slug)}`;
+
+      try {
+        const items = await client.get(url);
+        const dashboard = items
+          .map((i) => ({
+            uid: i.uid,
+            slug: i.url.replace(`/d/${i.uid}/`, ''),
+          }))
+          .find((x) => x.slug == slug);
+
+        if (dashboard && dashboard.uid) {
+          return dashboard.uid;
+        }
+
+        if (items.length != pageSize) break;
+        page++;
+      } catch (err) {
+        this.logger.error(err, `Error while getting dashboard on URL: ${url}`);
+      }
+    }
+
+    return null;
+  }
+
+  /**
    * Retrieves a dashboard from Grafana based on the provided UID.
    * @param {string} uid - The UID of the dashboard to retrieve.
    * @returns {Promise<GrafanaDashboardResponse.Response|null>} - A promise that resolves to the retrieved dashboard object, or null if the dashboard is not found or an error occurs.
@@ -237,12 +275,9 @@ class GrafanaService {
 
     // check if we can improve the error message
     if (dashboard && dashboard.message === 'Dashboard not found') {
-      const dashboards = await this.client.get('search?type=dash-db');
-      for (const item of Array.from(dashboards)) {
-        if (item.url.match(new RegExp(`\/d\/[a-z0-9\-]+\/${uid}$`, 'i'))) {
-          dashboard.message = `Try your query again with \`${item.uid}\` instead of \`${uid}\``;
-          break;
-        }
+      let realUid = await this.getUidBySlug(uid);
+      if (realUid) {
+        dashboard.message = `Try your query again with \`${realUid}\` instead of \`${uid}\``;
       }
     }
 
