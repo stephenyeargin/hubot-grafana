@@ -33,7 +33,7 @@ class Bot {
    * Sends a dashboard chart.
    *
    * @param {Hubot.Response} context - The context object.
-   * @param {GrafanaDashboardResponse.Dashboard} dashboard - The dashboard object.
+   * @param {DashboardResponse} dashboard - The dashboard object.
    * @returns {Promise<void>} - A promise that resolves when the chart is sent.
    */
   async sendDashboardChart(context, dashboard) {
