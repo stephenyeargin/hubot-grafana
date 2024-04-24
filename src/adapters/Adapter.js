@@ -111,14 +111,14 @@ class Adapter {
  * Overrides the responder.
  * @param {Responder} responder The responder to use.
  */
-exports.overrideResponder = function(responder) {
+exports.setResponder = function(responder) {
   overrideResponder = responder;
 }
 
 /**
  * Clears the override responder.
  */
-exports.clearOverrideResponder = function() {
+exports.clearResponder = function() {
   overrideResponder = null;
 }
 

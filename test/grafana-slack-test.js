@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const { createTestBot, TestBotContext, createAwaitableValue } = require('./common/TestBot');
 const { SlackResponder } = require('../src/adapters/implementations/SlackResponder');
 const { SlackUploader } = require('../src/adapters/implementations/SlackUploader');
-const { overrideResponder, clearOverrideResponder } = require('../src/adapters/Adapter');
+const { setResponder, clearResponder } = require('../src/adapters/Adapter');
 const { Responder } = require('../src/adapters/Responder');
 
 describe('slack', () => {
@@ -24,7 +24,7 @@ describe('slack', () => {
     let ctx;
 
     beforeEach(async () => {
-      overrideResponder(new CustomResponder());
+      setResponder(new CustomResponder());
       process.env.HUBOT_GRAFANA_S3_BUCKET = 'graf';
       ctx = await createTestBot({
         adapterName: 'hubot-slack',
@@ -33,8 +33,8 @@ describe('slack', () => {
 
     afterEach(function () {
       delete process.env.HUBOT_GRAFANA_S3_BUCKET;
+      clearResponder();
       ctx?.shutdown();
-      clearOverrideResponder();
     });
 
     it('should respond with an uploaded graph', async () => {
