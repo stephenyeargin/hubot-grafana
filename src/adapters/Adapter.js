@@ -12,6 +12,13 @@ const { TelegramUploader } = require('./implementations/TelegramUploader');
 const { SlackUploader } = require('./implementations/SlackUploader');
 
 /**
+ * The override responder is used to override the default responder.
+ * This can be used to inject a custom responder to influence the message formatting.
+ * @type {Responder|null}
+ */
+let overrideResponder = null;
+
+/**
  * The Adapter will hide away platform specific details for file upload and
  * response messages. When an S3 bucket is configured, it will always take
  * precedence.
@@ -53,6 +60,11 @@ class Adapter {
    */
   /** @type {Responder} */
   get responder() {
+
+    if(overrideResponder){
+      return overrideResponder;
+    }
+
     if (/slack/i.test(this.robot.adapterName)) {
       return new SlackResponder();
     }
@@ -93,6 +105,21 @@ class Adapter {
   isUploadSupported() {
     return this.site !== '';
   }
+}
+
+/**
+ * Overrides the responder.
+ * @param {Responder} responder The responder to use.
+ */
+exports.overrideResponder = function(responder) {
+  overrideResponder = responder;
+}
+
+/**
+ * Clears the override responder.
+ */
+exports.clearOverrideResponder = function() {
+  overrideResponder = null;
 }
 
 exports.Adapter = Adapter;
