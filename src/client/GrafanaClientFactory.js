@@ -19,7 +19,7 @@ class GrafanaClientFactory {
    * @param {string?} apiKey the api key. If no apiKey is provided, the one from the environment will be taken.
    * @returns {GrafanaClient|null} - The created Grafana client instance, or null if no Grafana endpoint is configured.
    */
-  createByResponse(res, host, apiKey) {
+  createByResponse(res, host = null, apiKey = null) {
     const robot = res.robot;
 
     if (this.grafana_per_room === '1') {
@@ -39,11 +39,11 @@ class GrafanaClientFactory {
   /**
    * Create a new instance of GrafanaClient using the Hubot Robot.
    * @param {Hubot.Robot} robot the logger.
-   * @param {string?} host the host. If no host is provided, the one from the environment will be taken.
-   * @param {string?} apiKey the api key. If no apiKey is provided, the one from the environment will be taken.
+   * @param {string|null} host the host. If no host is provided, the one from the environment will be taken.
+   * @param {string|null} apiKey the api key. If no apiKey is provided, the one from the environment will be taken.
    * @returns {GrafanaClient|null} - The created Grafana client instance, or null if no Grafana endpoint is configured.
    */
-  createByRobot(robot, host, apiKey) {
+  createByRobot(robot, host = null, apiKey = null) {
     return this.create(robot.http, robot.logger, host, apiKey);
   }
 
@@ -51,11 +51,11 @@ class GrafanaClientFactory {
    * Create a new instance of GrafanaClient.
    * @param {(url: string, options?: HttpOptions)=>ScopedClient} http the HTTP client.
    * @param {Hubot.Log} logger the logger.
-   * @param {string?} host the host. If no host is provided, the one from the environment will be taken.
-   * @param {string?} apiKey the api key. If no apiKey is provided, the one from the environment will be taken.
+   * @param {string|null} host the host. If no host is provided, the one from the environment will be taken.
+   * @param {string|null] apiKey the api key. If no apiKey is provided, the one from the environment will be taken.
    * @returns {GrafanaClient|null} - The created Grafana client instance, or null if no Grafana endpoint is configured.
    */
-  create(http, logger, host, apiKey) {
+  create(http, logger, host = null, apiKey = null) {
     host = host || this.grafana_host;
     apiKey = apiKey || this.grafana_api_key;
 
