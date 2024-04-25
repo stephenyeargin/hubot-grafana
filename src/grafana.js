@@ -49,8 +49,7 @@
 
 /// <reference path="../types.d.ts"/>
 
-const { Bot } = require('./bot');
-const { sendError } = require('./common');
+const { Bot } = require('./Bot');
 
 /**
  * Adds the Grafana commands to Hubot.
@@ -65,7 +64,7 @@ module.exports = (robot) => {
   // Set Grafana host/api_key
   robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) => {
     if (grafanaPerRoom !== '1') {
-      return sendError('Set HUBOT_GRAFANA_PER_ROOM=1 to use multiple configurations.', msg);
+      return bot.sendError('Set HUBOT_GRAFANA_PER_ROOM=1 to use multiple configurations.', msg);
     }
 
     const context = msg.message.user.room.split('@')[0];
@@ -88,12 +87,10 @@ module.exports = (robot) => {
 
     // Check dashboard information
     if (!dashboard) {
-      sendError('An error ocurred. Check your logs for more details.', msg);
-      return;
+      return bot.sendError('An error ocurred. Check your logs for more details.', msg);
     }
     if (dashboard.message) {
-      sendError(dashboard.message, msg);
-      return;
+      return bot.sendError(dashboard.message, msg);
     }
 
     // Defaults
@@ -101,14 +98,12 @@ module.exports = (robot) => {
 
     // Handle empty dashboard
     if (data.rows == null) {
-      sendError('Dashboard empty.', msg);
-      return;
+      return bot.sendError('Dashboard empty.', msg);
     }
 
     const dashboards = await service.getDashboardCharts(req, dashboard, maxReturnDashboards);
     if (dashboards == null || dashboards.length === 0) {
-      sendError('Could not locate desired panel.', msg);
-      return;
+      return bot.sendError('Could not locate desired panel.', msg);
     }
 
     for (let d of dashboards) {

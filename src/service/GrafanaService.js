@@ -1,7 +1,7 @@
 /// <reference path="../../types.d.ts"/>
 
 const { GrafanaDashboardRequest } = require('./query/GrafanaDashboardRequest');
-const { GrafanaClient } = require('../client/GrafanaClient');
+const { GrafanaClient } = require('../GrafanaClient');
 
 class GrafanaService {
   /**
@@ -62,7 +62,7 @@ class GrafanaService {
       let parts = request.uid.split(':');
       request.uid = parts[0];
       request.visualPanelId = parseInt(parts[1], 10);
-      if (Number.isNaN(request.visualPanelId)) {
+      if (isNaN(request.visualPanelId)) {
         request.visualPanelId = false;
         request.pname = parts[1].toLowerCase();
       }

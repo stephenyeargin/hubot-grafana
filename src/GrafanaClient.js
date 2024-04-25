@@ -1,4 +1,4 @@
-/// <reference path="../../types.d.ts"/>
+/// <reference path="../types.d.ts"/>
 
 const fetch = require('node-fetch');
 const { URL, URLSearchParams } = require('url');
