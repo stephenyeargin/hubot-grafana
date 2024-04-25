@@ -1,7 +1,7 @@
 /// <reference path="../../types.d.ts"/>
 
 const { GrafanaDashboardRequest } = require('./query/GrafanaDashboardRequest');
-const { GrafanaClient } = require('../GrafanaClient');
+const { GrafanaClient } = require('../grafana-client');
 
 class GrafanaService {
   /**

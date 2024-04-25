@@ -1,6 +1,6 @@
 const { Adapter } = require('./adapters/Adapter');
 const { GrafanaService } = require('./service/GrafanaService');
-const { GrafanaClient } = require('./GrafanaClient');
+const { GrafanaClient } = require('./grafana-client');
 
 /**
  * The bot brings the Adapter and the Grafana Service together.
