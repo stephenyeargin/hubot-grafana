@@ -16,5 +16,6 @@ function post(robot, uploadData, callback) {
   });
 }
 
-exports.post = post;
-
+module.exports = {
+  post,
+};
