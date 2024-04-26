@@ -1,7 +1,7 @@
 {
   "name": "hubot-grafana",
   "description": "Query Grafana dashboards",
-  "version": "5.1.2",
+  "version": "6.0.0",
   "author": "Stephen Yeargin <stephen@yearg.in>",
   "license": "MIT",
   "keywords": [
@@ -39,7 +39,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "test": "mocha \"test/**/*.js\" --reporter spec",
+    "test": "mocha \"test/**/*.js\" --reporter spec --no-experiemental-fetch --timeout 200",
     "test-with-coverage": "nyc --reporter=text mocha \"test/**/*.js\" --reporter spec",
     "bootstrap": "script/bootstrap",
     "prepare": "husky install",
@@ -49,7 +49,8 @@
     "src/**/*.js",
     "CONTRIBUTING.md",
     "LICENSE",
-    "index.js"
+    "index.js",
+    "types.d.ts"
   ],
   "volta": {
     "node": "18.19.0"

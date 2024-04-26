@@ -2,8 +2,47 @@ const { expect } = require('chai');
 const { createTestBot, TestBotContext, createAwaitableValue } = require('./common/TestBot');
 const { SlackResponder } = require('../src/adapters/implementations/SlackResponder');
 const { SlackUploader } = require('../src/adapters/implementations/SlackUploader');
+const { setResponder, clearResponder } = require('../src/adapters/Adapter');
+const { Responder } = require('../src/adapters/Responder');
 
 describe('slack', () => {
+  describe('and override responder upload', () => {
+    class CustomResponder extends Responder {
+      /**
+       * Sends the response to Hubot.
+       * @param {Hubot.Response} res the context.
+       * @param {string} title the title of the message
+       * @param {string} image the URL of the image
+       * @param {string} link the title of the link
+       */
+      send(res, title, image, link) {
+        res.send('Hiding dashboard: ' + title);
+      }
+    }
+
+    /** @type {TestBotContext} */
+    let ctx;
+
+    beforeEach(async () => {
+      setResponder(new CustomResponder());
+      process.env.HUBOT_GRAFANA_S3_BUCKET = 'graf';
+      ctx = await createTestBot({
+        adapterName: 'hubot-slack',
+      });
+    });
+
+    afterEach(function () {
+      delete process.env.HUBOT_GRAFANA_S3_BUCKET;
+      clearResponder();
+      ctx?.shutdown();
+    });
+
+    it('should respond with an uploaded graph', async () => {
+      let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
+      expect(response).to.eql('Hiding dashboard: logins');
+    });
+  });
+
   describe('and s3 upload', () => {
     /** @type {TestBotContext} */
     let ctx;
