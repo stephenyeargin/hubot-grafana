@@ -23,7 +23,8 @@
 		"vscode": {
 			"extensions": [
 				"esbenp.prettier-vscode",
-				"GitHub.copilot"
+				"GitHub.copilot",
+				"streetsidesoftware.code-spell-checker"
 			]
 		}
 	}
