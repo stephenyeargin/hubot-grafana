@@ -267,8 +267,12 @@ class GrafanaService {
     try {
       dashboard = await this.client.get(url);
     } catch (err) {
-      this.logger.error(err, `Error while getting dashboard on URL: ${url}`);
-      return null;
+      if (err.message !== 'Dashboard not found') {
+        this.logger.error(err, `Error while getting dashboard on URL: ${url}`);
+        return null;
+      }
+
+      dashboard = { message: err.message };
     }
 
     this.logger.debug(dashboard);

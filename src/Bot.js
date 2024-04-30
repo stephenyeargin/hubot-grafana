@@ -42,7 +42,7 @@ class Bot {
       return null;
     }
 
-    let client = new GrafanaClient(robot.http, robot.logger, host, apiKey);
+    let client = new GrafanaClient(robot.logger, host, apiKey);
     return new GrafanaService(client);
   }
 

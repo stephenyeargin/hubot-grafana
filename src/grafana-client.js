@@ -7,18 +7,11 @@ const { URL, URLSearchParams } = require('url');
 class GrafanaClient {
   /**
    * Creates a new instance.
-   * @param {(url: string, options?: HttpOptions)=>ScopedClient} http the HTTP client.
    * @param {Hubot.Log} logger the logger.
    * @param {string} host the host.
    * @param {string} apiKey the api key.
    */
-  constructor(http, logger, host, apiKey) {
-    /**
-     * The HTTP client
-     * @type {(url: string, options?: HttpOptions)=>ScopedClient}
-     */
-    this.http = http;
-
+  constructor(logger, host, apiKey) {
     /**
      * The logger.
      * @type {Hubot.Log}
@@ -39,66 +32,71 @@ class GrafanaClient {
   }
 
   /**
-   * Creates a scoped HTTP client.
-   * @param {string} url The URL.
-   * @param {string | null} contentType Indicates if the HTTP client should post.
-   * @param {encoding | false} encoding Indicates if an encoding should be set.
-   * @returns {ScopedClient}
+   * Performs a GET on the Grafana API.
+   * Remarks: uses Hubot because of Nock testing.
+   * @param {string} url the url
+   * @returns {Promise<unknown>} the response data
    */
-  createHttpClient(url, contentType = null, encoding = false) {
+  async get(url) {
     if (!url.startsWith('http://') && !url.startsWith('https://') && !this.host) {
       throw new Error('No Grafana endpoint configured.');
     }
 
-    // in case of a download we get a "full" URL
     const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `${this.host}/api/${url}`;
-    const headers = grafanaHeaders(contentType, encoding, this.apiKey);
-    const client = this.http(fullUrl).headers(headers);
 
-    return client;
-  }
-
-  /**
-   * Performs a GET on the Grafana API.
-   * Remarks: uses Hubot because of Nock testing.
-   * @param {string} url the url
-   * @returns {Promise<any>}
-   */
-  async get(url) {
-    let client = this.createHttpClient(url);
-    return new Promise((resolve) => {
-      client.get()((err, res, body) => {
-        if (err) {
-          throw err;
-        }
-        const data = JSON.parse(body);
-        return resolve(data);
-      });
+    const response = await fetch(fullUrl, {
+      method: 'GET',
+      headers: grafanaHeaders(null, false, this.apiKey),
     });
+
+    await this.throwIfNotOk(response);
+
+    const json = await response.json();
+    return json;
   }
 
   /**
    * Performs a POST call to the Grafana API.
    *
    * @param {string} url The API sub URL
-   * @param {Record<string, any>} data The data that will be sent.
-   * @returns {Promise<any>}
+   * @param {Record<string, unknown>} data The data that will be sent.
+   * @returns {Promise<unknown>}
    */
-  post(url, data) {
-    const http = this.createHttpClient(url, 'application/json');
-    const jsonPayload = JSON.stringify(data);
+  async post(url, data) {
+    const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `${this.host}/api/${url}`;
 
-    return new Promise((resolve, reject) => {
-      http.post(jsonPayload)((err, res, body) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-
-        data = JSON.parse(body);
-        resolve(data);
-      });
+    const response = await fetch(fullUrl, {
+      method: 'POST',
+      headers: grafanaHeaders('application/json', false, this.apiKey),
+      body: JSON.stringify(data),
     });
+
+    await this.throwIfNotOk(response);
+
+    const json = await response.json();
+    return json;
+  }
+
+  /**
+   * Ensures that the response is OK. If the response is not OK, an error is thrown.
+   * @param {fetch.Response} response - The response object.
+   * @throws {Error} If the response is not OK, an error with the response text is thrown.
+   */
+  async throwIfNotOk(response) {
+    if (response.ok) {
+      return;
+    }
+
+    if (response.headers.get('content-type') == 'application/json') {
+      const json = await response.json();
+
+      const error = new Error(json.message || 'Error while fetching data from Grafana.');
+      error.data = json;
+      throw error;
+    }
+
+    const text = await response.text();
+    throw new Error(text);
   }
 
   /**
@@ -107,18 +105,20 @@ class GrafanaClient {
    * @returns {Promise<DownloadedFile>}
    */
   async download(url) {
-    return await fetch(url, {
+    let response = await fetch(url, {
       method: 'GET',
       headers: grafanaHeaders(null, null, this.apiKey),
-    }).then(async (res) => {
-      const contentType = res.headers.get('content-type');
-      const body = await res.arrayBuffer();
-
-      return {
-        body: Buffer.from(body),
-        contentType: contentType,
-      };
     });
+
+    await this.throwIfNotOk(response);
+
+    const contentType = response.headers.get('content-type');
+    const body = await response.arrayBuffer();
+
+    return {
+      body: Buffer.from(body),
+      contentType: contentType,
+    };
   }
 
   createGrafanaChartLink(query, uid, panel, timeSpan, variables) {

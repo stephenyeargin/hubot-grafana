@@ -1,5 +1,4 @@
 'strict';
-const { post } = require('../../http');
 const { Uploader } = require('../Uploader');
 
 class RocketChatUploader extends Uploader {
@@ -20,7 +19,11 @@ class RocketChatUploader extends Uploader {
     /** @type {string} */
     this.rocketchat_url = process.env.ROCKETCHAT_URL;
 
-    if (this.rocketchat_url && !this.rocketchat_url.startsWith('http://') && !this.rocketchat_url.startsWith('https://')) {
+    if (
+      this.rocketchat_url &&
+      !this.rocketchat_url.startsWith('http://') &&
+      !this.rocketchat_url.startsWith('https://')
+    ) {
       this.rocketchat_url = `http://${rocketchat_url}`;
     }
 
@@ -32,6 +35,40 @@ class RocketChatUploader extends Uploader {
   }
 
   /**
+   * Logs in to the RocketChat API using the provided credentials.
+   * @returns {Promise<{'X-Auth-Token': string, 'X-User-Id': string}>} A promise that resolves to the authentication headers if successful.
+   * @throws {Error} If authentication fails.
+   */
+  async login() {
+    const authUrl = `${this.rocketchat_url}/api/v1/login`;
+    const authForm = {
+      username: this.rocketchat_user,
+      password: this.rocketchat_password,
+    };
+
+    let rocketchatResBodyJson = null;
+
+    try {
+      rocketchatResBodyJson = await post(authUrl, authForm);
+    } catch (err) {
+      this.logger.error(err);
+      throw new Error('Could not authenticate.');
+    }
+
+    const { status } = rocketchatResBodyJson;
+    if (status === 'success') {
+      return      {
+        'X-Auth-Token': rocketchatResBodyJson.data.authToken,
+        'X-User-Id': rocketchatResBodyJson.data.userId,
+      };
+    }
+
+    const errMsg = rocketchatResBodyJson.message;
+    this.logger.error(errMsg);
+    throw new Error(errMsg);
+  }
+
+  /**
    * Uploads the a screenshot of the dashboards.
    *
    * @param {Hubot.Response} res the context.
@@ -39,69 +76,67 @@ class RocketChatUploader extends Uploader {
    * @param {{ body: Buffer, contentType: string}=>void} file the screenshot.
    * @param {string} grafanaChartLink link to the Grafana chart.
    */
-  upload(res, title, file, grafanaChartLink) {
-    const authData = {
-      url: `${this.rocketchat_url}/api/v1/login`,
-      form: {
-        username: this.rocketchat_user,
-        password: this.rocketchat_password,
+  async upload(res, title, file, grafanaChartLink) {
+    let authHeaders = null;
+    try {
+      authHeaders = await this.login();
+    } catch (ex) {
+      let msg = ex == 'Could not authenticate.' ? "invalid url, user or password/can't access rocketchat api" : ex;
+      res.send(`${title} - [Rocketchat auth Error - ${msg}] - ${grafanaChartLink}`);
+      return;
+    }
+
+    // fill in the POST request. This must be www-form/multipart
+    // TODO: needs some extra testing!
+    const uploadUrl = `${this.rocketchat_url}/api/v1/rooms.upload/${res.envelope.user.roomID}`;
+    const uploadForm = {
+      msg: `${title}: ${grafanaChartLink}`,
+      // grafanaDashboardRequest() is the method that downloads the .png
+      file: {
+        value: file.body,
+        options: {
+          filename: `${title} ${Date()}.png`,
+          contentType: 'image/png',
+        },
       },
     };
 
-    // We auth against rocketchat to obtain the auth token
-    post(robot, authData, async (err, rocketchatResBodyJson) => {
-      if (err) {
-        this.logger.error(err);
-        res.send(`${title} - [Rocketchat auth Error - invalid url, user or password/can't access rocketchat api] - ${grafanaChartLink}`);
-        return;
-      }
-      let errMsg;
-      const { status } = rocketchatResBodyJson;
-      if (status !== 'success') {
-        errMsg = rocketchatResBodyJson.message;
-        this.logger.error(errMsg);
-        res.send(`${title} - [Rocketchat auth Error - ${errMsg}] - ${grafanaChartLink}`);
-        return;
-      }
+    let body = null;
 
-      const auth = rocketchatResBodyJson.data;
+    try {
+      body = await this.post(uploadUrl, uploadForm, authHeaders);
+    } catch (err) {
+      this.logger.error(err);
+      res.send(`${title} - [Upload Error] - ${grafanaChartLink}`);
+      return;
+    }
 
-      // fill in the POST request. This must be www-form/multipart
-      // TODO: needs some extra testing!
-      const uploadData = {
-        url: `${this.rocketchat_url}/api/v1/rooms.upload/${res.envelope.user.roomID}`,
-        headers: {
-          'X-Auth-Token': auth.authToken,
-          'X-User-Id': auth.userId,
-        },
-        formData: {
-          msg: `${title}: ${grafanaChartLink}`,
-          // grafanaDashboardRequest() is the method that downloads the .png
-          file: {
-            value: file.body,
-            options: {
-              filename: `${title} ${Date()}.png`,
-              contentType: 'image/png',
-            },
-          },
-        },
-      };
+    if (!body.success) {
+      this.logger.error(`rocketchat service error while posting data:${body.error}`);
+      return res.send(`${title} - [Form Error: can't upload file : ${body.error}] - ${grafanaChartLink}`);
+    }
+  }
 
-      // Try to upload the image to rocketchat else pass the link over
-      return post(this.robot, uploadData, (err, body) => {
-        // Error logging, we must also check the body response.
-        // It will be something like: { "success": <boolean>, "error": <error message> }
-        if (err) {
-          this.logger.error(err);
-          return res.send(`${title} - [Upload Error] - ${grafanaChartLink}`);
-        }
-        if (!body.success) {
-          errMsg = body.error;
-          this.logger.error(`rocketchat service error while posting data:${errMsg}`);
-          return res.send(`${title} - [Form Error: can't upload file : ${errMsg}] - ${grafanaChartLink}`);
-        }
-      });
+  /**
+   * Posts the data data to the specified url and returns JSON.
+   * @param {string} url - the URL
+   * @param {Record<string, unknown>} formData - formatData
+   * @param {Record<string, string>|null} headers - formatData
+   * @returns {Promise<unknown>} The deserialized JSON response or an error if something went wrong.
+   */
+  async post(url, formData, headers = null) {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: headers,
+      body: new FormData(formData),
     });
+
+    if (!response.ok) {
+      throw new Error('HTTP request failed');
+    }
+
+    const data = await response.json();
+    return data;
   }
 }
 
