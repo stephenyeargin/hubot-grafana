@@ -121,7 +121,7 @@ class GrafanaClient {
     });
   }
 
-  createGrafanaChartLink(query, uid, panel, timespan, variables) {
+  createGrafanaChartLink(query, uid, panel, timeSpan, variables) {
     const url = new URL(`${this.host}/d/${uid}/`);
 
     if (panel) {
@@ -129,8 +129,8 @@ class GrafanaClient {
       url.searchParams.set('fullscreen', '');
     }
 
-    url.searchParams.set('from', timespan.from);
-    url.searchParams.set('to', timespan.to);
+    url.searchParams.set('from', timeSpan.from);
+    url.searchParams.set('to', timeSpan.to);
 
     if (variables) {
       const additionalParams = new URLSearchParams(variables);
@@ -150,7 +150,7 @@ class GrafanaClient {
     return url.toString().replace('fullscreen=&', 'fullscreen&');
   }
 
-  createImageUrl(query, uid, panel, timespan, variables) {
+  createImageUrl(query, uid, panel, timeSpan, variables) {
     const url = new URL(`${this.host}/render/${query.apiEndpoint}/${uid}/`);
 
     if (panel) {
@@ -162,8 +162,8 @@ class GrafanaClient {
 
     url.searchParams.set('width', query.width);
     url.searchParams.set('height', query.height);
-    url.searchParams.set('from', timespan.from);
-    url.searchParams.set('to', timespan.to);
+    url.searchParams.set('from', timeSpan.from);
+    url.searchParams.set('to', timeSpan.to);
 
     if (variables) {
       const additionalParams = new URLSearchParams(variables);

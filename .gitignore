@@ -42,7 +42,6 @@ coverage.json
 
 # Node versions (nodenv)
 .node-version
-.vscode/settings.json
 
 # npm pack result
 *.tgz
