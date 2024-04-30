@@ -1,10 +1,10 @@
 type DashboardChart = {
   imageUrl: string;
-  grafanaChartLink: grafanaChartLink;
+  grafanaChartLink: string;
   title: string;
 };
 
-namespace GrafanaDashboardResponse {
+declare namespace GrafanaDashboardResponse {
   type Response = {
     meta: Meta;
     dashboard: Dashboard;

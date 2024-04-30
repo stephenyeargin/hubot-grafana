@@ -18,28 +18,28 @@
     "url": "https://github.com/stephenyeargin/hubot-grafana/issues"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.378.0",
-    "node-fetch": "^2.6.12"
+    "@aws-sdk/client-s3": "^3.565.0",
+    "node-fetch": "^2.7.0"
   },
   "peerDependencies": {
     "hubot": ">=3 || 0.0.0-development"
   },
   "devDependencies": {
-    "@types/hubot": "^3.3.2",
-    "chai": "^4.3.7",
+    "@types/hubot": "^3.3.7",
+    "chai": "^4.4.1",
     "eslint": "^8.45.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.27.5",
     "hubot": "^7.0.0",
     "hubot-mock-adapter": "^2.0.0",
-    "husky": "^8.0.3",
-    "mocha": "^10.2.0",
-    "nock": "^13.3.2",
+    "husky": "^9.0.11",
+    "mocha": "^10.4.0",
+    "nock": "^13.5.4",
     "nyc": "^15.1.0"
   },
   "main": "index.js",
   "scripts": {
-    "test": "mocha \"test/**/*.js\" --reporter spec --no-experiemental-fetch --timeout 200",
+    "test": "mocha \"test/**/*.js\" --reporter spec --no-experimental-fetch --timeout 200",
     "test-with-coverage": "nyc --reporter=text mocha \"test/**/*.js\" --reporter spec",
     "bootstrap": "script/bootstrap",
     "prepare": "husky install",
@@ -54,5 +54,6 @@
   ],
   "volta": {
     "node": "18.19.0"
-  }
+  },
+  "types": "types.d.ts"
 }
