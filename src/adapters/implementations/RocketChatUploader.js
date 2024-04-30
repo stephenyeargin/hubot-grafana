@@ -57,7 +57,7 @@ class RocketChatUploader extends Uploader {
 
     const { status } = rocketchatResBodyJson;
     if (status === 'success') {
-      return      {
+      return {
         'X-Auth-Token': rocketchatResBodyJson.data.authToken,
         'X-User-Id': rocketchatResBodyJson.data.userId,
       };
