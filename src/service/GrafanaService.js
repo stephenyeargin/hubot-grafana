@@ -55,7 +55,7 @@ class GrafanaService {
     if (!match) return null;
 
     const request = new GrafanaDashboardRequest();
-    request.uid = match[1].trim();
+    request.uid = match[1];
 
     // Parse out a specific panel
     if (/\:/.test(request.uid)) {
