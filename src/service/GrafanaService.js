@@ -408,9 +408,7 @@ class GrafanaService {
  * @returns {string} - The formatted title.
  */
 function formatTitleWithTemplate(title, templateMap) {
-  if (!title) {
-    title = '';
-  }
+  title = title || '';
   return title.replace(/\$\w+/g, (match) => {
     if (templateMap[match]) {
       return templateMap[match];
