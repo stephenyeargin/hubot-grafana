@@ -39,8 +39,8 @@
   },
   "main": "index.js",
   "scripts": {
-    "test": "mocha \"test/**/*.js\" --reporter spec --no-experimental-fetch --timeout 200",
-    "test-with-coverage": "nyc --reporter=text mocha \"test/**/*.js\" --reporter spec",
+    "test": "mocha",
+    "test-with-coverage": "nyc --reporter=text mocha",
     "bootstrap": "script/bootstrap",
     "prepare": "husky",
     "lint": "eslint src/ test/"

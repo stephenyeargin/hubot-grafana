@@ -1,6 +1,0 @@
---reporter spec
---colors
---full-trace
---no-experimental-fetch
---timeout 200
-
