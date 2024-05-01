@@ -73,59 +73,31 @@ module.exports = (robot) => {
   });
 
   // Get a specific dashboard with options
-  robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, async (msg) => {
-    const service = bot.createService(msg);
-    if (!service) return;
+  robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, async (context) => {
 
-    let str = msg.match[1].trim();
-    if (msg.match[2]) {
-      str += ' ' + msg.match[2].trim();
+    let str = context.match[1];
+    if (context.match[2]) {
+      str += ' ' + context.match[2];
     }
 
-    const req = service.parseToGrafanaDashboardRequest(str);
-    const dashboard = await service.getDashboard(req.uid);
-
-    // Check dashboard information
-    if (!dashboard) {
-      return bot.sendError('An error ocurred. Check your logs for more details.', msg);
-    }
-    if (dashboard.message) {
-      return bot.sendError(dashboard.message, msg);
-    }
-
-    // Defaults
-    const data = dashboard.dashboard;
-
-    // Handle empty dashboard
-    if (data.rows == null) {
-      return bot.sendError('Dashboard empty.', msg);
-    }
-
-    const dashboards = await service.getDashboardCharts(req, dashboard, maxReturnDashboards);
-    if (dashboards == null || dashboards.length === 0) {
-      return bot.sendError('Could not locate desired panel.', msg);
-    }
-
-    for (let d of dashboards) {
-      await bot.sendDashboardChart(msg, d);
-    }
+    await bot.sendDashboardChartFromString(context, str, maxReturnDashboards);
   });
 
   // Get a list of available dashboards
-  robot.respond(/(?:grafana|graph|graf) list\s?(.+)?/i, async (msg) => {
-    const service = bot.createService(msg);
+  robot.respond(/(?:grafana|graph|graf) list\s?(.+)?/i, async (context) => {
+    const service = bot.createService(context);
     if (!service) return;
 
     let title = 'Available dashboards:\n';
     let tag = null;
-    if (msg.match[1]) {
-      tag = msg.match[1].trim();
+    if (context.match[1]) {
+      tag = context.match[1].trim();
       title = `Dashboards tagged \`${tag}\`:\n`;
     }
 
     const dashboards = await service.search(null, tag);
     if (dashboards == null) return;
-    sendDashboardList(dashboards, title, msg);
+    sendDashboardList(dashboards, title, context);
   });
 
   // Search dashboards

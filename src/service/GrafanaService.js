@@ -55,7 +55,7 @@ class GrafanaService {
     if (!match) return null;
 
     const request = new GrafanaDashboardRequest();
-    request.uid = match[1].trim();
+    request.uid = match[1];
 
     // Parse out a specific panel
     if (/\:/.test(request.uid)) {
@@ -267,8 +267,12 @@ class GrafanaService {
     try {
       dashboard = await this.client.get(url);
     } catch (err) {
-      this.logger.error(err, `Error while getting dashboard on URL: ${url}`);
-      return null;
+      if (err.message !== 'Dashboard not found') {
+        this.logger.error(err, `Error while getting dashboard on URL: ${url}`);
+        return null;
+      }
+
+      dashboard = { message: err.message };
     }
 
     this.logger.debug(dashboard);
@@ -404,9 +408,7 @@ class GrafanaService {
  * @returns {string} - The formatted title.
  */
 function formatTitleWithTemplate(title, templateMap) {
-  if (!title) {
-    title = '';
-  }
+  title = title || '';
   return title.replace(/\$\w+/g, (match) => {
     if (templateMap[match]) {
       return templateMap[match];

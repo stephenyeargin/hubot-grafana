@@ -1,0 +1,8 @@
+{
+  "reporter": "spec",
+  "color": true,
+  "full-trace": true,
+  "experimental-fetch": false,
+  "timeout": 200,
+  "spec": "test/**/*-test.js"
+}

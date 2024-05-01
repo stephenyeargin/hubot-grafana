@@ -1,4 +1,0 @@
---reporter list
---require test/test_helper.js
---colors
---full-trace
