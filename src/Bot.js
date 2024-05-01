@@ -47,6 +47,49 @@ class Bot {
   }
 
   /**
+   * Sends dashboard charts based on a request string.
+   *
+   * @param {Hubot.Response} context - The context object.
+   * @param {string} requestString - The request string. This string may contain all the parameters to fetch a dashboard (should not contain the `@hubot graf db` part).
+   * @param {number} maxReturnDashboards - The maximum number of dashboards to return.
+   * @returns {Promise<void>} - A promise that resolves when the charts are sent.
+   */
+  async sendDashboardChartFromString(context, requestString, maxReturnDashboards = null) {
+    const service = this.createService(context);
+    if (service == null) return;
+
+    const req = service.parseToGrafanaDashboardRequest(requestString);
+    const dashboard = await service.getDashboard(req.uid);
+
+    // Check dashboard information
+    if (!dashboard) {
+      return this.sendError('An error ocurred. Check your logs for more details.', context);
+    }
+
+    if (dashboard.message) {
+      return this.sendError(dashboard.message, context);
+    }
+
+    // Defaults
+    const data = dashboard.dashboard;
+
+    // Handle empty dashboard
+    if (data.rows == null) {
+      return this.sendError('Dashboard empty.', context);
+    }
+
+    maxReturnDashboards = maxReturnDashboards || parseInt(process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS, 10) || 25;
+    const charts = await service.getDashboardCharts(req, dashboard, maxReturnDashboards);
+    if (charts == null || charts.length === 0) {
+      return this.sendError('Could not locate desired panel.', context);
+    }
+
+    for (let chart of charts) {
+      await this.sendDashboardChart(context, chart);
+    }
+  }
+
+  /**
    * Sends a dashboard chart.
    *
    * @param {Hubot.Response} context - The context object.
