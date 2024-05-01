@@ -1,4 +1,6 @@
---reporter list
---require test/test_helper.js
+--reporter spec
 --colors
 --full-trace
+--no-experimental-fetch
+--timeout 200
+
