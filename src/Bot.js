@@ -111,8 +111,7 @@ class Bot {
     try {
       file = await service.client.download(dashboard.imageUrl);
     } catch (err) {
-      this.sendError(err, context);
-      return;
+      return this.sendError(err, context);
     }
 
     this.logger.debug(`Uploading file: ${file.body.length} bytes, content-type[${file.contentType}]`);
