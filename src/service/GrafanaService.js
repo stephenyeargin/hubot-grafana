@@ -160,12 +160,13 @@ class GrafanaService {
     if (dashboard.templating.list) {
       for (const template of Array.from(dashboard.templating.list)) {
         this.logger.debug(template);
-        if (!template.current) {
-          continue;
-        }
 
         const _param = req.template_params.find((param) => param.name === template.name);
-        templateMap[`$${template.name}`] = _param ? _param.value : template.current.text;
+        templateMap[`$${template.name}`] = _param
+          ? _param.value
+          : template.current
+          ? template.current.text
+          : `$${template.name}`;
       }
     }
 
