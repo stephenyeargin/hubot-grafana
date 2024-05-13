@@ -94,9 +94,9 @@ module.exports = (robot) => {
       title = `Dashboards tagged \`${tag}\`:\n`;
     }
 
-    service.search(null, tag).then((dashboards) => {
+    service.search(null, tag).then(async (dashboards) => {
       if (dashboards == null) return;
-      return sendDashboardList(dashboards, title, context);
+      await sendDashboardList(dashboards, title, context);
     });
   });
 
@@ -108,10 +108,10 @@ module.exports = (robot) => {
     const query = msg.match[1].trim();
     robot.logger.debug(query);
 
-    service.search(query).then((dashboards) => {
+    service.search(query).then(async (dashboards) => {
       if (dashboards == null) return;
       const title = `Dashboards matching \`${query}\`:\n`;
-      return sendDashboardList(dashboards, title, msg);
+      await sendDashboardList(dashboards, title, msg);
     });
   });
 
@@ -160,11 +160,11 @@ module.exports = (robot) => {
     const paused = msg.match[1] === 'pause';
     const alertId = msg.match[2];
 
-    const message = service.pauseSingleAlert(alertId, paused);
-
-    if (message) {
-      msg.send(message);
-    }
+    service.pauseSingleAlert(alertId, paused).then((message) => {
+      if (message) {
+        msg.send(message);
+      }
+    });
   });
 
   // Pause/unpause all alerts
