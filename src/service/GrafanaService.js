@@ -230,7 +230,7 @@ class GrafanaService {
     let page = 1;
 
     while (true) {
-      const url = `search?limit=${pageSize}&page=${encodeURIComponent(slug)}`;
+      const url = `search?limit=${pageSize}&page=${encodeURIComponent(page)}`;
 
       try {
         const items = await client.get(url);
@@ -249,6 +249,7 @@ class GrafanaService {
         page++;
       } catch (err) {
         this.logger.error(err, `Error while getting dashboard on URL: ${url}`);
+        return null;
       }
     }
 
