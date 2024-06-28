@@ -4,6 +4,33 @@ const { URL, URLSearchParams } = require('url');
 
 /// <reference path="../types.d.ts"/>
 
+  /**
+   * If the given url does not have a host, it will add it to the
+   * url and return it.
+   * @param {string} url the url
+   * @returns {string} the expanded URL.
+   */
+function expandUrl(url, host) {
+
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  if (!host) {
+    throw new Error('No Grafana endpoint configured.');
+  }
+
+  let apiUrl = host;
+  if (!apiUrl.endsWith('/')) {
+    apiUrl += '/';
+  }
+
+  apiUrl += 'api/';
+  apiUrl += url;
+
+  return apiUrl;
+}
+
 class GrafanaClient {
   /**
    * Creates a new instance.
@@ -38,12 +65,7 @@ class GrafanaClient {
    * @returns {Promise<unknown>} the response data
    */
   async get(url) {
-    if (!url.startsWith('http://') && !url.startsWith('https://') && !this.host) {
-      throw new Error('No Grafana endpoint configured.');
-    }
-
-    const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `${this.host}/api/${url}`;
-
+    const fullUrl = expandUrl(url, this.host);
     const response = await fetch(fullUrl, {
       method: 'GET',
       headers: grafanaHeaders(null, false, this.apiKey),
@@ -63,8 +85,7 @@ class GrafanaClient {
    * @returns {Promise<unknown>}
    */
   async post(url, data) {
-    const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `${this.host}/api/${url}`;
-
+    const fullUrl = expandUrl(url, this.host);
     const response = await fetch(fullUrl, {
       method: 'POST',
       headers: grafanaHeaders('application/json', false, this.apiKey),
@@ -87,16 +108,27 @@ class GrafanaClient {
       return;
     }
 
-    if (response.headers.get('content-type') == 'application/json') {
-      const json = await response.json();
+    let contentType = null;
+    if (response.headers.has('content-type')) {
+      contentType = response.headers.get('content-type');
+      if (contentType.includes(';')) {
+        contentType = contentType.split(';')[0];
+      }
+    }
 
+    if (contentType == 'application/json') {
+      const json = await response.json();
       const error = new Error(json.message || 'Error while fetching data from Grafana.');
       error.data = json;
       throw error;
     }
 
-    const text = await response.text();
-    throw new Error(text);
+    let error = new Error('Error while fetching data from Grafana.');
+    if (contentType != 'text/html') {
+      error.data = await response.text();
+    }
+
+    throw error;
   }
 
   /**
