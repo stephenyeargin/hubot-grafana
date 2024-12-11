@@ -10,6 +10,15 @@ class Responder {
   send(res, title, image, link) {
     res.send(`${title}: ${image} - ${link}`);
   }
+
+  /**
+   * Sends the error message to Hubot.
+   * @param {Hubot.Response} res the context.
+   * @param {string} message the error message.
+   */
+  sendError(res, message) {
+    res.send(message);
+  }
 }
 
 exports.Responder = Responder;
