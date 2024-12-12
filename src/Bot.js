@@ -125,7 +125,7 @@ class Bot {
    */
   sendError(message, context) {
     context.robot.logger.error(message);
-    context.send(message);
+    this.adapter.responder.sendError(context, message);
   }
 
   /**
