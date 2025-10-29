@@ -320,10 +320,10 @@ class GrafanaService {
     try {
       const result = await this.client.get(url);
       return result;
-    } catch {
+    } catch (err) {
       let errorTitle = query ? 'Error while searching dashboards' : 'Error while listing dashboards';
       errorTitle += `, URL: ${url}`;
-      this.logger.error(err, errorTitle);
+      this.logger.error({ err, errorTitle });
       return null;
     }
   }
