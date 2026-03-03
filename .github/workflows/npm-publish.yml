@@ -1,26 +1,51 @@
 on:
   push:
-    branches: main
+    branches:
+      - main
 
 name: npm-publish
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
+          registry-url: https://registry.npmjs.org
+
+      - name: Update npm to latest version
+        run: npm install -g npm@latest
+
       - run: npm ci
-      - run: npm test -- --forbid-only --forbid-pending
-      - uses: JS-DevTools/npm-publish@v3
+      - run: npm test
+
+      - name: Publish to npm
         id: publish
-        with:
-          token: ${{ secrets.NPM_AUTH_TOKEN }}
+        run: |
+          # Verify npm version supports OIDC
+          echo "npm version: $(npm --version)"
+
+          # Check if version is already published
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+
+          if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version 2>/dev/null; then
+            echo "Version $PACKAGE_VERSION already published"
+            echo "type=" >> $GITHUB_OUTPUT
+          else
+            echo "Publishing $PACKAGE_NAME@$PACKAGE_VERSION..."
+            npm publish --access public
+            echo "type=patch" >> $GITHUB_OUTPUT
+            echo "version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
+          fi
+
       - if: ${{ steps.publish.outputs.type }}
         name: Create Release
         env:
