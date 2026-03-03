@@ -53,7 +53,7 @@
     "types.d.ts"
   ],
   "volta": {
-    "node": "18.19.0"
+    "node": "24.14.0"
   },
   "types": "types.d.ts"
 }
