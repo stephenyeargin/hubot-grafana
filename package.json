@@ -30,17 +30,16 @@
     "eslint": "^8.45.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.27.5",
-    "hubot": "^7.0.0",
-    "hubot-mock-adapter": "^2.0.0",
+    "hubot": "^14.1.0",
     "husky": "^9.0.11",
-    "mocha": "^10.4.0",
-    "nock": "^13.5.4",
-    "nyc": "^15.1.0"
+    "c8": "^11.0.0",
+    "mocha": "^11.0.0",
+    "nock": "^13.5.4"
   },
   "main": "index.js",
   "scripts": {
     "test": "mocha",
-    "test-with-coverage": "nyc --reporter=text mocha",
+    "test-with-coverage": "c8 --reporter=text mocha",
     "bootstrap": "script/bootstrap",
     "prepare": "husky",
     "lint": "eslint src/ test/"
@@ -52,6 +51,10 @@
     "index.js",
     "types.d.ts"
   ],
+  "overrides": {
+    "diff": "^9.0.0",
+    "serialize-javascript": "^7.0.5"
+  },
   "volta": {
     "node": "24.14.0"
   },

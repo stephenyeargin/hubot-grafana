@@ -73,17 +73,17 @@ module.exports = (robot) => {
   });
 
   // Get a specific dashboard with options
-  robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (context) => {
+  robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, async (context) => {
     let str = context.match[1];
     if (context.match[2]) {
       str += ' ' + context.match[2];
     }
 
-    bot.sendDashboardChartFromString(context, str, maxReturnDashboards);
+    await bot.sendDashboardChartFromString(context, str, maxReturnDashboards);
   });
 
   // Get a list of available dashboards
-  robot.respond(/(?:grafana|graph|graf) list\s?(.+)?/i, (context) => {
+  robot.respond(/(?:grafana|graph|graf) list\s?(.+)?/i, async (context) => {
     const service = bot.createService(context);
     if (!service) return;
 
@@ -94,29 +94,27 @@ module.exports = (robot) => {
       title = `Dashboards tagged \`${tag}\`:\n`;
     }
 
-    service.search(null, tag).then(async (dashboards) => {
-      if (dashboards == null) return;
-      await sendDashboardList(dashboards, title, context);
-    });
+    const dashboards = await service.search(null, tag);
+    if (dashboards == null) return;
+    await sendDashboardList(dashboards, title, context);
   });
 
   // Search dashboards
-  robot.respond(/(?:grafana|graph|graf) search (.+)/i, (msg) => {
+  robot.respond(/(?:grafana|graph|graf) search (.+)/i, async (msg) => {
     const service = bot.createService(msg);
     if (!service) return;
 
     const query = msg.match[1].trim();
     robot.logger.debug(query);
 
-    service.search(query).then(async (dashboards) => {
-      if (dashboards == null) return;
-      const title = `Dashboards matching \`${query}\`:\n`;
-      await sendDashboardList(dashboards, title, msg);
-    });
+    const dashboards = await service.search(query);
+    if (dashboards == null) return;
+    const title = `Dashboards matching \`${query}\`:\n`;
+    await sendDashboardList(dashboards, title, msg);
   });
 
   // Show alerts
-  robot.respond(/(?:grafana|graph|graf) alerts\s?(.+)?/i, (msg) => {
+  robot.respond(/(?:grafana|graph|graf) alerts\s?(.+)?/i, async (msg) => {
     const service = bot.createService(msg);
     if (!service) return;
 
@@ -131,56 +129,53 @@ module.exports = (robot) => {
 
     robot.logger.debug(title.trim());
 
-    service.queryAlerts(state).then((alerts) => {
-      if (alerts == null) return;
+    const alerts = await service.queryAlerts(state);
+    if (alerts == null) return;
 
-      robot.logger.debug(alerts);
+    robot.logger.debug(alerts);
 
-      let text = title;
+    let text = title;
 
-      for (const alert of alerts) {
-        let line = `- *${alert.name}* (${alert.id}): \`${alert.state}\``;
-        if (alert.newStateDate) {
-          line += `\n  last state change: ${alert.newStateDate}`;
-        }
-        if (alert.executionError) {
-          line += `\n  execution error: ${alert.executionError}`;
-        }
-        text += line + `\n`;
+    for (const alert of alerts) {
+      let line = `- *${alert.name}* (${alert.id}): \`${alert.state}\``;
+      if (alert.newStateDate) {
+        line += `\n  last state change: ${alert.newStateDate}`;
       }
-      msg.send(text.trim());
-    });
+      if (alert.executionError) {
+        line += `\n  execution error: ${alert.executionError}`;
+      }
+      text += line + `\n`;
+    }
+    msg.send(text.trim());
   });
 
   // Pause/unpause an alert
-  robot.respond(/(?:grafana|graph|graf) (unpause|pause)\salert\s(\d+)/i, (msg) => {
+  robot.respond(/(?:grafana|graph|graf) (unpause|pause)\salert\s(\d+)/i, async (msg) => {
     const service = bot.createService(msg);
     if (!service) return;
 
     const paused = msg.match[1] === 'pause';
     const alertId = msg.match[2];
 
-    service.pauseSingleAlert(alertId, paused).then((message) => {
-      if (message) {
-        msg.send(message);
-      }
-    });
+    const message = await service.pauseSingleAlert(alertId, paused);
+    if (message) {
+      msg.send(message);
+    }
   });
 
   // Pause/unpause all alerts
   // requires an API token with admin permissions
-  robot.respond(/(?:grafana|graph|graf) (unpause|pause) all(?:\s+alerts)?/i, (msg) => {
+  robot.respond(/(?:grafana|graph|graf) (unpause|pause) all(?:\s+alerts)?/i, async (msg) => {
     const service = bot.createService(msg);
     if (!service) return;
 
     const command = msg.match[1];
     const paused = command === 'pause';
-    service.pauseAllAlerts(paused).then((result) => {
-      if (result.total == 0) return;
-      msg.send(
-        `Successfully tried to ${command} *${result.total}* alerts.\n*Success: ${result.success}*\n*Errored: ${result.errored}*`
-      );
-    });
+    const result = await service.pauseAllAlerts(paused);
+    if (result.total == 0) return;
+    msg.send(
+      `Successfully tried to ${command} *${result.total}* alerts.\n*Success: ${result.success}*\n*Errored: ${result.errored}*`
+    );
   });
 
   /**
