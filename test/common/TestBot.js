@@ -1,4 +1,5 @@
-const { Robot, TextMessage } = require('hubot/es2015');
+const { Robot, TextMessage } = require('hubot');
+const MockAdapter = require('./MockAdapter');
 const nock = require('nock');
 const grafanaScript = require('../../src/grafana');
 const { Bot } = require('../../src/Bot');
@@ -54,13 +55,13 @@ class TestBotContext {
    * @returns {Promise<string>} A promise that resolves with the response string.
    */
   async sendAndWaitForResponse(message, responseType = 'send') {
-    return new Promise((done) => {
+    const responsePromise = new Promise((done) => {
       this.robot.adapter.once(responseType, function (_, strings) {
         done(strings[0]);
       });
-
-      this.send(message);
     });
+    await this.send(message);
+    return responsePromise;
   }
 
   /**
@@ -76,7 +77,7 @@ class TestBotContext {
       textMessage.rawMessage = message.rawMessage;
     }
 
-    this.robot.adapter.receive(textMessage);
+    await this.robot.adapter.receive(textMessage);
     await this.wait(1);
   }
 
@@ -211,7 +212,7 @@ async function createTestBot(settings = null) {
     // create new robot, without http, using the mock adapter
     const botName = settings?.name || 'hubot';
     const botAlias = settings?.alias || null;
-    const robot = new Robot('hubot-mock-adapter', false, botName, botAlias);
+    const robot = new Robot(MockAdapter, false, botName, botAlias);
     await robot.loadAdapter();
 
     grafanaScript(robot);
