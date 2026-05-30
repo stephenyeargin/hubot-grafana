@@ -208,17 +208,15 @@ async function createTestBot(settings = null) {
   setupEnv(settings);
   setupNock(settings);
 
-  return new Promise(async (done) => {
-    // create new robot, without http, using the mock adapter
-    const botName = settings?.name || 'hubot';
-    const botAlias = settings?.alias || null;
-    const robot = new Robot(MockAdapter, false, botName, botAlias);
-    await robot.loadAdapter();
+  const botName = settings?.name || 'hubot';
+  const botAlias = settings?.alias || null;
+  const robot = new Robot(MockAdapter, false, botName, botAlias);
+  await robot.loadAdapter();
 
-    grafanaScript(robot);
+  grafanaScript(robot);
 
-    robot.adapter.on('connected', () => {
-      // create a user
+  const connectedPromise = new Promise((resolve) => {
+    robot.adapter.once('connected', () => {
       const user = robot.brain.userForId('1', {
         name: settings?.testUserName || 'mocha',
         room: '#mocha',
@@ -230,11 +228,12 @@ async function createTestBot(settings = null) {
         robot.adapterName = settings.adapterName;
       }
 
-      done(context);
+      resolve(context);
     });
-
-    robot.run();
   });
+
+  robot.run();
+  return connectedPromise;
 }
 
 module.exports = {
