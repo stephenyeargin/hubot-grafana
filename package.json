@@ -25,7 +25,7 @@
     "hubot": ">=3 || 0.0.0-development"
   },
   "devDependencies": {
-    "@types/hubot": "^3.3.7",
+    "@types/hubot": "^11.3.0",
     "chai": "^4.4.1",
     "eslint": "^8.45.0",
     "eslint-config-airbnb-base": "^15.0.0",
