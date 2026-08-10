@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.565.0",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^3.3.2"
   },
   "peerDependencies": {
     "hubot": ">=3 || 0.0.0-development"
