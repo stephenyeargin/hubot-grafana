@@ -18,21 +18,23 @@
     "url": "https://github.com/stephenyeargin/hubot-grafana/issues"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.565.0",
-    "node-fetch": "^2.7.0"
+    "@aws-sdk/client-s3": "^3.565.0"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "peerDependencies": {
     "hubot": ">=3 || 0.0.0-development"
   },
   "devDependencies": {
     "@types/hubot": "^11.3.0",
+    "c8": "^12.0.0",
     "chai": "^6.2.2",
     "eslint": "^8.45.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.27.5",
     "hubot": "^14.1.0",
     "husky": "^9.0.11",
-    "c8": "^12.0.0",
     "mocha": "^11.0.0",
     "nock": "^14.0.17"
   },

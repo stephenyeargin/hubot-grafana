@@ -1,5 +1,4 @@
 'strict';
-const fetch = require('node-fetch');
 const { URL, URLSearchParams } = require('url');
 
 /// <reference path="../types.d.ts"/>
