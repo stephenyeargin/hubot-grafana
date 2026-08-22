@@ -59,40 +59,42 @@ class Bot {
     const service = this.createService(context);
     if (service == null) return;
 
-    const req = service.parseToGrafanaDashboardRequest(requestString);
-    const dashboard = await service.getDashboard(req.uid);
+    await this.withWorkingIndicator(context, 'is fetching dashboard...', async () => {
+      const req = service.parseToGrafanaDashboardRequest(requestString);
+      const dashboard = await service.getDashboard(req.uid);
 
-    // Check dashboard information
-    if (!dashboard) {
-      this.sendError('An error ocurred. Check your logs for more details.', context);
-      return;
-    }
+      // Check dashboard information
+      if (!dashboard) {
+        this.sendError('An error ocurred. Check your logs for more details.', context);
+        return;
+      }
 
-    if (dashboard.message) {
-      this.sendError(dashboard.message, context);
-      return;
-    }
+      if (dashboard.message) {
+        this.sendError(dashboard.message, context);
+        return;
+      }
 
-    // Defaults
-    const data = dashboard.dashboard;
+      // Defaults
+      const data = dashboard.dashboard;
 
-    // Handle empty dashboard
-    if (data.rows == null) {
-      this.sendError('Dashboard empty.', context);
-      return;
-    }
+      // Handle empty dashboard
+      if (data.rows == null) {
+        this.sendError('Dashboard empty.', context);
+        return;
+      }
 
-    const envMaxDashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS;
-    const maxDashboards = parseInt(maxReturnDashboards, 10) || parseInt(envMaxDashboards, 10) || 25;
-    const charts = await service.getDashboardCharts(req, dashboard, maxDashboards);
-    if (charts == null || charts.length === 0) {
-      this.sendError('Could not locate desired panel.', context);
-      return;
-    }
+      const envMaxDashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS;
+      const maxDashboards = parseInt(maxReturnDashboards, 10) || parseInt(envMaxDashboards, 10) || 25;
+      const charts = await service.getDashboardCharts(req, dashboard, maxDashboards);
+      if (charts == null || charts.length === 0) {
+        this.sendError('Could not locate desired panel.', context);
+        return;
+      }
 
-    for (const chart of charts) {
-      await this.sendDashboardChart(context, chart);
-    }
+      for (const chart of charts) {
+        await this.sendDashboardChart(context, chart);
+      }
+    });
   }
 
   /**
@@ -133,6 +135,25 @@ class Bot {
   sendError(message, context) {
     context.robot.logger.error(message);
     this.adapter.responder.sendError(context, message);
+  }
+
+  /**
+   * Runs fn while showing a "working" status indicator (e.g. Slack Assistant
+   * threads). No-ops on adapters that don't support it, and never lets a
+   * failure to show/clear the indicator break the underlying command.
+   * @param {Hubot.Response} context The context.
+   * @param {string} status The status text to display while fn runs.
+   * @param {() => Promise<any>} fn The work to perform.
+   * @returns {Promise<any>}
+   */
+  async withWorkingIndicator(context, status, fn) {
+    const indicator = this.adapter.typingIndicator;
+    await indicator.start(context, status);
+    try {
+      return await fn();
+    } finally {
+      await indicator.stop(context);
+    }
   }
 
   /**
