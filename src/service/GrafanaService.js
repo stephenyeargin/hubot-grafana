@@ -178,6 +178,11 @@ class GrafanaService {
       for (const panel of Array.from(row.panels)) {
         this.logger.debug(panel);
 
+        // Skip row divider panels; they aren't renderable
+        if (panel.type === 'row') {
+          continue;
+        }
+
         panelNumber += 1;
         // Skip if visual panel ID was specified and didn't match
         if (req.visualPanelId && req.visualPanelId !== panelNumber) {

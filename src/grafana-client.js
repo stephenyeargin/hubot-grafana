@@ -155,7 +155,7 @@ class GrafanaClient {
   createGrafanaChartLink(query, uid, panel, timeSpan, variables) {
     const url = new URL(`${this.host}/d/${uid}/`);
 
-    if (panel) {
+    if (panel && panel.id != null) {
       url.searchParams.set('panelId', panel.id);
       url.searchParams.set('fullscreen', '');
     }
@@ -184,7 +184,7 @@ class GrafanaClient {
   createImageUrl(query, uid, panel, timeSpan, variables) {
     const url = new URL(`${this.host}/render/${query.apiEndpoint}/${uid}/`);
 
-    if (panel) {
+    if (panel && panel.id != null) {
       url.searchParams.set('panelId', panel.id);
     } else if (query.kiosk) {
       url.searchParams.set('kiosk', '');
