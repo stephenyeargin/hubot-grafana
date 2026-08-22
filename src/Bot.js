@@ -83,7 +83,7 @@ class Bot {
     }
 
     const envMaxDashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS;
-    const maxDashboards = maxReturnDashboards || parseInt(envMaxDashboards, 10) || 25;
+    const maxDashboards = parseInt(maxReturnDashboards, 10) || parseInt(envMaxDashboards, 10) || 25;
     const charts = await service.getDashboardCharts(req, dashboard, maxDashboards);
     if (charts == null || charts.length === 0) {
       this.sendError('Could not locate desired panel.', context);

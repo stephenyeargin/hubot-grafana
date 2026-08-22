@@ -58,7 +58,7 @@ const { Bot } = require('./Bot');
 module.exports = (robot) => {
   // Various configuration options stored in environment variables
   const grafanaPerRoom = process.env.HUBOT_GRAFANA_PER_ROOM;
-  const maxReturnDashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS || 25;
+  const maxReturnDashboards = parseInt(process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS, 10) || 25;
   const bot = new Bot(robot);
 
   /**

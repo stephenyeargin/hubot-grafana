@@ -4,6 +4,11 @@ module.exports = {
     es2021: true,
     mocha: true,
   },
+  globals: {
+    // Web-platform globals available in Node 18+ that this eslint/globals
+    // version doesn't yet include under the `node` env.
+    Blob: 'readonly',
+  },
   extends: ['eslint:recommended', 'plugin:import/recommended', 'prettier'],
   parserOptions: {
     ecmaVersion: 'latest',

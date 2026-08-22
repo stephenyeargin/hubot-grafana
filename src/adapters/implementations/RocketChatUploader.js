@@ -83,7 +83,9 @@ class RocketChatUploader extends Uploader {
       authHeaders = await this.login();
     } catch (ex) {
       const msg =
-        ex.message === 'Could not authenticate.' ? "invalid url, user or password/can't access rocketchat api" : ex;
+        ex.message === 'Could not authenticate.'
+          ? "invalid url, user or password/can't access rocketchat api"
+          : ex.message;
       res.send(`${title} - [Rocketchat auth Error - ${msg}] - ${grafanaChartLink}`);
       return;
     }
@@ -123,14 +125,24 @@ class RocketChatUploader extends Uploader {
    * Posts the data data to the specified url and returns JSON.
    * @param {string} url - the URL
    * @param {Record<string, unknown>} formData - formatData
-   * @param {Record<string, string>|null} headers - formatData
+   * @param {Record<string, string>} [headers] - request headers
    * @returns {Promise<unknown>} The deserialized JSON response or an error if something went wrong.
    */
-  async post(url, formData, headers = null) {
+  async post(url, formData, headers) {
+    const body = new FormData();
+    for (const [key, value] of Object.entries(formData)) {
+      if (value && typeof value === 'object' && 'value' in value) {
+        const { value: fileValue, options = {} } = value;
+        body.append(key, new Blob([fileValue], { type: options.contentType }), options.filename);
+      } else {
+        body.append(key, value);
+      }
+    }
+
     const response = await fetch(url, {
       method: 'POST',
       headers,
-      body: new FormData(formData),
+      body,
     });
 
     if (!response.ok) {
