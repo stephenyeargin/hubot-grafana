@@ -124,7 +124,7 @@ class Bot {
     }
 
     this.logger.debug(`Uploading file: ${file.body.length} bytes, content-type[${file.contentType}]`);
-    this.adapter.uploader.upload(context, dashboard.title || 'Image', file, dashboard.grafanaChartLink);
+    await this.adapter.uploader.upload(context, dashboard.title || 'Image', file, dashboard.grafanaChartLink);
   }
 
   /**
