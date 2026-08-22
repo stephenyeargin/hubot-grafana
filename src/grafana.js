@@ -118,16 +118,18 @@ module.exports = (robot) => {
     const service = bot.createService(context);
     if (!service) return;
 
-    let title = 'Available dashboards:\n';
-    let tag = null;
-    if (context.match[1]) {
-      tag = context.match[1].trim();
-      title = `Dashboards tagged \`${tag}\`:\n`;
-    }
+    await bot.withWorkingIndicator(context, 'is fetching dashboards...', async () => {
+      let title = 'Available dashboards:\n';
+      let tag = null;
+      if (context.match[1]) {
+        tag = context.match[1].trim();
+        title = `Dashboards tagged \`${tag}\`:\n`;
+      }
 
-    const dashboards = await service.search(null, tag);
-    if (dashboards == null) return;
-    await sendDashboardList(dashboards, title, context);
+      const dashboards = await service.search(null, tag);
+      if (dashboards == null) return;
+      await sendDashboardList(dashboards, title, context);
+    });
   });
 
   // Search dashboards
@@ -135,13 +137,15 @@ module.exports = (robot) => {
     const service = bot.createService(msg);
     if (!service) return;
 
-    const query = msg.match[1].trim();
-    robot.logger.debug(query);
+    await bot.withWorkingIndicator(msg, 'is searching dashboards...', async () => {
+      const query = msg.match[1].trim();
+      robot.logger.debug(query);
 
-    const dashboards = await service.search(query);
-    if (dashboards == null) return;
-    const title = `Dashboards matching \`${query}\`:\n`;
-    await sendDashboardList(dashboards, title, msg);
+      const dashboards = await service.search(query);
+      if (dashboards == null) return;
+      const title = `Dashboards matching \`${query}\`:\n`;
+      await sendDashboardList(dashboards, title, msg);
+    });
   });
 
   // Show alerts
@@ -149,35 +153,37 @@ module.exports = (robot) => {
     const service = bot.createService(msg);
     if (!service) return;
 
-    let title = 'All alerts:\n';
-    let state = null;
+    await bot.withWorkingIndicator(msg, 'is fetching alerts...', async () => {
+      let title = 'All alerts:\n';
+      let state = null;
 
-    // all alerts of a specific type
-    if (msg.match[1]) {
-      state = msg.match[1].trim();
-      title = `Alerts with state '${state}':\n`;
-    }
-
-    robot.logger.debug(title.trim());
-
-    const alerts = await service.queryAlerts(state);
-    if (alerts == null) return;
-
-    robot.logger.debug(alerts);
-
-    let text = title;
-
-    for (const alert of alerts) {
-      let line = `- *${alert.name}* (${alert.id}): \`${alert.state}\``;
-      if (alert.newStateDate) {
-        line += `\n  last state change: ${alert.newStateDate}`;
+      // all alerts of a specific type
+      if (msg.match[1]) {
+        state = msg.match[1].trim();
+        title = `Alerts with state '${state}':\n`;
       }
-      if (alert.executionError) {
-        line += `\n  execution error: ${alert.executionError}`;
+
+      robot.logger.debug(title.trim());
+
+      const alerts = await service.queryAlerts(state);
+      if (alerts == null) return;
+
+      robot.logger.debug(alerts);
+
+      let text = title;
+
+      for (const alert of alerts) {
+        let line = `- *${alert.name}* (${alert.id}): \`${alert.state}\``;
+        if (alert.newStateDate) {
+          line += `\n  last state change: ${alert.newStateDate}`;
+        }
+        if (alert.executionError) {
+          line += `\n  execution error: ${alert.executionError}`;
+        }
+        text += `${line}\n`;
       }
-      text += `${line}\n`;
-    }
-    msg.send(text.trim());
+      msg.send(text.trim());
+    });
   });
 
   // Pause/unpause an alert
@@ -185,13 +191,15 @@ module.exports = (robot) => {
     const service = bot.createService(msg);
     if (!service) return;
 
-    const paused = msg.match[1] === 'pause';
-    const alertId = msg.match[2];
+    await bot.withWorkingIndicator(msg, 'is updating alert...', async () => {
+      const paused = msg.match[1] === 'pause';
+      const alertId = msg.match[2];
 
-    const message = await service.pauseSingleAlert(alertId, paused);
-    if (message) {
-      msg.send(message);
-    }
+      const message = await service.pauseSingleAlert(alertId, paused);
+      if (message) {
+        msg.send(message);
+      }
+    });
   });
 
   // Pause/unpause all alerts
@@ -200,12 +208,14 @@ module.exports = (robot) => {
     const service = bot.createService(msg);
     if (!service) return;
 
-    const command = msg.match[1];
-    const paused = command === 'pause';
-    const result = await service.pauseAllAlerts(paused);
-    if (result.total === 0) return;
-    msg.send(
-      `Successfully tried to ${command} *${result.total}* alerts.\n*Success: ${result.success}*\n*Errored: ${result.errored}*`
-    );
+    await bot.withWorkingIndicator(msg, 'is updating alerts...', async () => {
+      const command = msg.match[1];
+      const paused = command === 'pause';
+      const result = await service.pauseAllAlerts(paused);
+      if (result.total === 0) return;
+      msg.send(
+        `Successfully tried to ${command} *${result.total}* alerts.\n*Success: ${result.success}*\n*Errored: ${result.errored}*`
+      );
+    });
   });
 };
