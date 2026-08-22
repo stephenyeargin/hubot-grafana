@@ -14,7 +14,7 @@ describe('telegram', () => {
       });
     });
 
-    afterEach(function () {
+    afterEach(() => {
       delete process.env.HUBOT_GRAFANA_S3_BUCKET;
       ctx?.shutdown();
     });
@@ -33,9 +33,9 @@ describe('telegram', () => {
     // to Mock the Response object.
 
     it('should respond with an uploaded graph', async () => {
-      let uploader = new TelegramUploader();
-      let sendPhotoResult = createAwaitableValue();
-      let res = {
+      const uploader = new TelegramUploader();
+      const sendPhotoResult = createAwaitableValue();
+      const res = {
         sendPhoto: sendPhotoResult.set,
         envelope: {
           room: '#mocha',
@@ -52,7 +52,7 @@ describe('telegram', () => {
         'https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now'
       );
 
-      var result = await sendPhotoResult;
+      const result = await sendPhotoResult;
 
       expect(result).to.be.of.length(3);
       expect(result[0]).to.eql('#mocha');

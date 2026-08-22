@@ -23,11 +23,11 @@ class Bot {
   /**
    * Creates a new Grafana service based on the provided message.
    * @param {Hubot.Response} context - The context object.
-   * @returns {GrafanaService|null} - The created Grafana service or null if the client is not available.
+   * @returns {GrafanaService|null} - The created Grafana service or null if
+   *   the client is not available.
    */
   createService(context) {
-
-    const robot = context.robot;
+    const { robot } = context;
     let host = process.env.HUBOT_GRAFANA_HOST;
     let apiKey = process.env.HUBOT_GRAFANA_API_KEY;
 
@@ -42,7 +42,7 @@ class Bot {
       return null;
     }
 
-    let client = new GrafanaClient(robot.logger, host, apiKey);
+    const client = new GrafanaClient(robot.logger, host, apiKey);
     return new GrafanaService(client);
   }
 
@@ -50,7 +50,8 @@ class Bot {
    * Sends dashboard charts based on a request string.
    *
    * @param {Hubot.Response} context - The context object.
-   * @param {string} requestString - The request string. This string may contain all the parameters to fetch a dashboard (should not contain the `@hubot graf db` part).
+   * @param {string} requestString - The request string. This string may contain all the parameters
+   *   to fetch a dashboard (should not contain the `@hubot graf db` part).
    * @param {number} maxReturnDashboards - The maximum number of dashboards to return.
    * @returns {Promise<void>} - A promise that resolves when the charts are sent.
    */
@@ -63,11 +64,13 @@ class Bot {
 
     // Check dashboard information
     if (!dashboard) {
-      return this.sendError('An error ocurred. Check your logs for more details.', context);
+      this.sendError('An error ocurred. Check your logs for more details.', context);
+      return;
     }
 
     if (dashboard.message) {
-      return this.sendError(dashboard.message, context);
+      this.sendError(dashboard.message, context);
+      return;
     }
 
     // Defaults
@@ -75,16 +78,19 @@ class Bot {
 
     // Handle empty dashboard
     if (data.rows == null) {
-      return this.sendError('Dashboard empty.', context);
+      this.sendError('Dashboard empty.', context);
+      return;
     }
 
-    maxReturnDashboards = maxReturnDashboards || parseInt(process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS, 10) || 25;
-    const charts = await service.getDashboardCharts(req, dashboard, maxReturnDashboards);
+    const envMaxDashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS;
+    const maxDashboards = maxReturnDashboards || parseInt(envMaxDashboards, 10) || 25;
+    const charts = await service.getDashboardCharts(req, dashboard, maxDashboards);
     if (charts == null || charts.length === 0) {
-      return this.sendError('Could not locate desired panel.', context);
+      this.sendError('Could not locate desired panel.', context);
+      return;
     }
 
-    for (let chart of charts) {
+    for (const chart of charts) {
       await this.sendDashboardChart(context, chart);
     }
   }
@@ -111,7 +117,8 @@ class Bot {
     try {
       file = await service.client.download(dashboard.imageUrl);
     } catch (err) {
-      return this.sendError(err, context);
+      this.sendError(err, context);
+      return;
     }
 
     this.logger.debug(`Uploading file: ${file.body.length} bytes, content-type[${file.contentType}]`);

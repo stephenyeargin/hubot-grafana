@@ -1,5 +1,6 @@
 'strict';
-const { Responder } = require("../Responder");
+
+const { Responder } = require('../Responder');
 
 class SlackResponder extends Responder {
   constructor() {
@@ -17,8 +18,7 @@ class SlackResponder extends Responder {
    * @param {string} dashboardLink the title of the link
    */
   send(res, title, imageUrl, dashboardLink) {
-
-    let thread_ts = null
+    let thread_ts = null;
     if (this.use_threads) {
       thread_ts = res.message.rawMessage.ts;
     }
@@ -33,7 +33,7 @@ class SlackResponder extends Responder {
         },
       ],
       unfurl_links: false,
-      thread_ts: thread_ts
+      thread_ts,
     });
   }
 }

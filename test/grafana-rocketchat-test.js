@@ -42,7 +42,7 @@ describe('rocketchat', () => {
   });
 
   describe('rocketchat upload', () => {
-    beforeEach(function () {
+    beforeEach(() => {
       ctx
         .nock('http://chat.example.com')
         .post('/api/v1/login')
@@ -55,7 +55,7 @@ describe('rocketchat', () => {
     });
 
     it('should respond with an uploaded graph', async () => {
-      let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
+      const response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
       expect(response).to.eql(
         'logins: https://play.grafana.org/render/d-solo/97PlYC7Mk/?panelId=3&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now'
       );

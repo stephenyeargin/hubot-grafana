@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const { createTestBot, TestBotContext } = require('./common/TestBot');
 
 describe('s3', () => {
-  describe('no region provided', function () {
+  describe('no region provided', () => {
     /** @type {TestBotContext} */
     let ctx;
 
@@ -41,7 +41,7 @@ describe('s3', () => {
         .reply(200);
     });
 
-    afterEach(function () {
+    afterEach(() => {
       delete process.env.HUBOT_GRAFANA_S3_BUCKET;
       delete process.env.HUBOT_GRAFANA_S3_REGION;
       delete process.env.AWS_REGION;
@@ -52,14 +52,14 @@ describe('s3', () => {
       let response = await ctx.sendAndWaitForResponse('@hubot graf db AAy9r_bmk:cpu server=ww3.example.com now-6h');
       response = response.replace(/\/[a-f0-9]{40}\.png/i, '/abdcdef0123456789.png');
 
-      let panelRegex = /panelId=(\d+)/;
+      const panelRegex = /panelId=(\d+)/;
       expect(response).to.match(panelRegex);
 
-      let panelId = response.match(panelRegex)[1];
+      const panelId = response.match(panelRegex)[1];
       expect(response).to.eql(
-        'CPU: https://graf.s3.us-standard.amazonaws.com/grafana/abdcdef0123456789.png - https://play.grafana.org/d/AAy9r_bmk/?panelId=' +
-          panelId +
-          '&fullscreen&from=now-6h&to=now&var-server=ww3.example.com'
+        `CPU: https://graf.s3.us-standard.amazonaws.com/grafana/abdcdef0123456789.png - https://play.grafana.org/d/AAy9r_bmk/?panelId=${
+          panelId
+        }&fullscreen&from=now-6h&to=now&var-server=ww3.example.com`
       );
     });
   });

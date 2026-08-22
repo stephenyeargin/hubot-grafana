@@ -1,6 +1,6 @@
+const { expect } = require('chai');
 const { Adapter } = require('../src/adapters/Adapter');
 const { Uploader } = require('../src/adapters/Uploader');
-const { expect } = require('chai');
 const { SlackUploader } = require('../src/adapters/implementations/SlackUploader');
 const { createTestBot, TestBotContext } = require('./common/TestBot');
 const { SlackResponder } = require('../src/adapters/implementations/SlackResponder');
@@ -12,9 +12,9 @@ const { Responder } = require('../src/adapters/Responder');
 const { RocketChatUploader } = require('../src/adapters/implementations/RocketChatUploader');
 
 describe('adapter', () => {
-  it('Uploader class cannot upload', function () {
-    let uploader = new Uploader();
-    expect(function () {
+  it('Uploader class cannot upload', () => {
+    const uploader = new Uploader();
+    expect(() => {
       uploader.upload();
     }).to.throw('Not supported');
   });
@@ -27,7 +27,7 @@ describe('adapter', () => {
       ctx = await createTestBot();
     });
 
-    afterEach(function () {
+    afterEach(() => {
       delete process.env.HUBOT_GRAFANA_S3_BUCKET;
       ctx?.shutdown();
     });
@@ -103,7 +103,7 @@ describe('adapter', () => {
     it('should not support upload for unknown adapter', () => {
       ctx.robot.adapterName = 'my-amazing-fancy-super-unknown-thingy';
       const adapter = new Adapter(ctx.robot);
-      expect(function () {
+      expect(() => {
         adapter.uploader;
       }).to.throw("Upload not supported for 'my-amazing-fancy-super-unknown-thingy'");
       expect(adapter.site).to.eql('');
@@ -128,7 +128,7 @@ describe('adapter', () => {
       ctx = await createTestBot();
     });
 
-    afterEach(function () {
+    afterEach(() => {
       ctx?.shutdown();
     });
 

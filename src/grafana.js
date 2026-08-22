@@ -61,6 +61,37 @@ module.exports = (robot) => {
   const maxReturnDashboards = process.env.HUBOT_GRAFANA_MAX_RETURNED_DASHBOARDS || 25;
   const bot = new Bot(robot);
 
+  /**
+   * Sends the list of dashboards.
+   * @param {Array<GrafanaSearchResponse>} dashboards the list of dashboards
+   * @param {string} title the title that is printed before the result
+   * @param {Hubot.Response} res the context.
+   */
+  async function sendDashboardList(dashboards, title, res) {
+    robot.logger.debug(dashboards);
+    if (!(dashboards.length > 0)) {
+      return;
+    }
+
+    let remaining = 0;
+    let shownDashboards = dashboards;
+    if (dashboards.length > maxReturnDashboards) {
+      remaining = dashboards.length - maxReturnDashboards;
+      shownDashboards = dashboards.slice(0, maxReturnDashboards - 1);
+    }
+
+    const list = [];
+    for (const dashboard of Array.from(shownDashboards)) {
+      list.push(`- ${dashboard.uid}: ${dashboard.title}`);
+    }
+
+    if (remaining) {
+      list.push(` (and ${remaining} more)`);
+    }
+
+    res.send(title + list.join('\n'));
+  }
+
   // Set Grafana host/api_key
   robot.respond(/(?:grafana|graph|graf) set (host|api_key) (.+)/i, (msg) => {
     if (grafanaPerRoom !== '1') {
@@ -73,10 +104,10 @@ module.exports = (robot) => {
   });
 
   // Get a specific dashboard with options
-  robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, async (context) => {
+  robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-:_]+)(.*)?/i, async (context) => {
     let str = context.match[1];
     if (context.match[2]) {
-      str += ' ' + context.match[2];
+      str += ` ${context.match[2]}`;
     }
 
     await bot.sendDashboardChartFromString(context, str, maxReturnDashboards);
@@ -144,7 +175,7 @@ module.exports = (robot) => {
       if (alert.executionError) {
         line += `\n  execution error: ${alert.executionError}`;
       }
-      text += line + `\n`;
+      text += `${line}\n`;
     }
     msg.send(text.trim());
   });
@@ -172,40 +203,9 @@ module.exports = (robot) => {
     const command = msg.match[1];
     const paused = command === 'pause';
     const result = await service.pauseAllAlerts(paused);
-    if (result.total == 0) return;
+    if (result.total === 0) return;
     msg.send(
       `Successfully tried to ${command} *${result.total}* alerts.\n*Success: ${result.success}*\n*Errored: ${result.errored}*`
     );
   });
-
-  /**
-   * Sends the list of dashboards.
-   * @param {Array<GrafanaSearchResponse>} dashboards the list of dashboards
-   * @param {string} title the title that is printed before the result
-   * @param {Hubot.Response} res the context.
-   */
-  async function sendDashboardList(dashboards, title, res) {
-    let remaining;
-    robot.logger.debug(dashboards);
-    if (!(dashboards.length > 0)) {
-      return;
-    }
-
-    remaining = 0;
-    if (dashboards.length > maxReturnDashboards) {
-      remaining = dashboards.length - maxReturnDashboards;
-      dashboards = dashboards.slice(0, maxReturnDashboards - 1);
-    }
-
-    const list = [];
-    for (const dashboard of Array.from(dashboards)) {
-      list.push(`- ${dashboard.uid}: ${dashboard.title}`);
-    }
-
-    if (remaining) {
-      list.push(` (and ${remaining} more)`);
-    }
-
-    res.send(title + list.join('\n'));
-  }
 };

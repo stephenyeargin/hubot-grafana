@@ -1,4 +1,5 @@
 'strict';
+
 const { Uploader } = require('../Uploader');
 
 class TelegramUploader extends Uploader {

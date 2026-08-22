@@ -1,6 +1,6 @@
 'strict';
-class Uploader {
 
+class Uploader {
   /**
    * Uploads the a screenshot of the dashboards.
    *

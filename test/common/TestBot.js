@@ -1,6 +1,6 @@
 const { Robot, TextMessage } = require('hubot');
-const MockAdapter = require('./MockAdapter');
 const nock = require('nock');
+const MockAdapter = require('./MockAdapter');
 const grafanaScript = require('../../src/grafana');
 const { Bot } = require('../../src/Bot');
 
@@ -11,12 +11,13 @@ const { Bot } = require('../../src/Bot');
  * @property {string?} name - The name of the bot.
  * @property {string?} alias - The alias of the bot.
  * @property {string?} adapterName - The name of the adapter.
- * 
+ *
  * @typedef {Promise<unknown[]> & { set<unknown[]>(...value:unknown[]):void }} AwaitableValue
  */
 
 class TestBotContext {
   replies = [];
+
   sends = [];
 
   /**
@@ -26,7 +27,6 @@ class TestBotContext {
    * @param {Hubot.User} user - The user.
    */
   constructor(robot, user) {
-
     /** @type {Hubot.Robot} */
     this.robot = robot;
 
@@ -56,7 +56,7 @@ class TestBotContext {
    */
   async sendAndWaitForResponse(message, responseType = 'send') {
     const responsePromise = new Promise((done) => {
-      this.robot.adapter.once(responseType, function (_, strings) {
+      this.robot.adapter.once(responseType, (_, strings) => {
         done(strings[0]);
       });
     });
@@ -71,7 +71,7 @@ class TestBotContext {
    */
   async send(message) {
     const id = (Math.random() + 1).toString(36).substring(7);
-    const textMessage = new TextMessage(this.user, "" + message, id);
+    const textMessage = new TextMessage(this.user, `${message}`, id);
 
     if (message.rawMessage) {
       textMessage.rawMessage = message.rawMessage;

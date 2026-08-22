@@ -1,7 +1,25 @@
 /// <reference path="../../types.d.ts"/>
 
 const { GrafanaDashboardRequest } = require('./query/GrafanaDashboardRequest');
+// eslint-disable-next-line no-unused-vars -- used only in the @type {GrafanaClient} JSDoc below
 const { GrafanaClient } = require('../grafana-client');
+
+/**
+ * Formats the title with the provided template map.
+ *
+ * @param {string} title - The title to be formatted.
+ * @param {Record<string, string>} templateMap - The map containing the template values.
+ * @returns {string} - The formatted title.
+ */
+function formatTitleWithTemplate(title, templateMap) {
+  const safeTitle = title || '';
+  return safeTitle.replace(/\$\w+/g, (match) => {
+    if (templateMap[match]) {
+      return templateMap[match];
+    }
+    return match;
+  });
+}
 
 class GrafanaService {
   /**
@@ -24,11 +42,13 @@ class GrafanaService {
   }
 
   /**
-   * Processes the given string and returns an array of screenshot URLs for the requested dashboards.
+   * Processes the given string and returns an array of screenshot URLs for the requested
+   * dashboards.
    *
    * @param {string} str - The string to be processed.
    * @param {number} maxReturnDashboards - The maximum number of dashboard screenshots to return.
-   * @returns {Promise<Array<DashboardChart>|null>} An array of DashboardResponse objects containing the screenshot URLs.
+   * @returns {Promise<Array<DashboardChart>|null>} An array of DashboardResponse objects
+   *   containing the screenshot URLs.
    */
   async process(str, maxReturnDashboards) {
     const request = this.parseToGrafanaDashboardRequest(str);
@@ -48,21 +68,22 @@ class GrafanaService {
   /**
    * Parses a string into a GrafanaDashboardRequest object.
    * @param {string} str - The string to parse.
-   * @returns {GrafanaDashboardResponse.Response|null} - The parsed GrafanaDashboardRequest object, or null if the string cannot be parsed.
+   * @returns {GrafanaDashboardResponse.Response|null} - The parsed GrafanaDashboardRequest
+   *   object, or null if the string cannot be parsed.
    */
   parseToGrafanaDashboardRequest(str) {
-    const match = str.match(/([A-Za-z0-9\-\:_]+)(.*)/);
+    const match = str.match(/([A-Za-z0-9-:_]+)(.*)/);
     if (!match) return null;
 
     const request = new GrafanaDashboardRequest();
-    request.uid = match[1];
+    [, request.uid] = match;
 
     // Parse out a specific panel
-    if (/\:/.test(request.uid)) {
+    if (/:/.test(request.uid)) {
       let parts = request.uid.split(':');
-      request.uid = parts[0];
+      [request.uid] = parts;
       request.visualPanelId = parseInt(parts[1], 10);
-      if (isNaN(request.visualPanelId)) {
+      if (Number.isNaN(request.visualPanelId)) {
         request.visualPanelId = false;
         request.pname = parts[1].toLowerCase();
       }
@@ -90,10 +111,10 @@ class GrafanaService {
           if (partName in request.query) {
             request.query[partName] = partValue;
             continue;
-          } else if (partName == 'from') {
+          } else if (partName === 'from') {
             request.timespan.from = partValue;
             continue;
-          } else if (partName == 'to') {
+          } else if (partName === 'to') {
             request.timespan.to = partValue;
             continue;
           }
@@ -103,11 +124,10 @@ class GrafanaService {
             name: partName,
             value: partValue,
           });
-        } else if (part == 'kiosk') {
+        } else if (part === 'kiosk') {
           request.query.kiosk = true;
-        }
-        // Only add to the timespan if we haven't already filled out from and to
-        else if (timeFields.length > 0) {
+        } else if (timeFields.length > 0) {
+          // Only add to the timespan if we haven't already filled out from and to
           request.timespan[timeFields.shift()] = part.trim();
         }
       }
@@ -136,7 +156,7 @@ class GrafanaService {
   async getDashboardCharts(req, dashboardResponse, maxReturnDashboards) {
     if (!dashboardResponse || dashboardResponse.message) return null;
 
-    let dashboard = dashboardResponse.dashboard;
+    const { dashboard } = dashboardResponse;
 
     if (req.query.kiosk) {
       req.query.apiEndpoint = 'd';
@@ -148,25 +168,27 @@ class GrafanaService {
         req.timespan,
         req.variables
       );
-      const title = dashboard.title;
+      const { title } = dashboard;
 
       const response = { imageUrl, grafanaChartLink, title };
       return [response];
     }
 
     // Support for templated dashboards
-    let templateMap = {};
+    const templateMap = {};
     this.logger.debug(dashboard.templating.list);
     if (dashboard.templating.list) {
       for (const template of Array.from(dashboard.templating.list)) {
         this.logger.debug(template);
 
-        const _param = req.template_params.find((param) => param.name === template.name);
-        templateMap[`$${template.name}`] = _param
-          ? _param.value
-          : template.current
-          ? template.current.text
-          : `$${template.name}`;
+        const matchedParam = req.template_params.find((param) => param.name === template.name);
+        if (matchedParam) {
+          templateMap[`$${template.name}`] = matchedParam.value;
+        } else if (template.current) {
+          templateMap[`$${template.name}`] = template.current.text;
+        } else {
+          templateMap[`$${template.name}`] = `$${template.name}`;
+        }
       }
     }
 
@@ -213,7 +235,7 @@ class GrafanaService {
         responses.push({ imageUrl, grafanaChartLink, title });
 
         // Skip if we have already returned max count of dashboards
-        if (responses.length == maxReturnDashboards) {
+        if (responses.length === maxReturnDashboards) {
           break;
         }
       }
@@ -229,7 +251,7 @@ class GrafanaService {
    * @returns {Promise<string|null>} The UID of the dashboard, or undefined if not found.
    */
   async getUidBySlug(slug) {
-    let client = this.client;
+    const { client } = this;
 
     const pageSize = 5000;
     let page = 1;
@@ -244,14 +266,14 @@ class GrafanaService {
             uid: i.uid,
             slug: i.url.replace(`/d/${i.uid}/`, ''),
           }))
-          .find((x) => x.slug == slug);
+          .find((x) => x.slug === slug);
 
         if (dashboard && dashboard.uid) {
           return dashboard.uid;
         }
 
-        if (items.length != pageSize) break;
-        page++;
+        if (items.length !== pageSize) break;
+        page += 1;
       } catch (err) {
         this.logger.error(err, `Error while getting dashboard on URL: ${url}`);
         return null;
@@ -286,7 +308,7 @@ class GrafanaService {
 
     // check if we can improve the error message
     if (dashboard && dashboard.message === 'Dashboard not found') {
-      let realUid = await this.getUidBySlug(uid);
+      const realUid = await this.getUidBySlug(uid);
       if (realUid) {
         dashboard.message = `Try your query again with \`${realUid}\` instead of \`${uid}\``;
       }
@@ -386,7 +408,7 @@ class GrafanaService {
     };
 
     const alerts = await this.client.get('alerts');
-    if (alerts == null || alerts.length == 0) {
+    if (alerts == null || alerts.length === 0) {
       return result;
     }
 
@@ -396,32 +418,15 @@ class GrafanaService {
       const url = `alerts/${alert.id}/pause`;
       try {
         await this.client.post(url, { paused });
-        result.success++;
+        result.success += 1;
       } catch (err) {
         this.logger.error(err, `Error for URL: ${url}`);
-        result.errored++;
+        result.errored += 1;
       }
     }
 
     return result;
   }
-}
-
-/**
- * Formats the title with the provided template map.
- *
- * @param {string} title - The title to be formatted.
- * @param {Record<string, string>} templateMap - The map containing the template values.
- * @returns {string} - The formatted title.
- */
-function formatTitleWithTemplate(title, templateMap) {
-  title = title || '';
-  return title.replace(/\$\w+/g, (match) => {
-    if (templateMap[match]) {
-      return templateMap[match];
-    }
-    return match;
-  });
 }
 
 exports.GrafanaService = GrafanaService;

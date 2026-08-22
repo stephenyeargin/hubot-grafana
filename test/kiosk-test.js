@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { TestBotContext, createTestBot } = require('./common/TestBot');
 
-describe('retrieve dashboard graphs', function () {
+describe('retrieve dashboard graphs', () => {
   /** @type {TestBotContext} */
   let ctx;
 
@@ -18,7 +18,7 @@ describe('retrieve dashboard graphs', function () {
   });
 
   it('should respond with a single graph in kiosk mode', async () => {
-    let response = await ctx.sendAndWaitForResponse('hubot graf db 000000091 kiosk');
+    const response = await ctx.sendAndWaitForResponse('hubot graf db 000000091 kiosk');
     expect(response).to.eql(
       'Templating showcase: https://play.grafana.org/render/d/000000091/?kiosk&autofitpanels&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/000000091/?from=now-6h&to=now'
     );

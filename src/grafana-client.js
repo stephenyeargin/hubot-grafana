@@ -1,16 +1,16 @@
 'strict';
+
 const { URL, URLSearchParams } = require('url');
 
 /// <reference path="../types.d.ts"/>
 
-  /**
-   * If the given url does not have a host, it will add it to the
-   * url and return it.
-   * @param {string} url the url
-   * @returns {string} the expanded URL.
-   */
+/**
+ * If the given url does not have a host, it will add it to the
+ * url and return it.
+ * @param {string} url the url
+ * @returns {string} the expanded URL.
+ */
 function expandUrl(url, host) {
-
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
@@ -28,6 +28,33 @@ function expandUrl(url, host) {
   apiUrl += url;
 
   return apiUrl;
+}
+
+/**
+ * Create headers for the Grafana request.
+ * @param {string | null} contentType Indicates if the HTTP client should post.
+ * @param {string | false} encoding Indicates if an encoding should be set.
+ * @param {string | null} api_key The API key.
+ * @returns {Record<string, string|null>}
+ */
+function grafanaHeaders(contentType, encoding, api_key) {
+  const headers = { Accept: 'application/json' };
+
+  if (contentType) {
+    headers['Content-Type'] = contentType;
+  }
+
+  // download needs a null encoding
+  // TODO: are we sure?
+  if (encoding !== false) {
+    headers.encoding = encoding;
+  }
+
+  if (api_key) {
+    headers.Authorization = `Bearer ${api_key}`;
+  }
+
+  return headers;
 }
 
 class GrafanaClient {
@@ -111,19 +138,19 @@ class GrafanaClient {
     if (response.headers.has('content-type')) {
       contentType = response.headers.get('content-type');
       if (contentType.includes(';')) {
-        contentType = contentType.split(';')[0];
+        [contentType] = contentType.split(';');
       }
     }
 
-    if (contentType == 'application/json') {
+    if (contentType === 'application/json') {
       const json = await response.json();
       const error = new Error(json.message || 'Error while fetching data from Grafana.');
       error.data = json;
       throw error;
     }
 
-    let error = new Error('Error while fetching data from Grafana.');
-    if (contentType != 'text/html') {
+    const error = new Error('Error while fetching data from Grafana.');
+    if (contentType !== 'text/html') {
       error.data = await response.text();
     }
 
@@ -136,7 +163,7 @@ class GrafanaClient {
    * @returns {Promise<DownloadedFile>}
    */
   async download(url) {
-    let response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: grafanaHeaders(null, null, this.apiKey),
     });
@@ -148,7 +175,7 @@ class GrafanaClient {
 
     return {
       body: Buffer.from(body),
-      contentType: contentType,
+      contentType,
     };
   }
 
@@ -207,40 +234,13 @@ class GrafanaClient {
       url.searchParams.set('tz', query.tz);
     }
 
-    //TODO: currently not tested
+    // TODO: currently not tested
     if (query.orgId) {
       url.searchParams.set('orgId', query.orgId);
     }
 
     return url.toString().replace('kiosk=&', 'kiosk&').replace('autofitpanels=&', 'autofitpanels&');
   }
-}
-
-/**
- * Create headers for the Grafana request.
- * @param {string | null} contentType Indicates if the HTTP client should post.
- * @param {string | false} encoding Indicates if an encoding should be set.
- * @param {string | null} api_key The API key.
- * @returns {Record<string, string|null>}
- */
-function grafanaHeaders(contentType, encoding, api_key) {
-  const headers = { Accept: 'application/json' };
-
-  if (contentType) {
-    headers['Content-Type'] = contentType;
-  }
-
-  // download needs a null encoding
-  // TODO: are we sure?
-  if (encoding !== false) {
-    headers['encoding'] = encoding;
-  }
-
-  if (api_key) {
-    headers.Authorization = `Bearer ${api_key}`;
-  }
-
-  return headers;
 }
 
 exports.GrafanaClient = GrafanaClient;

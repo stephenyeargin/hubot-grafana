@@ -34,7 +34,7 @@ describe('grafana service', () => {
     );
   });
 
-  afterEach(function () {
+  afterEach(() => {
     ctx?.shutdown();
   });
 
@@ -64,10 +64,7 @@ describe('grafana service', () => {
 
   it('should resolve UID by slug', async () => {
     const service = ctx.bot.createService({ robot: ctx.robot });
-    const result = await service.getUidBySlug("the-four-golden-signals");
+    const result = await service.getUidBySlug('the-four-golden-signals');
     expect(result).to.eql('000000109');
   });
-
-
-  
 });

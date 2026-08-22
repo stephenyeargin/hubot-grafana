@@ -1,5 +1,3 @@
-'use strict';
-
 const { Adapter } = require('hubot');
 
 class MockAdapter extends Adapter {
@@ -28,4 +26,4 @@ class MockAdapter extends Adapter {
   }
 }
 
-module.exports = { use: robot => new MockAdapter(robot) };
+module.exports = { use: (robot) => new MockAdapter(robot) };

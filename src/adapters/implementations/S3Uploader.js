@@ -3,6 +3,7 @@
 const crypto = require('crypto');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { Uploader } = require('../Uploader');
+// eslint-disable-next-line no-unused-vars -- imported for the @type {Responder} JSDoc annotation below
 const { Responder } = require('../Responder');
 
 class S3Uploader extends Uploader {
@@ -61,7 +62,12 @@ class S3Uploader extends Uploader {
 
     s3.send(command)
       .then(() => {
-        this.responder.send(res, title, `https://${this.s3_bucket}.s3.${this.s3_region}.amazonaws.com/${params.Key}`, grafanaChartLink);
+        this.responder.send(
+          res,
+          title,
+          `https://${this.s3_bucket}.s3.${this.s3_region}.amazonaws.com/${params.Key}`,
+          grafanaChartLink
+        );
       })
       .catch((s3Err) => {
         this.logger.error(`Upload Error Code: ${s3Err}`);

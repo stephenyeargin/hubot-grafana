@@ -5,6 +5,7 @@ const { SlackResponder } = require('./implementations/SlackResponder');
 const { BearyChatResponder } = require('./implementations/BearyChatResponder');
 const { HipChatResponder } = require('./implementations/HipChatResponder');
 
+// eslint-disable-next-line no-unused-vars -- imported for the @type {Uploader} JSDoc annotation below
 const { Uploader } = require('./Uploader');
 const { S3Uploader } = require('./implementations/S3Uploader');
 const { RocketChatUploader } = require('./implementations/RocketChatUploader');
@@ -60,8 +61,7 @@ class Adapter {
    */
   /** @type {Responder} */
   get responder() {
-
-    if(overrideResponder){
+    if (overrideResponder) {
       return overrideResponder;
     }
 
@@ -93,9 +93,9 @@ class Adapter {
         return new SlackUploader(this.robot, this.robot.logger);
       case 'telegram':
         return new TelegramUploader();
+      default:
+        throw new Error(`Upload not supported for '${this.robot.adapterName}'`);
     }
-
-    throw new Error(`Upload not supported for '${this.robot.adapterName}'`);
   }
 
   /**
@@ -111,15 +111,15 @@ class Adapter {
  * Overrides the responder.
  * @param {Responder} responder The responder to use.
  */
-exports.setResponder = function(responder) {
+exports.setResponder = function setResponder(responder) {
   overrideResponder = responder;
-}
+};
 
 /**
  * Clears the override responder.
  */
-exports.clearResponder = function() {
+exports.clearResponder = function clearResponder() {
   overrideResponder = null;
-}
+};
 
 exports.Adapter = Adapter;

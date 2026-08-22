@@ -19,7 +19,6 @@ class SlackUploader extends Uploader {
 
     /** @type {Hubot.Log} */
     this.logger = logger;
-
   }
 
   /**
@@ -35,12 +34,12 @@ class SlackUploader extends Uploader {
     const channel = res.envelope.room;
 
     try {
-      let options = {
-        filename: title + '.png',
+      const options = {
+        filename: `${title}.png`,
         file: Buffer.from(file.body),
         title: 'dashboard',
         initial_comment: `${title}: ${grafanaChartLink}`,
-        thread_ts: thread_ts,
+        thread_ts,
         channels: channel,
       };
 
