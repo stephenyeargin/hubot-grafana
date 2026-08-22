@@ -1,4 +1,5 @@
 'strict';
+
 class Responder {
   /**
    * Sends the response to Hubot.

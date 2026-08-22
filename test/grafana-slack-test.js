@@ -15,8 +15,9 @@ describe('slack', () => {
        * @param {string} image the URL of the image
        * @param {string} link the title of the link
        */
+      // eslint-disable-next-line no-unused-vars -- overriding Responder.send's signature
       send(res, title, image, link) {
-        res.send('Hiding dashboard: ' + title);
+        res.send(`Hiding dashboard: ${title}`);
       }
     }
 
@@ -31,14 +32,14 @@ describe('slack', () => {
       });
     });
 
-    afterEach(function () {
+    afterEach(() => {
       delete process.env.HUBOT_GRAFANA_S3_BUCKET;
       clearResponder();
       ctx?.shutdown();
     });
 
     it('should respond with an uploaded graph', async () => {
-      let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
+      const response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
       expect(response).to.eql('Hiding dashboard: logins');
     });
   });
@@ -54,13 +55,13 @@ describe('slack', () => {
       });
     });
 
-    afterEach(function () {
+    afterEach(() => {
       delete process.env.HUBOT_GRAFANA_S3_BUCKET;
       ctx?.shutdown();
     });
 
     it('should respond with an uploaded graph', async () => {
-      let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
+      const response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
 
       expect(response).to.be.a('object');
       expect(response).to.have.property('attachments');
@@ -93,13 +94,13 @@ describe('slack', () => {
       });
     });
 
-    afterEach(function () {
+    afterEach(() => {
       delete process.env.HUBOT_GRAFANA_S3_BUCKET;
       ctx?.shutdown();
     });
 
     it('should respond with an uploaded graph', async () => {
-      let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
+      const response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
       expect(response).to.eql(
         'logins - [Upload Error] - https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now'
       );
@@ -107,19 +108,19 @@ describe('slack', () => {
   });
 
   describe('and respond in thread', () => {
-    beforeEach(function () {
+    beforeEach(() => {
       process.env.HUBOT_GRAFANA_USE_THREADS = 1;
     });
 
-    afterEach(function () {
+    afterEach(() => {
       delete process.env.HUBOT_GRAFANA_USE_THREADS;
     });
 
     it('with threaded message', async () => {
-      let responder = new SlackResponder();
-      let resSendResponse = createAwaitableValue();
+      const responder = new SlackResponder();
+      const resSendResponse = createAwaitableValue();
 
-      let res = {
+      const res = {
         message: {
           rawMessage: {
             ts: 42,
@@ -128,14 +129,13 @@ describe('slack', () => {
         send: resSendResponse.set,
       };
 
-      let title = 'logins';
-      let imageUrl = 'https://graf.s3.us-standard.amazonaws.com/grafana/abdcdef0123456789.png';
-      let dashboardUrl = 'https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now';
+      const title = 'logins';
+      const imageUrl = 'https://graf.s3.us-standard.amazonaws.com/grafana/abdcdef0123456789.png';
+      const dashboardUrl = 'https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now';
 
       responder.send(res, title, imageUrl, dashboardUrl);
 
-      let response = await resSendResponse;
-      response = response[0];
+      const [response] = await resSendResponse;
 
       expect(response).to.be.a('object');
       expect(response).to.have.property('attachments');
@@ -174,13 +174,13 @@ describe('slack', () => {
       };
     });
 
-    afterEach(function () {
+    afterEach(() => {
       ctx?.shutdown();
     });
 
     it('should respond with an uploaded graph', async () => {
       await ctx.send('@hubot graf db 97PlYC7Mk:panel-3');
-      let response = await uploadResult;
+      const response = await uploadResult;
 
       expect(response).not.to.be.null;
       expect(response).to.be.of.length(1);
@@ -214,12 +214,12 @@ describe('slack', () => {
       };
     });
 
-    afterEach(function () {
+    afterEach(() => {
       ctx?.shutdown();
     });
 
     it('should respond with an failed message ', async () => {
-      let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
+      const response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
       expect(response).to.eql(
         "logins - [Slack files.upload Error: can't upload file] - https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now"
       );
@@ -227,18 +227,18 @@ describe('slack', () => {
   });
 
   describe('and Slack upload in thread', () => {
-    beforeEach(function () {
+    beforeEach(() => {
       process.env.HUBOT_GRAFANA_USE_THREADS = 1;
     });
 
-    afterEach(function () {
+    afterEach(() => {
       delete process.env.HUBOT_GRAFANA_USE_THREADS;
     });
 
     it('should respond with a threaded message', async () => {
-      let uploadResult = createAwaitableValue();
+      const uploadResult = createAwaitableValue();
 
-      let robot = {
+      const robot = {
         adapter: {
           client: {
             web: {
@@ -255,7 +255,7 @@ describe('slack', () => {
         },
       };
 
-      let res = {
+      const res = {
         message: {
           rawMessage: {
             ts: 42,
@@ -266,9 +266,9 @@ describe('slack', () => {
         },
       };
 
-      let uploader = new SlackUploader(robot, robot.logger);
-      let title = 'logins';
-      let dashboardUrl = 'https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now';
+      const uploader = new SlackUploader(robot, robot.logger);
+      const title = 'logins';
+      const dashboardUrl = 'https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now';
 
       await uploader.upload(
         res,
@@ -280,7 +280,7 @@ describe('slack', () => {
         dashboardUrl
       );
 
-      let response = await uploadResult;
+      const response = await uploadResult;
 
       expect(response).not.to.be.null;
       expect(response).to.be.of.length(1);
@@ -290,7 +290,7 @@ describe('slack', () => {
       expect(response[0].thread_ts).to.eql(42);
       expect(response[0].channels).to.eql('C1337');
       expect(response[0].title).to.equal('dashboard');
-      expect(response[0].filename).to.eql(title + '.png');
+      expect(response[0].filename).to.eql(`${title}.png`);
       expect(response[0].file).not.to.be.null;
     });
   });

@@ -1,4 +1,5 @@
 'strict';
+
 const { Responder } = require('../Responder');
 
 class BearyChatResponder extends Responder {
@@ -12,6 +13,7 @@ class BearyChatResponder extends Responder {
     /** @type {Hubot.Robot} */
     this.robot = robot;
   }
+
   /**
    * Sends the response to Hubot.
    * @param {Hubot.Response} res the context.

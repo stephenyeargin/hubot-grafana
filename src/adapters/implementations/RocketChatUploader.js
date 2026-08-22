@@ -1,4 +1,5 @@
 'strict';
+
 const { Uploader } = require('../Uploader');
 
 class RocketChatUploader extends Uploader {
@@ -24,7 +25,7 @@ class RocketChatUploader extends Uploader {
       !this.rocketchat_url.startsWith('http://') &&
       !this.rocketchat_url.startsWith('https://')
     ) {
-      this.rocketchat_url = `http://${rocketchat_url}`;
+      this.rocketchat_url = `http://${this.rocketchat_url}`;
     }
 
     /** @type {Hubot.Robot} */
@@ -49,7 +50,7 @@ class RocketChatUploader extends Uploader {
     let rocketchatResBodyJson = null;
 
     try {
-      rocketchatResBodyJson = await post(authUrl, authForm);
+      rocketchatResBodyJson = await this.post(authUrl, authForm);
     } catch (err) {
       this.logger.error(err);
       throw new Error('Could not authenticate.');
@@ -73,7 +74,7 @@ class RocketChatUploader extends Uploader {
    *
    * @param {Hubot.Response} res the context.
    * @param {string} title the title of the dashboard.
-   * @param {{ body: Buffer, contentType: string}=>void} file the screenshot.
+   * @param {{ body: Buffer, contentType: string }} file the screenshot.
    * @param {string} grafanaChartLink link to the Grafana chart.
    */
   async upload(res, title, file, grafanaChartLink) {
@@ -81,7 +82,10 @@ class RocketChatUploader extends Uploader {
     try {
       authHeaders = await this.login();
     } catch (ex) {
-      let msg = ex == 'Could not authenticate.' ? "invalid url, user or password/can't access rocketchat api" : ex;
+      const msg =
+        ex.message === 'Could not authenticate.'
+          ? "invalid url, user or password/can't access rocketchat api"
+          : ex.message;
       res.send(`${title} - [Rocketchat auth Error - ${msg}] - ${grafanaChartLink}`);
       return;
     }
@@ -113,7 +117,7 @@ class RocketChatUploader extends Uploader {
 
     if (!body.success) {
       this.logger.error(`rocketchat service error while posting data:${body.error}`);
-      return res.send(`${title} - [Form Error: can't upload file : ${body.error}] - ${grafanaChartLink}`);
+      res.send(`${title} - [Form Error: can't upload file : ${body.error}] - ${grafanaChartLink}`);
     }
   }
 
@@ -121,14 +125,24 @@ class RocketChatUploader extends Uploader {
    * Posts the data data to the specified url and returns JSON.
    * @param {string} url - the URL
    * @param {Record<string, unknown>} formData - formatData
-   * @param {Record<string, string>|null} headers - formatData
+   * @param {Record<string, string>} [headers] - request headers
    * @returns {Promise<unknown>} The deserialized JSON response or an error if something went wrong.
    */
-  async post(url, formData, headers = null) {
+  async post(url, formData, headers) {
+    const body = new FormData();
+    for (const [key, value] of Object.entries(formData)) {
+      if (value && typeof value === 'object' && 'value' in value) {
+        const { value: fileValue, options = {} } = value;
+        body.append(key, new Blob([fileValue], { type: options.contentType }), options.filename);
+      } else {
+        body.append(key, value);
+      }
+    }
+
     const response = await fetch(url, {
       method: 'POST',
-      headers: headers,
-      body: new FormData(formData),
+      headers,
+      body,
     });
 
     if (!response.ok) {
