@@ -64,6 +64,19 @@ class SlackTypingIndicator extends TypingIndicator {
   }
 
   /**
+   * Re-displays the status without touching the start/stop reference count.
+   * Slack clears an Assistant thread's status as soon as a new message is
+   * posted to it, so a command that posts several messages in sequence
+   * (e.g. one per dashboard panel) needs to re-arm the status between each
+   * one to show that more are still coming.
+   * @param {Hubot.Response} res the context.
+   * @param {string} status the status text.
+   */
+  async update(res, status) {
+    await this.setStatus(resolveTarget(res), status);
+  }
+
+  /**
    * Sets the Slack Assistant thread status, if supported. Never throws:
    * this is a nice-to-have enhancement (requires the bot's Slack app to be
    * running in Assistant mode with the right scope), so any failure is

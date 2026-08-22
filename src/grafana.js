@@ -82,7 +82,7 @@ module.exports = (robot) => {
 
     const list = [];
     for (const dashboard of Array.from(shownDashboards)) {
-      list.push(`- ${dashboard.uid}: ${dashboard.title}`);
+      list.push(`- \`${dashboard.uid}\`: ${dashboard.title}`);
     }
 
     if (remaining) {

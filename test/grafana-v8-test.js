@@ -43,7 +43,7 @@ describe('grafana v8', () => {
     it('hubot should respond with a list of dashboards', async () => {
       const response = await ctx.sendAndWaitForResponse('hubot graf list');
       expect(response).to.eql(
-        'Available dashboards:\n- 000000016: 1 -  Time series graphs\n- YI95GyqMz: 1 - New Features in v8.0\n- nP8rcffGk: 2 - New Features in v7.4\n- Zb3f4veGk: 2 - Stats\n- 0KapoFkMk: 3 - New Features in  v7.0\n- OhR1ID6Mk: 3 - Table\n- KIhkVD6Gk: 4 -  Gauges\n- Fbp5uPsZk: 4 - New Features in v6.6\n- ktMs4D6Mk: 5 - Bar charts and pie charts\n- ZvPm55mWk: 5 - New Features in v6.3\n- 2ZvPm55mWk: 6 - New Features in v6.2\n- qD-rVv6Mz: 6 - State timeline and Status history\n- fMyjY3R7z: Accessibility\n- 000000052: Advanced Layout\n- 4QfoqzGZk: Alert on multiple series\n- 000000074: Alerting\n- 000000019: Annotations\n- 000000010: Annotations\n- jA2cBIi7z: Annotations Copy\n- 1o-mceRnk: bar chart no room for value\n- vmie2cmWz: Bar Gauge\n- 000000045: Big Dashboard\n- 000000003: Big Dashboard Small\n- 000000079: Big Dashboard Theme\n (and 115 more)'
+        'Available dashboards:\n- `000000016`: 1 -  Time series graphs\n- `YI95GyqMz`: 1 - New Features in v8.0\n- `nP8rcffGk`: 2 - New Features in v7.4\n- `Zb3f4veGk`: 2 - Stats\n- `0KapoFkMk`: 3 - New Features in  v7.0\n- `OhR1ID6Mk`: 3 - Table\n- `KIhkVD6Gk`: 4 -  Gauges\n- `Fbp5uPsZk`: 4 - New Features in v6.6\n- `ktMs4D6Mk`: 5 - Bar charts and pie charts\n- `ZvPm55mWk`: 5 - New Features in v6.3\n- `2ZvPm55mWk`: 6 - New Features in v6.2\n- `qD-rVv6Mz`: 6 - State timeline and Status history\n- `fMyjY3R7z`: Accessibility\n- `000000052`: Advanced Layout\n- `4QfoqzGZk`: Alert on multiple series\n- `000000074`: Alerting\n- `000000019`: Annotations\n- `000000010`: Annotations\n- `jA2cBIi7z`: Annotations Copy\n- `1o-mceRnk`: bar chart no room for value\n- `vmie2cmWz`: Bar Gauge\n- `000000045`: Big Dashboard\n- `000000003`: Big Dashboard Small\n- `000000079`: Big Dashboard Theme\n (and 115 more)'
       );
     });
   });
@@ -59,7 +59,7 @@ describe('grafana v8', () => {
     it('hubot should respond with a list of dashboards with tag', async () => {
       const response = await ctx.sendAndWaitForResponse('hubot graf list demo');
       expect(response).to.eql(
-        'Dashboards tagged `demo`:\n- 000000016: 1 -  Time series graphs\n- Zb3f4veGk: 2 - Stats\n- OhR1ID6Mk: 3 - Table\n- KIhkVD6Gk: 4 -  Gauges\n- ktMs4D6Mk: 5 - Bar charts and pie charts\n- qD-rVv6Mz: 6 - State timeline and Status history\n- 000000074: Alerting\n- 000000010: Annotations\n- vmie2cmWz: Bar Gauge\n- 3SWXxreWk: Grafana Dashboard\n- 37Dq903mk: Graph Gradient Area Fills\n- iRY1K9VZk: Lazy Loading\n- 6NmftOxZz: Logs Panel\n- 000000100: Mixed Datasources\n- U_bZIMRMk: Table Panel Showcase\n- 000000056: Templated dynamic dashboard\n- 000000109: The Four Golden Signals\n- 000000167: Threshold example\n- 000000041: Time range override'
+        'Dashboards tagged `demo`:\n- `000000016`: 1 -  Time series graphs\n- `Zb3f4veGk`: 2 - Stats\n- `OhR1ID6Mk`: 3 - Table\n- `KIhkVD6Gk`: 4 -  Gauges\n- `ktMs4D6Mk`: 5 - Bar charts and pie charts\n- `qD-rVv6Mz`: 6 - State timeline and Status history\n- `000000074`: Alerting\n- `000000010`: Annotations\n- `vmie2cmWz`: Bar Gauge\n- `3SWXxreWk`: Grafana Dashboard\n- `37Dq903mk`: Graph Gradient Area Fills\n- `iRY1K9VZk`: Lazy Loading\n- `6NmftOxZz`: Logs Panel\n- `000000100`: Mixed Datasources\n- `U_bZIMRMk`: Table Panel Showcase\n- `000000056`: Templated dynamic dashboard\n- `000000109`: The Four Golden Signals\n- `000000167`: Threshold example\n- `000000041`: Time range override'
       );
     });
   });
@@ -75,7 +75,7 @@ describe('grafana v8', () => {
     it('hubot should respond with a matching dashboard', async () => {
       const response = await ctx.sendAndWaitForResponse('hubot graf search elasticsearch');
       expect(response).to.eql(
-        'Dashboards matching `elasticsearch`:\n- 000000030: ElasticSearch - Custom Templated query\n- VzxU55SWk: Elasticsearch Bar Gauge\n- 000000069: Elasticsearch Derivative\n- 000000014: Elasticsearch Metrics\n- 000000107: Elasticsearch Metrics Filter\n- 000000149: Elasticsearch query filter\n- CknOEXDMk: Elasticsearch Templated\n- uQRtuCoGz: Prometheus, InfluxDB, Elasticsearch DS Trends'
+        'Dashboards matching `elasticsearch`:\n- `000000030`: ElasticSearch - Custom Templated query\n- `VzxU55SWk`: Elasticsearch Bar Gauge\n- `000000069`: Elasticsearch Derivative\n- `000000014`: Elasticsearch Metrics\n- `000000107`: Elasticsearch Metrics Filter\n- `000000149`: Elasticsearch query filter\n- `CknOEXDMk`: Elasticsearch Templated\n- `uQRtuCoGz`: Prometheus, InfluxDB, Elasticsearch DS Trends'
       );
     });
   });

@@ -91,7 +91,13 @@ class Bot {
         return;
       }
 
-      for (const chart of charts) {
+      const indicator = this.adapter.typingIndicator;
+      for (const [index, chart] of charts.entries()) {
+        // Slack clears the Assistant thread status as soon as a message
+        // posts, so re-arm it before each panel to show more are coming.
+        if (charts.length > 1) {
+          await indicator.update(context, `is fetching image ${index + 1} of ${charts.length}...`);
+        }
         await this.sendDashboardChart(context, chart);
       }
     });

@@ -140,5 +140,26 @@ describe('typing indicator', () => {
       await indicator.stop(res);
       expect(calls.map((c) => c.status)).to.eql(['is fetching dashboard...', 'is searching dashboards...', '']);
     });
+
+    it('update() re-displays the status without touching the start/stop reference count', async () => {
+      const calls = [];
+      const indicator = new SlackTypingIndicator(
+        fakeRobot(async (opts) => calls.push(opts)),
+        fakeLogger()
+      );
+      const res = fakeContext({ room: 'C7', ts: '7.001' });
+
+      await indicator.start(res, 'is fetching dashboard...');
+      await indicator.update(res, 'is fetching image 1 of 2...');
+      await indicator.update(res, 'is fetching image 2 of 2...');
+      await indicator.stop(res);
+
+      expect(calls.map((c) => c.status)).to.eql([
+        'is fetching dashboard...',
+        'is fetching image 1 of 2...',
+        'is fetching image 2 of 2...',
+        '',
+      ]);
+    });
   });
 });

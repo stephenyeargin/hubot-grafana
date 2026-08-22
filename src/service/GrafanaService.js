@@ -211,6 +211,13 @@ class GrafanaService {
           continue;
         }
 
+        // Skip panels Grafana never assigned an ID (e.g. some stat/text
+        // panels); they can't be rendered individually via d-solo and
+        // would otherwise come back as a "Panel not found" screenshot.
+        if (panel.id == null) {
+          continue;
+        }
+
         // Skip if API panel ID was specified and didn't match
         if (req.apiPanelId && req.apiPanelId !== panel.id) {
           continue;
