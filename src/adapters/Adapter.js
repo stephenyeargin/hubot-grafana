@@ -12,6 +12,9 @@ const { RocketChatUploader } = require('./implementations/RocketChatUploader');
 const { TelegramUploader } = require('./implementations/TelegramUploader');
 const { SlackUploader } = require('./implementations/SlackUploader');
 
+const { TypingIndicator } = require('./TypingIndicator');
+const { SlackTypingIndicator } = require('./implementations/SlackTypingIndicator');
+
 /**
  * The override responder is used to override the default responder.
  * This can be used to inject a custom responder to influence the message formatting.
@@ -104,6 +107,19 @@ class Adapter {
    */
   isUploadSupported() {
     return this.site !== '';
+  }
+
+  /**
+   * The typing indicator shows a (platform specific) "working" status while
+   * a command is being processed. Adapters that don't support this no-op.
+   */
+  /** @type {TypingIndicator} */
+  get typingIndicator() {
+    if (/slack/i.test(this.robot.adapterName)) {
+      return new SlackTypingIndicator(this.robot, this.robot.logger);
+    }
+
+    return new TypingIndicator();
   }
 }
 

@@ -56,7 +56,7 @@ describe('per room configuration', () => {
 
       const response2 = await ctx.sendAndWaitForResponse('hubot graf list demo');
       expect(response2).to.eql(
-        'Dashboards tagged `demo`:\n- 000000016: 1 -  Time series graphs\n- Zb3f4veGk: 2 - Stats\n- OhR1ID6Mk: 3 - Table\n- KIhkVD6Gk: 4 -  Gauges\n- ktMs4D6Mk: 5 - Bar charts and pie charts\n- qD-rVv6Mz: 6 - State timeline and Status history\n- 000000074: Alerting\n- 000000010: Annotations\n- vmie2cmWz: Bar Gauge\n- 3SWXxreWk: Grafana Dashboard\n- 37Dq903mk: Graph Gradient Area Fills\n- iRY1K9VZk: Lazy Loading\n- 6NmftOxZz: Logs Panel\n- 000000100: Mixed Datasources\n- U_bZIMRMk: Table Panel Showcase\n- 000000056: Templated dynamic dashboard\n- 000000109: The Four Golden Signals\n- 000000167: Threshold example\n- 000000041: Time range override'
+        'Dashboards tagged `demo`:\n- `000000016`: 1 -  Time series graphs\n- `Zb3f4veGk`: 2 - Stats\n- `OhR1ID6Mk`: 3 - Table\n- `KIhkVD6Gk`: 4 -  Gauges\n- `ktMs4D6Mk`: 5 - Bar charts and pie charts\n- `qD-rVv6Mz`: 6 - State timeline and Status history\n- `000000074`: Alerting\n- `000000010`: Annotations\n- `vmie2cmWz`: Bar Gauge\n- `3SWXxreWk`: Grafana Dashboard\n- `37Dq903mk`: Graph Gradient Area Fills\n- `iRY1K9VZk`: Lazy Loading\n- `6NmftOxZz`: Logs Panel\n- `000000100`: Mixed Datasources\n- `U_bZIMRMk`: Table Panel Showcase\n- `000000056`: Templated dynamic dashboard\n- `000000109`: The Four Golden Signals\n- `000000167`: Threshold example\n- `000000041`: Time range override'
       );
     });
   });

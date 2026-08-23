@@ -60,7 +60,8 @@ class S3Uploader extends Uploader {
     };
     const command = new PutObjectCommand(params);
 
-    s3.send(command)
+    return s3
+      .send(command)
       .then(() => {
         this.responder.send(
           res,
