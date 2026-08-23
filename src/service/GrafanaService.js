@@ -356,18 +356,57 @@ class GrafanaService {
   }
 
   /**
+   * Grafana 9+ removed the legacy alerting API (`/api/alerts`) once unified
+   * alerting became mandatory. `err.status === 404` on that endpoint is the
+   * best signal we have that we're talking to a unified-alerting-only
+   * instance, so callers use it to fall back to the provisioning API.
+   * @param {{status?: number}} err
+   * @returns {boolean}
+   */
+  isLegacyAlertingUnavailable(err) {
+    return err.status === 404;
+  }
+
+  /**
    *
    * @param {string} state
-   * @returns {Promise<Array<{ name: string, id: number, state: string, newStateDate?: string, executionError?: string >|null}>}
+   * @returns {Promise<Array<{ name: string, id: number|string, state: string, newStateDate?: string, executionError?: string >|null}>}
    */
   async queryAlerts(state) {
-    let url = 'alerts';
-    if (state) {
-      url = `alerts?state=${state}`;
-    }
+    const url = state ? `alerts?state=${state}` : 'alerts';
     try {
       const result = await this.client.get(url);
       return result;
+    } catch (err) {
+      if (this.isLegacyAlertingUnavailable(err)) {
+        return this.queryUnifiedAlerts(state);
+      }
+      this.logger.error(err, `Error while getting alerts on URL: ${url}`);
+      return null;
+    }
+  }
+
+  /**
+   * Lists alert rules via the unified alerting provisioning API, used as a
+   * fallback once the legacy alerting API is gone. Unlike the legacy API,
+   * there's no runtime firing/pending/ok state available here -- only
+   * whether the rule is paused -- so `state` is matched against
+   * `paused`/`active` rather than the old alert states.
+   * @param {string} state
+   * @returns {Promise<Array<{ name: string, id: string, state: string }>|null>}
+   */
+  async queryUnifiedAlerts(state) {
+    const url = 'v1/provisioning/alert-rules';
+    try {
+      const rules = await this.client.get(url);
+      const alerts = Array.from(rules).map((rule) => ({
+        id: rule.uid,
+        name: rule.title,
+        state: rule.isPaused ? 'paused' : 'active',
+      }));
+
+      if (!state) return alerts;
+      return alerts.filter((alert) => alert.state === state.trim().toLowerCase());
     } catch (err) {
       this.logger.error(err, `Error while getting alerts on URL: ${url}`);
       return null;
@@ -389,6 +428,29 @@ class GrafanaService {
       this.logger.debug(result);
       return result.message;
     } catch (err) {
+      if (this.isLegacyAlertingUnavailable(err)) {
+        return this.pauseSingleUnifiedAlert(alertId, paused);
+      }
+      this.logger.error(err, `Error for URL: ${url}`);
+      return null;
+    }
+  }
+
+  /**
+   * Pauses or resumes a single alert rule via the unified alerting
+   * provisioning API. `alertId` here is the rule's uid, not a numeric ID.
+   * @param {string} uid - The uid of the alert rule to pause or resume.
+   * @param {boolean} paused - Indicates whether to pause or resume the rule.
+   * @returns {Promise<string|null>} - The result message if successful, or null if an error occurred.
+   */
+  async pauseSingleUnifiedAlert(uid, paused) {
+    const url = `v1/provisioning/alert-rules/${uid}`;
+
+    try {
+      const rule = await this.client.get(url);
+      await this.client.put(url, { ...rule, isPaused: paused });
+      return `Alert rule \`${rule.title}\` ${paused ? 'paused' : 'un-paused'}.`;
+    } catch (err) {
       this.logger.error(err, `Error for URL: ${url}`);
       return null;
     }
@@ -407,7 +469,17 @@ class GrafanaService {
       success: 0,
     };
 
-    const alerts = await this.client.get('alerts');
+    let alerts;
+    try {
+      alerts = await this.client.get('alerts');
+    } catch (err) {
+      if (this.isLegacyAlertingUnavailable(err)) {
+        return this.pauseAllUnifiedAlerts(paused);
+      }
+      this.logger.error(err, 'Error while getting alerts on URL: alerts');
+      return result;
+    }
+
     if (alerts == null || alerts.length === 0) {
       return result;
     }
@@ -421,6 +493,48 @@ class GrafanaService {
         result.success += 1;
       } catch (err) {
         this.logger.error(err, `Error for URL: ${url}`);
+        result.errored += 1;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Pauses or resumes all alert rules via the unified alerting provisioning
+   * API, used as a fallback once the legacy alerting API is gone.
+   * @param {boolean} paused - Indicates whether to pause or resume the rules.
+   * @returns {Promise<{total: number, errored: number, success: number}>}
+   */
+  async pauseAllUnifiedAlerts(paused) {
+    const result = {
+      total: 0,
+      errored: 0,
+      success: 0,
+    };
+
+    const url = 'v1/provisioning/alert-rules';
+    let rules;
+    try {
+      rules = await this.client.get(url);
+    } catch (err) {
+      this.logger.error(err, `Error while getting alerts on URL: ${url}`);
+      return result;
+    }
+
+    if (rules == null || rules.length === 0) {
+      return result;
+    }
+
+    result.total = rules.length;
+
+    for (const rule of Array.from(rules)) {
+      const ruleUrl = `v1/provisioning/alert-rules/${rule.uid}`;
+      try {
+        await this.client.put(ruleUrl, { ...rule, isPaused: paused });
+        result.success += 1;
+      } catch (err) {
+        this.logger.error(err, `Error for URL: ${ruleUrl}`);
         result.errored += 1;
       }
     }

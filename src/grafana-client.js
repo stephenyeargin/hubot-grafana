@@ -125,6 +125,27 @@ class GrafanaClient {
   }
 
   /**
+   * Performs a PUT call to the Grafana API.
+   *
+   * @param {string} url The API sub URL
+   * @param {Record<string, unknown>} data The data that will be sent.
+   * @returns {Promise<unknown>}
+   */
+  async put(url, data) {
+    const fullUrl = expandUrl(url, this.host);
+    const response = await fetch(fullUrl, {
+      method: 'PUT',
+      headers: grafanaHeaders('application/json', false, this.apiKey),
+      body: JSON.stringify(data),
+    });
+
+    await this.throwIfNotOk(response);
+
+    const json = await response.json();
+    return json;
+  }
+
+  /**
    * Ensures that the response is OK. If the response is not OK, an error is thrown.
    * @param {fetch.Response} response - The response object.
    * @throws {Error} If the response is not OK, an error with the response text is thrown.
@@ -145,11 +166,13 @@ class GrafanaClient {
     if (contentType === 'application/json') {
       const json = await response.json();
       const error = new Error(json.message || 'Error while fetching data from Grafana.');
+      error.status = response.status;
       error.data = json;
       throw error;
     }
 
     const error = new Error('Error while fetching data from Grafana.');
+    error.status = response.status;
     if (contentType !== 'text/html') {
       error.data = await response.text();
     }
