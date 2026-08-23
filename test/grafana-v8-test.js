@@ -338,4 +338,75 @@ describe('grafana v8', () => {
       expect(response).to.eql('Successfully tried to unpause *1* alerts.\n' + '*Success: 1*\n' + '*Errored: 0*');
     });
   });
+
+  describe('ask hubot for list of alerts when legacy alerting is unavailable', () => {
+    beforeEach(async () => {
+      ctx.nock('https://play.grafana.org').get('/api/alerts').reply(404, { message: 'Not found' });
+
+      ctx
+        .nock('https://play.grafana.org')
+        .get('/api/v1/provisioning/alert-rules')
+        .reply(200, [
+          { uid: 'abc123', title: 'CPU high', isPaused: false },
+          { uid: 'def456', title: 'Disk full', isPaused: true },
+        ]);
+    });
+
+    it('hubot should fall back to the unified alerting provisioning API', async () => {
+      const response = await ctx.sendAndWaitForResponse('hubot graf alerts');
+      expect(response).to.eql('All alerts:\n- *CPU high* (abc123): `active`\n- *Disk full* (def456): `paused`');
+    });
+  });
+
+  describe('ask hubot to pause an alert when legacy alerting is unavailable', () => {
+    beforeEach(async () => {
+      ctx.nock('https://play.grafana.org').post('/api/alerts/abc123/pause', { paused: true }).reply(404, {
+        message: 'Not found',
+      });
+
+      ctx
+        .nock('https://play.grafana.org')
+        .get('/api/v1/provisioning/alert-rules/abc123')
+        .reply(200, { uid: 'abc123', title: 'CPU high', isPaused: false });
+
+      ctx
+        .nock('https://play.grafana.org')
+        .put('/api/v1/provisioning/alert-rules/abc123', { uid: 'abc123', title: 'CPU high', isPaused: true })
+        .reply(200, { uid: 'abc123', title: 'CPU high', isPaused: true });
+    });
+
+    it('hubot should fall back to pausing the alert rule via the provisioning API', async () => {
+      const response = await ctx.sendAndWaitForResponse('hubot graf pause alert abc123');
+      expect(response).to.eql('Alert rule `CPU high` paused.');
+    });
+  });
+
+  describe('ask hubot to pause all alerts when legacy alerting is unavailable', () => {
+    beforeEach(async () => {
+      ctx.nock('https://play.grafana.org').get('/api/alerts').reply(404, { message: 'Not found' });
+
+      ctx
+        .nock('https://play.grafana.org')
+        .get('/api/v1/provisioning/alert-rules')
+        .reply(200, [
+          { uid: 'abc123', title: 'CPU high', isPaused: false },
+          { uid: 'def456', title: 'Disk full', isPaused: false },
+        ]);
+
+      ctx
+        .nock('https://play.grafana.org')
+        .put('/api/v1/provisioning/alert-rules/abc123', { uid: 'abc123', title: 'CPU high', isPaused: true })
+        .reply(200, { uid: 'abc123', title: 'CPU high', isPaused: true });
+
+      ctx
+        .nock('https://play.grafana.org')
+        .put('/api/v1/provisioning/alert-rules/def456', { uid: 'def456', title: 'Disk full', isPaused: true })
+        .reply(200, { uid: 'def456', title: 'Disk full', isPaused: true });
+    });
+
+    it('hubot should fall back to pausing all alert rules via the provisioning API', async () => {
+      const response = await ctx.sendAndWaitForResponse('hubot graf pause all alerts');
+      expect(response).to.eql('Successfully tried to pause *2* alerts.\n' + '*Success: 2*\n' + '*Errored: 0*');
+    });
+  });
 });

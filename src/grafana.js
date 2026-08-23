@@ -35,6 +35,13 @@
 //     hubot-slack: 4.0+
 //     @hubot-friends/hubot-slack: 1.0+
 //
+//   Alert commands try the legacy alerting API first, then fall back to the
+//   unified alerting provisioning API (Grafana 9+, where legacy alerting was
+//   removed). Under the fallback, alert IDs are rule uids (not numeric), and
+//   `hubot graf alerts <state>` matches `paused`/`active` rather than the
+//   legacy alerting/ok/no_data states, since unified alerting doesn't expose
+//   runtime firing state through this API.
+//
 // Commands:
 //   hubot graf set `[host|api_key]` <value> - Setup Grafana host or API key
 //   hubot graf db <dashboard uid>[:<panel id>][ <template variables>][ <from clause>][ <to clause>] - Show grafana dashboard graphs
@@ -181,7 +188,9 @@ module.exports = (robot) => {
   });
 
   // Pause/unpause an alert
-  robot.respond(/(?:grafana|graph|graf) (unpause|pause)\salert\s(\d+)/i, async (msg) => {
+  // <id> is a numeric ID under the legacy alerting API, or an alert rule
+  // uid (alphanumeric) under unified alerting.
+  robot.respond(/(?:grafana|graph|graf) (unpause|pause)\salert\s([A-Za-z0-9-]+)/i, async (msg) => {
     const service = bot.createService(msg);
     if (!service) return;
 
