@@ -9,6 +9,8 @@ class Uploader {
    * @param {({ body: Buffer, contentType: string})} file request for getting the screenshot.
    * @param {string} grafanaChartLink link to the Grafana chart.
    */
+  // Subclasses implement the upload interface; the base method reports unsupported uploads.
+  // eslint-disable-next-line no-unused-vars
   upload(res, title, file, grafanaChartLink) {
     throw new Error('Not supported');
   }

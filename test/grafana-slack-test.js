@@ -1,6 +1,7 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { createTestBot, TestBotContext, createAwaitableValue } = require('./common/TestBot');
+const { createTestBot, createAwaitableValue } = require('./common/TestBot');
+/** @typedef {import('./common/TestBot').TestBotContext} TestBotContext */
 const { SlackResponder } = require('../src/adapters/implementations/SlackResponder');
 const { SlackUploader } = require('../src/adapters/implementations/SlackUploader');
 const { setResponder, clearResponder } = require('../src/adapters/Adapter');
@@ -16,7 +17,7 @@ describe('slack', () => {
        * @param {string} image the URL of the image
        * @param {string} link the title of the link
        */
-      send(res, title, image, link) {
+      send(res, title) {
         res.send('Hiding dashboard: ' + title);
       }
     }
@@ -39,7 +40,7 @@ describe('slack', () => {
     });
 
     it('should respond with an uploaded graph', async () => {
-      let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
+      const response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
       assert.equal(response, 'Hiding dashboard: logins');
     });
   });
@@ -61,7 +62,7 @@ describe('slack', () => {
     });
 
     it('should respond with an uploaded graph', async () => {
-      let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
+      const response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
 
       assert.notEqual(response, null);
       assert.equal(typeof response, 'object');
@@ -101,7 +102,7 @@ describe('slack', () => {
     });
 
     it('should respond with an uploaded graph', async () => {
-      let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
+      const response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
       assert.equal(response,
         'logins - [Upload Error] - https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now'
       );
@@ -118,10 +119,10 @@ describe('slack', () => {
     });
 
     it('with threaded message', async () => {
-      let responder = new SlackResponder();
-      let resSendResponse = createAwaitableValue();
+      const responder = new SlackResponder();
+      const resSendResponse = createAwaitableValue();
 
-      let res = {
+      const res = {
         message: {
           rawMessage: {
             ts: 42,
@@ -130,9 +131,9 @@ describe('slack', () => {
         send: resSendResponse.set,
       };
 
-      let title = 'logins';
-      let imageUrl = 'https://graf.s3.us-standard.amazonaws.com/grafana/abdcdef0123456789.png';
-      let dashboardUrl = 'https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now';
+      const title = 'logins';
+      const imageUrl = 'https://graf.s3.us-standard.amazonaws.com/grafana/abdcdef0123456789.png';
+      const dashboardUrl = 'https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now';
 
       responder.send(res, title, imageUrl, dashboardUrl);
 
@@ -183,7 +184,7 @@ describe('slack', () => {
 
     it('should respond with an uploaded graph', async () => {
       await ctx.send('@hubot graf db 97PlYC7Mk:panel-3');
-      let response = await uploadResult;
+      const response = await uploadResult;
 
       assert.notEqual(response, null);
       assert.equal(response.length, 1);
@@ -222,7 +223,7 @@ describe('slack', () => {
     });
 
     it('should respond with an failed message ', async () => {
-      let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
+      const response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
       assert.equal(response,
         "logins - [Slack files.upload Error: can't upload file] - https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now"
       );
@@ -239,9 +240,9 @@ describe('slack', () => {
     });
 
     it('should respond with a threaded message', async () => {
-      let uploadResult = createAwaitableValue();
+      const uploadResult = createAwaitableValue();
 
-      let robot = {
+      const robot = {
         adapter: {
           client: {
             web: {
@@ -258,7 +259,7 @@ describe('slack', () => {
         },
       };
 
-      let res = {
+      const res = {
         message: {
           rawMessage: {
             ts: 42,
@@ -269,9 +270,9 @@ describe('slack', () => {
         },
       };
 
-      let uploader = new SlackUploader(robot, robot.logger);
-      let title = 'logins';
-      let dashboardUrl = 'https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now';
+      const uploader = new SlackUploader(robot, robot.logger);
+      const title = 'logins';
+      const dashboardUrl = 'https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now';
 
       await uploader.upload(
         res,
@@ -283,7 +284,7 @@ describe('slack', () => {
         dashboardUrl
       );
 
-      let response = await uploadResult;
+      const response = await uploadResult;
 
       assert.notEqual(response, null);
       assert.equal(response.length, 1);

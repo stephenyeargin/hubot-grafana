@@ -116,15 +116,15 @@ class GrafanaClient {
       }
     }
 
-    if (contentType == 'application/json') {
+    if (contentType === 'application/json') {
       const json = await response.json();
       const error = new Error(json.message || 'Error while fetching data from Grafana.');
       error.data = json;
       throw error;
     }
 
-    let error = new Error('Error while fetching data from Grafana.');
-    if (contentType != 'text/html') {
+    const error = new Error('Error while fetching data from Grafana.');
+    if (contentType !== 'text/html') {
       error.data = await response.text();
     }
 
@@ -137,7 +137,7 @@ class GrafanaClient {
    * @returns {Promise<DownloadedFile>}
    */
   async download(url) {
-    let response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: grafanaHeaders(null, null, this.apiKey),
     });

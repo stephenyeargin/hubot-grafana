@@ -1,6 +1,7 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { createTestBot, TestBotContext } = require('./common/TestBot');
+const { createTestBot } = require('./common/TestBot');
+/** @typedef {import('./common/TestBot').TestBotContext} TestBotContext */
 
 describe('grafana service', () => {
   /** @type {TestBotContext} */
@@ -67,6 +68,21 @@ describe('grafana service', () => {
     const service = ctx.bot.createService({ robot: ctx.robot });
     const result = await service.getUidBySlug("the-four-golden-signals");
     assert.equal(result, '000000109');
+  });
+
+  it('should log failed searches and return null', async () => {
+    const error = new Error('Grafana unavailable');
+    const loggedErrors = [];
+    const service = ctx.bot.createService({ robot: ctx.robot });
+    service.client.get = async () => { throw error; };
+    service.logger = {
+      debug: () => {},
+      error: (...args) => loggedErrors.push(args),
+    };
+
+    assert.equal(await service.search('cpu'), null);
+    assert.equal(loggedErrors[0][0], error);
+    assert.match(loggedErrors[0][1], /Error while searching dashboards/);
   });
 
 

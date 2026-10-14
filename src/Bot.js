@@ -42,7 +42,7 @@ class Bot {
       return null;
     }
 
-    let client = new GrafanaClient(robot.logger, host, apiKey);
+    const client = new GrafanaClient(robot.logger, host, apiKey);
     return new GrafanaService(client);
   }
 
@@ -84,7 +84,7 @@ class Bot {
       return this.sendError('Could not locate desired panel.', context);
     }
 
-    for (let chart of charts) {
+    for (const chart of charts) {
       await this.sendDashboardChart(context, chart);
     }
   }
@@ -106,7 +106,7 @@ class Bot {
     if (service == null) return;
 
     /** @type {DownloadedFile|null} */
-    let file = null;
+    let file;
 
     try {
       file = await service.client.download(dashboard.imageUrl);

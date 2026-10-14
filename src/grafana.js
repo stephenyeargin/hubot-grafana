@@ -73,7 +73,7 @@ module.exports = (robot) => {
   });
 
   // Get a specific dashboard with options
-  robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-\:_]+)(.*)?/i, (context) => {
+  robot.respond(/(?:grafana|graph|graf) (?:dash|dashboard|db) ([A-Za-z0-9\-:_]+)(.*)?/i, (context) => {
     let str = context.match[1];
     if (context.match[2]) {
       str += ' ' + context.match[2];
@@ -176,7 +176,7 @@ module.exports = (robot) => {
     const command = msg.match[1];
     const paused = command === 'pause';
     service.pauseAllAlerts(paused).then((result) => {
-      if (result.total == 0) return;
+      if (result.total === 0) return;
       msg.send(
         `Successfully tried to ${command} *${result.total}* alerts.\n*Success: ${result.success}*\n*Errored: ${result.errored}*`
       );

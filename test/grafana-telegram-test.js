@@ -1,6 +1,7 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { createTestBot, TestBotContext, createAwaitableValue } = require('./common/TestBot');
+const { createTestBot, createAwaitableValue } = require('./common/TestBot');
+/** @typedef {import('./common/TestBot').TestBotContext} TestBotContext */
 const { TelegramUploader } = require('../src/adapters/implementations/TelegramUploader');
 
 describe('telegram', () => {
@@ -34,9 +35,9 @@ describe('telegram', () => {
     // to Mock the Response object.
 
     it('should respond with an uploaded graph', async () => {
-      let uploader = new TelegramUploader();
-      let sendPhotoResult = createAwaitableValue();
-      let res = {
+      const uploader = new TelegramUploader();
+      const sendPhotoResult = createAwaitableValue();
+      const res = {
         sendPhoto: sendPhotoResult.set,
         envelope: {
           room: '#mocha',
@@ -53,7 +54,7 @@ describe('telegram', () => {
         'https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now'
       );
 
-      var result = await sendPhotoResult;
+      const result = await sendPhotoResult;
 
       assert.equal(result.length, 3);
       assert.equal(result[0], '#mocha');

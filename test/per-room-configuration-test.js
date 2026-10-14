@@ -1,6 +1,7 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { createTestBot, TestBotContext } = require('./common/TestBot');
+const { createTestBot } = require('./common/TestBot');
+/** @typedef {import('./common/TestBot').TestBotContext} TestBotContext */
 
 describe('per room configuration', () => {
   /** @type {TestBotContext} */
@@ -18,28 +19,28 @@ describe('per room configuration', () => {
 
   describe('ensure configuration listener is registered', () =>
     it('register configuration listener', function () {
-      let regexes = ctx.robot.listeners.map((x) => x.regex.toString());
+      const regexes = ctx.robot.listeners.map((x) => x.regex.toString());
       assert.ok(regexes.includes('/^\\s*[@]?hubot[:,]?\\s*(?:(?:grafana|graph|graf) set (host|api_key) (.+))/i'));
     })
   );
 
   describe('ask hubot to configure grafana host', () => {
     it('hubot should respond it has configured the host', async () => {
-      let response = await ctx.sendAndWaitForResponse('hubot graf set host https://play.grafana.org');
+      const response = await ctx.sendAndWaitForResponse('hubot graf set host https://play.grafana.org');
       assert.equal(response, 'Value set for host');
     })
   });
 
   describe('ask hubot to configure grafana api_key', () => {
     it('hubot should respond it has configured the api_key', async () => {
-      let response = await ctx.sendAndWaitForResponse('hubot graf set api_key AABBCC');
+      const response = await ctx.sendAndWaitForResponse('hubot graf set api_key AABBCC');
       assert.equal(response, 'Value set for api_key');
     })
   });
 
   describe('ask hubot to list dashboards filterd by tag', () => {
     it('hubot should respond that grafana endpoint is not configured', async () => {
-      let response = await ctx.sendAndWaitForResponse('hubot graf list demo');
+      const response = await ctx.sendAndWaitForResponse('hubot graf list demo');
       assert.equal(response, 'No Grafana endpoint configured.');
     })
   })
@@ -53,10 +54,10 @@ describe('per room configuration', () => {
 
     it('hubot should respond that grafana is configured and then with a list of dashboards with tag', async () => {
 
-      let response1 = await ctx.sendAndWaitForResponse('hubot graf set host https://play.grafana.org');
+      const response1 = await ctx.sendAndWaitForResponse('hubot graf set host https://play.grafana.org');
       assert.equal(response1, 'Value set for host');
 
-      let response2 = await ctx.sendAndWaitForResponse('hubot graf list demo');
+      const response2 = await ctx.sendAndWaitForResponse('hubot graf list demo');
       assert.equal(response2, 'Dashboards tagged `demo`:\n- 000000016: 1 -  Time series graphs\n- Zb3f4veGk: 2 - Stats\n- OhR1ID6Mk: 3 - Table\n- KIhkVD6Gk: 4 -  Gauges\n- ktMs4D6Mk: 5 - Bar charts and pie charts\n- qD-rVv6Mz: 6 - State timeline and Status history\n- 000000074: Alerting\n- 000000010: Annotations\n- vmie2cmWz: Bar Gauge\n- 3SWXxreWk: Grafana Dashboard\n- 37Dq903mk: Graph Gradient Area Fills\n- iRY1K9VZk: Lazy Loading\n- 6NmftOxZz: Logs Panel\n- 000000100: Mixed Datasources\n- U_bZIMRMk: Table Panel Showcase\n- 000000056: Templated dynamic dashboard\n- 000000109: The Four Golden Signals\n- 000000167: Threshold example\n- 000000041: Time range override');
 
     });

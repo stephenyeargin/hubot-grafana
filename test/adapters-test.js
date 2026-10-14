@@ -3,7 +3,8 @@ const { Adapter } = require('../src/adapters/Adapter');
 const { Uploader } = require('../src/adapters/Uploader');
 const assert = require('node:assert/strict');
 const { SlackUploader } = require('../src/adapters/implementations/SlackUploader');
-const { createTestBot, TestBotContext } = require('./common/TestBot');
+const { createTestBot } = require('./common/TestBot');
+/** @typedef {import('./common/TestBot').TestBotContext} TestBotContext */
 const { SlackResponder } = require('../src/adapters/implementations/SlackResponder');
 const { TelegramUploader } = require('../src/adapters/implementations/TelegramUploader');
 const { S3Uploader } = require('../src/adapters/implementations/S3Uploader');
@@ -14,7 +15,7 @@ const { RocketChatUploader } = require('../src/adapters/implementations/RocketCh
 
 describe('adapter', () => {
   it('Uploader class cannot upload', function () {
-    let uploader = new Uploader();
+    const uploader = new Uploader();
     assert.throws(function () {
       uploader.upload();
     }, /Not supported/);
@@ -105,7 +106,7 @@ describe('adapter', () => {
       ctx.robot.adapterName = 'my-amazing-fancy-super-unknown-thingy';
       const adapter = new Adapter(ctx.robot);
       assert.throws(function () {
-        adapter.uploader;
+        return adapter.uploader;
       }, /Upload not supported for 'my-amazing-fancy-super-unknown-thingy'/);
       assert.equal(adapter.site, '');
       assert.equal(adapter.isUploadSupported(), false);

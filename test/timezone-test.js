@@ -1,6 +1,7 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { TestBotContext, createTestBot } = require('./common/TestBot');
+const { createTestBot } = require('./common/TestBot');
+/** @typedef {import('./common/TestBot').TestBotContext} TestBotContext */
 
 describe('retrieve graphs by timezone', function () {
   /** @type {TestBotContext} */
@@ -21,14 +22,14 @@ describe('retrieve graphs by timezone', function () {
   });
 
   it('should respond with default timezone set', async () => {
-    let response = await ctx.sendAndWaitForResponse('hubot graf db 000000091:table server=backend_01 now-6h');
+    const response = await ctx.sendAndWaitForResponse('hubot graf db 000000091:table server=backend_01 now-6h');
     assert.equal(response,
       'Table: https://play.grafana.org/render/d-solo/000000091/?panelId=2&width=1000&height=500&from=now-6h&to=now&var-server=backend_01&tz=America%2FChicago - https://play.grafana.org/d/000000091/?panelId=2&fullscreen&from=now-6h&to=now&var-server=backend_01'
     );
   });
 
   it('should respond with requested timezone set', async () => {
-    let response = await ctx.sendAndWaitForResponse(
+    const response = await ctx.sendAndWaitForResponse(
       'hubot graf db 000000091:table server=backend_01 now-6h tz=Europe/Amsterdam'
     );
     assert.equal(response,

@@ -1,7 +1,7 @@
 /// <reference path="../../types.d.ts"/>
 
 const { GrafanaDashboardRequest } = require('./query/GrafanaDashboardRequest');
-const { GrafanaClient } = require('../grafana-client');
+/** @typedef {import('../grafana-client').GrafanaClient} GrafanaClient */
 
 class GrafanaService {
   /**
@@ -51,14 +51,14 @@ class GrafanaService {
    * @returns {GrafanaDashboardResponse.Response|null} - The parsed GrafanaDashboardRequest object, or null if the string cannot be parsed.
    */
   parseToGrafanaDashboardRequest(str) {
-    const match = str.match(/([A-Za-z0-9\-\:_]+)(.*)/);
+    const match = str.match(/([A-Za-z0-9\-:_]+)(.*)/);
     if (!match) return null;
 
     const request = new GrafanaDashboardRequest();
     request.uid = match[1];
 
     // Parse out a specific panel
-    if (/\:/.test(request.uid)) {
+    if (/:/.test(request.uid)) {
       let parts = request.uid.split(':');
       request.uid = parts[0];
       request.visualPanelId = parseInt(parts[1], 10);
@@ -90,10 +90,10 @@ class GrafanaService {
           if (partName in request.query) {
             request.query[partName] = partValue;
             continue;
-          } else if (partName == 'from') {
+          } else if (partName === 'from') {
             request.timespan.from = partValue;
             continue;
-          } else if (partName == 'to') {
+          } else if (partName === 'to') {
             request.timespan.to = partValue;
             continue;
           }
@@ -103,7 +103,7 @@ class GrafanaService {
             name: partName,
             value: partValue,
           });
-        } else if (part == 'kiosk') {
+        } else if (part === 'kiosk') {
           request.query.kiosk = true;
         }
         // Only add to the timespan if we haven't already filled out from and to
@@ -136,7 +136,7 @@ class GrafanaService {
   async getDashboardCharts(req, dashboardResponse, maxReturnDashboards) {
     if (!dashboardResponse || dashboardResponse.message) return null;
 
-    let dashboard = dashboardResponse.dashboard;
+    const dashboard = dashboardResponse.dashboard;
 
     if (req.query.kiosk) {
       req.query.apiEndpoint = 'd';
@@ -155,7 +155,7 @@ class GrafanaService {
     }
 
     // Support for templated dashboards
-    let templateMap = {};
+    const templateMap = {};
     this.logger.debug(dashboard.templating.list);
     if (dashboard.templating.list) {
       for (const template of Array.from(dashboard.templating.list)) {
@@ -208,7 +208,7 @@ class GrafanaService {
         responses.push({ imageUrl, grafanaChartLink, title });
 
         // Skip if we have already returned max count of dashboards
-        if (responses.length == maxReturnDashboards) {
+        if (responses.length === maxReturnDashboards) {
           break;
         }
       }
@@ -224,7 +224,7 @@ class GrafanaService {
    * @returns {Promise<string|null>} The UID of the dashboard, or undefined if not found.
    */
   async getUidBySlug(slug) {
-    let client = this.client;
+    const client = this.client;
 
     const pageSize = 5000;
     let page = 1;
@@ -239,13 +239,13 @@ class GrafanaService {
             uid: i.uid,
             slug: i.url.replace(`/d/${i.uid}/`, ''),
           }))
-          .find((x) => x.slug == slug);
+          .find((x) => x.slug === slug);
 
         if (dashboard && dashboard.uid) {
           return dashboard.uid;
         }
 
-        if (items.length != pageSize) break;
+        if (items.length !== pageSize) break;
         page++;
       } catch (err) {
         this.logger.error(err, `Error while getting dashboard on URL: ${url}`);
@@ -265,7 +265,7 @@ class GrafanaService {
     const url = `dashboards/uid/${uid}`;
 
     /** @type {GrafanaDashboardResponse.Response|null} */
-    let dashboard = null;
+    let dashboard;
     try {
       dashboard = await this.client.get(url);
     } catch (err) {
@@ -281,7 +281,7 @@ class GrafanaService {
 
     // check if we can improve the error message
     if (dashboard && dashboard.message === 'Dashboard not found') {
-      let realUid = await this.getUidBySlug(uid);
+      const realUid = await this.getUidBySlug(uid);
       if (realUid) {
         dashboard.message = `Try your query again with \`${realUid}\` instead of \`${uid}\``;
       }
@@ -320,7 +320,7 @@ class GrafanaService {
     try {
       const result = await this.client.get(url);
       return result;
-    } catch {
+    } catch (err) {
       let errorTitle = query ? 'Error while searching dashboards' : 'Error while listing dashboards';
       errorTitle += `, URL: ${url}`;
       this.logger.error(err, errorTitle);
@@ -381,7 +381,7 @@ class GrafanaService {
     };
 
     const alerts = await this.client.get('alerts');
-    if (alerts == null || alerts.length == 0) {
+    if (alerts == null || alerts.length === 0) {
       return result;
     }
 

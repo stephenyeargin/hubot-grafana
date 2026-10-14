@@ -207,14 +207,15 @@ async function createTestBot(settings = null) {
   setupEnv(settings);
   setupNock(settings);
 
-  return new Promise(async (done) => {
-    // create new robot, without http, using the mock adapter
-    const botName = settings?.name || 'hubot';
-    const botAlias = settings?.alias || null;
-    const robot = new Robot('hubot-mock-adapter', false, botName, botAlias);
-    await robot.loadAdapter();
+  // create new robot, without http, using the mock adapter
+  const botName = settings?.name || 'hubot';
+  const botAlias = settings?.alias || null;
+  const robot = new Robot('hubot-mock-adapter', false, botName, botAlias);
+  await robot.loadAdapter();
 
-    grafanaScript(robot);
+  grafanaScript(robot);
+
+  return new Promise((done) => {
 
     robot.adapter.on('connected', () => {
       // create a user

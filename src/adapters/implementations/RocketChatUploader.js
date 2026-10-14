@@ -24,7 +24,7 @@ class RocketChatUploader extends Uploader {
       !this.rocketchat_url.startsWith('http://') &&
       !this.rocketchat_url.startsWith('https://')
     ) {
-      this.rocketchat_url = `http://${rocketchat_url}`;
+      this.rocketchat_url = `http://${this.rocketchat_url}`;
     }
 
     /** @type {Hubot.Robot} */
@@ -46,13 +46,13 @@ class RocketChatUploader extends Uploader {
       password: this.rocketchat_password,
     };
 
-    let rocketchatResBodyJson = null;
+    let rocketchatResBodyJson;
 
     try {
-      rocketchatResBodyJson = await post(authUrl, authForm);
+      rocketchatResBodyJson = await this.post(authUrl, authForm);
     } catch (err) {
       this.logger.error(err);
-      throw new Error('Could not authenticate.');
+      throw new Error('Could not authenticate.', { cause: err });
     }
 
     const { status } = rocketchatResBodyJson;
@@ -77,11 +77,11 @@ class RocketChatUploader extends Uploader {
    * @param {string} grafanaChartLink link to the Grafana chart.
    */
   async upload(res, title, file, grafanaChartLink) {
-    let authHeaders = null;
+    let authHeaders;
     try {
       authHeaders = await this.login();
     } catch (ex) {
-      let msg = ex == 'Could not authenticate.' ? "invalid url, user or password/can't access rocketchat api" : ex;
+      const msg = ex.message === 'Could not authenticate.' ? "invalid url, user or password/can't access rocketchat api" : ex;
       res.send(`${title} - [Rocketchat auth Error - ${msg}] - ${grafanaChartLink}`);
       return;
     }
@@ -101,7 +101,7 @@ class RocketChatUploader extends Uploader {
       },
     };
 
-    let body = null;
+    let body;
 
     try {
       body = await this.post(uploadUrl, uploadForm, authHeaders);

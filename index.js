@@ -4,8 +4,8 @@ const path = require('path');
 module.exports = function (robot) {
   const scriptsPath = path.resolve(__dirname, 'src');
   if (fs.existsSync(scriptsPath)) {
-    let scripts = ['grafana.js'].sort();
-    for (let script of scripts) {
+    const scripts = ['grafana.js'].sort();
+    for (const script of scripts) {
       robot.loadFile(scriptsPath, script);
     }
   }

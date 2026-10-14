@@ -29,9 +29,9 @@
   },
   "devDependencies": {
     "@types/hubot": "^3.3.7",
-    "eslint": "^8.45.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.27.5",
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "globals": "^17.13.0",
     "hubot": "^7.0.0",
     "hubot-mock-adapter": "^2.0.0",
     "husky": "^9.0.11",
@@ -43,7 +43,8 @@
     "test-with-coverage": "node --test --experimental-test-coverage test/*-test.js",
     "bootstrap": "script/bootstrap",
     "prepare": "husky",
-    "lint": "eslint src/ test/"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "files": [
     "src/**/*.js",
@@ -53,7 +54,7 @@
     "types.d.ts"
   ],
   "volta": {
-    "node": "22.0.0"
+    "node": "22.20.0"
   },
   "types": "types.d.ts"
 }

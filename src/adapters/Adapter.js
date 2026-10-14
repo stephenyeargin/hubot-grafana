@@ -5,7 +5,7 @@ const { SlackResponder } = require('./implementations/SlackResponder');
 const { BearyChatResponder } = require('./implementations/BearyChatResponder');
 const { HipChatResponder } = require('./implementations/HipChatResponder');
 
-const { Uploader } = require('./Uploader');
+/** @typedef {import('./Uploader').Uploader} Uploader */
 const { S3Uploader } = require('./implementations/S3Uploader');
 const { RocketChatUploader } = require('./implementations/RocketChatUploader');
 const { TelegramUploader } = require('./implementations/TelegramUploader');

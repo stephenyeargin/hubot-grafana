@@ -3,7 +3,7 @@
 const crypto = require('crypto');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { Uploader } = require('../Uploader');
-const { Responder } = require('../Responder');
+/** @typedef {import('../Responder').Responder} Responder */
 
 class S3Uploader extends Uploader {
   /**

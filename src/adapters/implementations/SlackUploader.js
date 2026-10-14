@@ -35,7 +35,7 @@ class SlackUploader extends Uploader {
     const channel = res.envelope.room;
 
     try {
-      let options = {
+      const options = {
         filename: title + '.png',
         file: Buffer.from(file.body),
         title: 'dashboard',

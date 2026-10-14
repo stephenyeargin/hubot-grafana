@@ -1,6 +1,7 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { createTestBot, TestBotContext } = require('./common/TestBot');
+const { createTestBot } = require('./common/TestBot');
+/** @typedef {import('./common/TestBot').TestBotContext} TestBotContext */
 
 describe('s3', () => {
   describe('no region provided', function () {
@@ -53,10 +54,10 @@ describe('s3', () => {
       let response = await ctx.sendAndWaitForResponse('@hubot graf db AAy9r_bmk:cpu server=ww3.example.com now-6h');
       response = response.replace(/\/[a-f0-9]{40}\.png/i, '/abdcdef0123456789.png');
 
-      let panelRegex = /panelId=(\d+)/;
+      const panelRegex = /panelId=(\d+)/;
       assert.match(response, panelRegex);
 
-      let panelId = response.match(panelRegex)[1];
+      const panelId = response.match(panelRegex)[1];
       assert.equal(response,
         'CPU: https://graf.s3.us-standard.amazonaws.com/grafana/abdcdef0123456789.png - https://play.grafana.org/d/AAy9r_bmk/?panelId=' +
           panelId +

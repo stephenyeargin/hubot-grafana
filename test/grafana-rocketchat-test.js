@@ -1,6 +1,8 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { createTestBot, TestBotContext } = require('./common/TestBot');
+const { RocketChatUploader } = require('../src/adapters/implementations/RocketChatUploader');
+const { createTestBot } = require('./common/TestBot');
+/** @typedef {import('./common/TestBot').TestBotContext} TestBotContext */
 
 describe('rocketchat', () => {
   /** @type {TestBotContext} */
@@ -42,6 +44,26 @@ describe('rocketchat', () => {
     ctx?.shutdown();
   });
 
+  it('should normalize the URL and use its POST method to log in', async () => {
+    process.env.ROCKETCHAT_URL = 'chat.example.com';
+    const uploader = new RocketChatUploader(ctx.robot, ctx.robot.logger);
+    uploader.post = async (url, form) => {
+      assert.equal(url, 'http://chat.example.com/api/v1/login');
+      assert.deepEqual(form, { username: 'user1', password: 'sekret' });
+      return { status: 'success', data: { authToken: 'token', userId: 'user' } };
+    };
+
+    assert.deepEqual(await uploader.login(), { 'X-Auth-Token': 'token', 'X-User-Id': 'user' });
+  });
+
+  it('should preserve the original login failure', async () => {
+    const uploader = new RocketChatUploader(ctx.robot, ctx.robot.logger);
+    const error = new Error('Connection failed');
+    uploader.post = async () => { throw error; };
+
+    await assert.rejects(uploader.login(), { message: 'Could not authenticate.', cause: error });
+  });
+
   describe('rocketchat upload', () => {
     beforeEach(function () {
       ctx
@@ -56,7 +78,7 @@ describe('rocketchat', () => {
     });
 
     it('should respond with an uploaded graph', async () => {
-      let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
+      const response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
       assert.equal(response,
         'logins: https://play.grafana.org/render/d-solo/97PlYC7Mk/?panelId=3&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now'
       );
