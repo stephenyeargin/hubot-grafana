@@ -47,3 +47,6 @@ coverage.json
 *.tgz
 
 .nyc_output
+
+# Local OpenCode configuration
+/opencode.json
