@@ -54,12 +54,33 @@ class TestBotContext {
    * @returns {Promise<string>} A promise that resolves with the response string.
    */
   async sendAndWaitForResponse(message, responseType = 'send') {
-    return new Promise((done) => {
-      this.robot.adapter.once(responseType, function (_, strings) {
-        done(strings[0]);
-      });
+    const responses = await this.sendAndWaitForResponses(message, 1, responseType);
+    return responses[0];
+  }
 
-      this.send(message);
+  /**
+   * Sends a message and waits for the expected number of responses.
+   * @param {string} message - The message to send.
+   * @param {number} count - The expected number of responses.
+   * @param {string} [responseType='send'] - The response event to listen for.
+   * @returns {Promise<string[]>} The collected responses.
+   */
+  async sendAndWaitForResponses(message, count, responseType = 'send') {
+    return new Promise((done, reject) => {
+      const responses = [];
+      const onResponse = (_, strings) => {
+        responses.push(...strings);
+        if (responses.length >= count) {
+          this.robot.adapter.removeListener(responseType, onResponse);
+          done(responses);
+        }
+      };
+
+      this.robot.adapter.on(responseType, onResponse);
+      this.send(message).catch((error) => {
+        this.robot.adapter.removeListener(responseType, onResponse);
+        reject(error);
+      });
     });
   }
 

@@ -68,12 +68,17 @@ describe('rocketchat', () => {
     beforeEach(function () {
       ctx
         .nock('http://chat.example.com')
-        .post('/api/v1/login')
+        .post('/api/v1/login', { username: 'user1', password: 'sekret' })
+        .matchHeader('content-type', 'application/json')
         .replyWithFile(200, `${__dirname}/fixtures/rocketchat/login.json`);
 
       ctx
         .nock('http://chat.example.com')
-        .post('/api/v1/rooms.upload/undefined')
+        .post('/api/v1/rooms.upload/undefined', (body) => {
+          const multipart = Buffer.isBuffer(body) ? body.toString() : String(body);
+          return multipart.includes('name="file"') && multipart.includes('Content-Type: image/png');
+        })
+        .matchHeader('content-type', /multipart\/form-data; boundary=/)
         .replyWithFile(200, `${__dirname}/fixtures/rocketchat/rooms.upload.json`);
     });
 

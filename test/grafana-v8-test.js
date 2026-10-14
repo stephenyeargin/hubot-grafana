@@ -91,8 +91,8 @@ describe('grafana v8', () => {
     });
 
     it('hubot should respond with a matching dashboard', async () => {
-      await ctx.sendAndWaitForResponse('hubot graf db 97PlYC7Mk');
-      assert.deepEqual(ctx.sends, [
+      const responses = await ctx.sendAndWaitForResponses('hubot graf db 97PlYC7Mk', 6);
+      assert.deepEqual(responses, [
         'Grafana diagram architecture: https://play.grafana.org/render/d-solo/97PlYC7Mk/?panelId=13&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/97PlYC7Mk/?panelId=13&fullscreen&from=now-6h&to=now',
         'server requests: https://play.grafana.org/render/d-solo/97PlYC7Mk/?panelId=2&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/97PlYC7Mk/?panelId=2&fullscreen&from=now-6h&to=now',
         'client side full page load: https://play.grafana.org/render/d-solo/97PlYC7Mk/?panelId=5&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/97PlYC7Mk/?panelId=5&fullscreen&from=now-6h&to=now',

@@ -125,10 +125,24 @@ class RocketChatUploader extends Uploader {
    * @returns {Promise<unknown>} The deserialized JSON response or an error if something went wrong.
    */
   async post(url, formData, headers = null) {
+    const requestHeaders = { ...headers };
+    let body;
+
+    if (formData.file) {
+      body = new FormData();
+      body.set('msg', formData.msg);
+      body.set('file', new Blob([formData.file.value], {
+        type: formData.file.options.contentType,
+      }), formData.file.options.filename);
+    } else {
+      requestHeaders['Content-Type'] = 'application/json';
+      body = JSON.stringify(formData);
+    }
+
     const response = await fetch(url, {
       method: 'POST',
-      headers: headers,
-      body: new FormData(formData),
+      headers: requestHeaders,
+      body,
     });
 
     if (!response.ok) {

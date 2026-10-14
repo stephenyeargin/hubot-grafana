@@ -21,8 +21,7 @@
     "url": "https://github.com/stephenyeargin/hubot-grafana/issues"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.565.0",
-    "node-fetch": "^2.7.0"
+    "@aws-sdk/client-s3": "^3.1151.0"
   },
   "peerDependencies": {
     "hubot": ">=3 || 0.0.0-development"
@@ -32,10 +31,10 @@
     "@eslint/js": "^9.39.5",
     "eslint": "^9.39.5",
     "globals": "^17.13.0",
-    "hubot": "^7.0.0",
-    "hubot-mock-adapter": "^2.0.0",
-    "husky": "^9.0.11",
-    "nock": "^13.5.4"
+    "hubot": "^9.1.1",
+    "hubot-mock-adapter": "^2.3.0",
+    "husky": "^9.1.7",
+    "nock": "^14.0.17"
   },
   "main": "index.js",
   "scripts": {

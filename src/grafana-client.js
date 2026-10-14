@@ -1,5 +1,4 @@
 'strict';
-const fetch = require('node-fetch');
 const { URL, URLSearchParams } = require('url');
 
 /// <reference path="../types.d.ts"/>
@@ -60,7 +59,6 @@ class GrafanaClient {
 
   /**
    * Performs a GET on the Grafana API.
-   * Remarks: uses Hubot because of Nock testing.
    * @param {string} url the url
    * @returns {Promise<unknown>} the response data
    */
@@ -100,7 +98,7 @@ class GrafanaClient {
 
   /**
    * Ensures that the response is OK. If the response is not OK, an error is thrown.
-   * @param {fetch.Response} response - The response object.
+   * @param {Response} response - The response object.
    * @throws {Error} If the response is not OK, an error with the response text is thrown.
    */
   async throwIfNotOk(response) {
