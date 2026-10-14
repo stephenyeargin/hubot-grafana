@@ -1,4 +1,5 @@
-const { expect } = require('chai');
+const { describe, it, beforeEach, afterEach } = require('node:test');
+const assert = require('node:assert/strict');
 const { createTestBot, TestBotContext, createAwaitableValue } = require('./common/TestBot');
 const { SlackResponder } = require('../src/adapters/implementations/SlackResponder');
 const { SlackUploader } = require('../src/adapters/implementations/SlackUploader');
@@ -39,7 +40,7 @@ describe('slack', () => {
 
     it('should respond with an uploaded graph', async () => {
       let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
-      expect(response).to.eql('Hiding dashboard: logins');
+      assert.equal(response, 'Hiding dashboard: logins');
     });
   });
 
@@ -62,22 +63,23 @@ describe('slack', () => {
     it('should respond with an uploaded graph', async () => {
       let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
 
-      expect(response).to.be.a('object');
-      expect(response).to.have.property('attachments');
-      expect(response.unfurl_links).to.eql(false);
+      assert.notEqual(response, null);
+      assert.equal(typeof response, 'object');
+      assert.ok('attachments' in response);
+      assert.equal(response.unfurl_links, false);
 
-      expect(response.attachments).to.have.lengthOf(1);
-      expect(response.attachments[0].title).to.eql('logins');
-      expect(response.attachments[0].title_link).to.eql(
+      assert.equal(response.attachments.length, 1);
+      assert.equal(response.attachments[0].title, 'logins');
+      assert.equal(response.attachments[0].title_link,
         'https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now'
       );
-      expect(response.attachments[0]).to.have.property('title_link');
-      expect(response.attachments[0]).to.have.property('fallback');
-      expect(response.attachments[0]).to.have.property('image_url');
+      assert.ok('title_link' in response.attachments[0]);
+      assert.ok('fallback' in response.attachments[0]);
+      assert.ok('image_url' in response.attachments[0]);
 
       let imageUrl = response.attachments[0].image_url || '';
       imageUrl = imageUrl.replace(/\/[a-f0-9]{40}\.png/i, '/abdcdef0123456789.png');
-      expect(imageUrl).to.eql('https://graf.s3.us-standard.amazonaws.com/grafana/abdcdef0123456789.png');
+      assert.equal(imageUrl, 'https://graf.s3.us-standard.amazonaws.com/grafana/abdcdef0123456789.png');
     });
   });
 
@@ -100,7 +102,7 @@ describe('slack', () => {
 
     it('should respond with an uploaded graph', async () => {
       let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
-      expect(response).to.eql(
+      assert.equal(response,
         'logins - [Upload Error] - https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now'
       );
     });
@@ -137,19 +139,20 @@ describe('slack', () => {
       let response = await resSendResponse;
       response = response[0];
 
-      expect(response).to.be.a('object');
-      expect(response).to.have.property('attachments');
-      expect(response.unfurl_links).to.eql(false);
-      expect(response.thread_ts).to.eql(42);
+      assert.notEqual(response, null);
+      assert.equal(typeof response, 'object');
+      assert.ok('attachments' in response);
+      assert.equal(response.unfurl_links, false);
+      assert.equal(response.thread_ts, 42);
 
-      expect(response.attachments).to.have.lengthOf(1);
-      expect(response.attachments[0].title).to.eql(title);
-      expect(response.attachments[0].title_link).to.eql(dashboardUrl);
-      expect(response.attachments[0]).to.have.property('title_link');
-      expect(response.attachments[0]).to.have.property('fallback');
-      expect(response.attachments[0]).to.have.property('image_url');
+      assert.equal(response.attachments.length, 1);
+      assert.equal(response.attachments[0].title, title);
+      assert.equal(response.attachments[0].title_link, dashboardUrl);
+      assert.ok('title_link' in response.attachments[0]);
+      assert.ok('fallback' in response.attachments[0]);
+      assert.ok('image_url' in response.attachments[0]);
 
-      expect(response.attachments[0].image_url).to.eql(imageUrl);
+      assert.equal(response.attachments[0].image_url, imageUrl);
     });
   });
 
@@ -182,15 +185,15 @@ describe('slack', () => {
       await ctx.send('@hubot graf db 97PlYC7Mk:panel-3');
       let response = await uploadResult;
 
-      expect(response).not.to.be.null;
-      expect(response).to.be.of.length(1);
-      expect(response[0].initial_comment).to.eql(
+      assert.notEqual(response, null);
+      assert.equal(response.length, 1);
+      assert.equal(response[0].initial_comment,
         'logins: https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now'
       );
-      expect(response[0].channels).to.eql('#mocha');
-      expect(response[0].title).to.equal('dashboard');
-      expect(response[0].filename).to.eql('logins.png');
-      expect(response[0].file).not.to.be.null;
+      assert.equal(response[0].channels, '#mocha');
+      assert.equal(response[0].title, 'dashboard');
+      assert.equal(response[0].filename, 'logins.png');
+      assert.notEqual(response[0].file, null);
     });
   });
 
@@ -220,7 +223,7 @@ describe('slack', () => {
 
     it('should respond with an failed message ', async () => {
       let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
-      expect(response).to.eql(
+      assert.equal(response,
         "logins - [Slack files.upload Error: can't upload file] - https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now"
       );
     });
@@ -282,16 +285,16 @@ describe('slack', () => {
 
       let response = await uploadResult;
 
-      expect(response).not.to.be.null;
-      expect(response).to.be.of.length(1);
-      expect(response[0].initial_comment).to.eql(
+      assert.notEqual(response, null);
+      assert.equal(response.length, 1);
+      assert.equal(response[0].initial_comment,
         'logins: https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now'
       );
-      expect(response[0].thread_ts).to.eql(42);
-      expect(response[0].channels).to.eql('C1337');
-      expect(response[0].title).to.equal('dashboard');
-      expect(response[0].filename).to.eql(title + '.png');
-      expect(response[0].file).not.to.be.null;
+      assert.equal(response[0].thread_ts, 42);
+      assert.equal(response[0].channels, 'C1337');
+      assert.equal(response[0].title, 'dashboard');
+      assert.equal(response[0].filename, title + '.png');
+      assert.notEqual(response[0].file, null);
     });
   });
 });

@@ -1,4 +1,5 @@
-const { expect } = require('chai');
+const { describe, it, beforeEach, afterEach } = require('node:test');
+const assert = require('node:assert/strict');
 const { createTestBot, TestBotContext } = require('./common/TestBot');
 
 describe('rocketchat', () => {
@@ -56,7 +57,7 @@ describe('rocketchat', () => {
 
     it('should respond with an uploaded graph', async () => {
       let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
-      expect(response).to.eql(
+      assert.equal(response,
         'logins: https://play.grafana.org/render/d-solo/97PlYC7Mk/?panelId=3&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now'
       );
     });
@@ -81,7 +82,7 @@ describe('rocketchat', () => {
 
       let response = await ctx.sendAndWaitForResponse('@hubot graf db 97PlYC7Mk:panel-3');
       response = response.replace(/\/[a-f0-9]{40}\.png/i, '/abdcdef0123456789.png');
-      expect(response).to.eql(
+      assert.equal(response,
         'logins: https://play.grafana.org/render/d-solo/97PlYC7Mk/?panelId=3&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/97PlYC7Mk/?panelId=3&fullscreen&from=now-6h&to=now'
       );
     });

@@ -1,4 +1,5 @@
-const { expect } = require('chai');
+const { describe, it, beforeEach, afterEach } = require('node:test');
+const assert = require('node:assert/strict');
 const { createTestBot, TestBotContext } = require('./common/TestBot');
 
 describe('s3', () => {
@@ -53,10 +54,10 @@ describe('s3', () => {
       response = response.replace(/\/[a-f0-9]{40}\.png/i, '/abdcdef0123456789.png');
 
       let panelRegex = /panelId=(\d+)/;
-      expect(response).to.match(panelRegex);
+      assert.match(response, panelRegex);
 
       let panelId = response.match(panelRegex)[1];
-      expect(response).to.eql(
+      assert.equal(response,
         'CPU: https://graf.s3.us-standard.amazonaws.com/grafana/abdcdef0123456789.png - https://play.grafana.org/d/AAy9r_bmk/?panelId=' +
           panelId +
           '&fullscreen&from=now-6h&to=now&var-server=ww3.example.com'

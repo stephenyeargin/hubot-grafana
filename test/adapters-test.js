@@ -1,6 +1,7 @@
+const { describe, it, beforeEach, afterEach } = require('node:test');
 const { Adapter } = require('../src/adapters/Adapter');
 const { Uploader } = require('../src/adapters/Uploader');
-const { expect } = require('chai');
+const assert = require('node:assert/strict');
 const { SlackUploader } = require('../src/adapters/implementations/SlackUploader');
 const { createTestBot, TestBotContext } = require('./common/TestBot');
 const { SlackResponder } = require('../src/adapters/implementations/SlackResponder');
@@ -14,9 +15,9 @@ const { RocketChatUploader } = require('../src/adapters/implementations/RocketCh
 describe('adapter', () => {
   it('Uploader class cannot upload', function () {
     let uploader = new Uploader();
-    expect(function () {
+    assert.throws(function () {
       uploader.upload();
-    }).to.throw('Not supported');
+    }, /Not supported/);
   });
 
   describe('uploader', () => {
@@ -35,88 +36,88 @@ describe('adapter', () => {
     it('should support hubot-slack adapter', () => {
       ctx.robot.adapterName = 'hubot-slack';
       const adapter = new Adapter(ctx.robot);
-      expect(adapter.uploader).to.be.an.instanceOf(SlackUploader);
-      expect(adapter.site).to.eql('slack');
-      expect(adapter.isUploadSupported()).to.eql(true);
+      assert.ok(adapter.uploader instanceof SlackUploader);
+      assert.equal(adapter.site, 'slack');
+      assert.equal(adapter.isUploadSupported(), true);
     });
 
     it('should support hubot-slack adapter, but be overridden by S3', () => {
       process.env.HUBOT_GRAFANA_S3_BUCKET = 'graf';
       ctx.robot.adapterName = 'hubot-slack';
       const adapter = new Adapter(ctx.robot);
-      expect(adapter.uploader).to.be.an.instanceOf(S3Uploader);
-      expect(adapter.site).to.eql('s3');
-      expect(adapter.isUploadSupported()).to.eql(true);
+      assert.ok(adapter.uploader instanceof S3Uploader);
+      assert.equal(adapter.site, 's3');
+      assert.equal(adapter.isUploadSupported(), true);
     });
 
     it('should support @hubot-friends/hubot-slack', () => {
       ctx.robot.adapterName = '@hubot-friends/hubot-slack';
       const adapter = new Adapter(ctx.robot);
-      expect(adapter.uploader).to.be.an.instanceOf(SlackUploader);
-      expect(adapter.site).to.eql('slack');
-      expect(adapter.isUploadSupported()).to.eql(true);
+      assert.ok(adapter.uploader instanceof SlackUploader);
+      assert.equal(adapter.site, 'slack');
+      assert.equal(adapter.isUploadSupported(), true);
     });
 
     it('should support @hubot-friends/hubot-slack, but be overridden by S3', () => {
       process.env.HUBOT_GRAFANA_S3_BUCKET = 'graf';
       ctx.robot.adapterName = '@hubot-friends/hubot-slack';
       const adapter = new Adapter(ctx.robot);
-      expect(adapter.uploader).to.be.an.instanceOf(S3Uploader);
-      expect(adapter.site).to.eql('s3');
-      expect(adapter.isUploadSupported()).to.eql(true);
+      assert.ok(adapter.uploader instanceof S3Uploader);
+      assert.equal(adapter.site, 's3');
+      assert.equal(adapter.isUploadSupported(), true);
     });
 
     it('should support hubot-telegram', () => {
       ctx.robot.adapterName = 'hubot-telegram';
       const adapter = new Adapter(ctx.robot);
-      expect(adapter.uploader).to.be.an.instanceOf(TelegramUploader);
-      expect(adapter.site).to.eql('telegram');
-      expect(adapter.isUploadSupported()).to.eql(true);
+      assert.ok(adapter.uploader instanceof TelegramUploader);
+      assert.equal(adapter.site, 'telegram');
+      assert.equal(adapter.isUploadSupported(), true);
     });
 
     it('should support hubot-telegram, but be overridden by S3', () => {
       process.env.HUBOT_GRAFANA_S3_BUCKET = 'graf';
       ctx.robot.adapterName = 'hubot-telegram';
       const adapter = new Adapter(ctx.robot);
-      expect(adapter.uploader).to.be.an.instanceOf(S3Uploader);
-      expect(adapter.site).to.eql('s3');
-      expect(adapter.isUploadSupported()).to.eql(true);
+      assert.ok(adapter.uploader instanceof S3Uploader);
+      assert.equal(adapter.site, 's3');
+      assert.equal(adapter.isUploadSupported(), true);
     });
 
     it('should support hubot-rocketchat', () => {
       ctx.robot.adapterName = 'hubot-rocketchat';
       const adapter = new Adapter(ctx.robot);
-      expect(adapter.uploader).to.be.an.instanceOf(RocketChatUploader);
-      expect(adapter.site).to.eql('rocketchat');
-      expect(adapter.isUploadSupported()).to.eql(true);
+      assert.ok(adapter.uploader instanceof RocketChatUploader);
+      assert.equal(adapter.site, 'rocketchat');
+      assert.equal(adapter.isUploadSupported(), true);
     });
 
     it('should support hubot-rocketchat, but be overridden by S3', () => {
       process.env.HUBOT_GRAFANA_S3_BUCKET = 'graf';
       ctx.robot.adapterName = 'hubot-rocketchat';
       const adapter = new Adapter(ctx.robot);
-      expect(adapter.uploader).to.be.an.instanceOf(S3Uploader);
-      expect(adapter.site).to.eql('s3');
-      expect(adapter.isUploadSupported()).to.eql(true);
+      assert.ok(adapter.uploader instanceof S3Uploader);
+      assert.equal(adapter.site, 's3');
+      assert.equal(adapter.isUploadSupported(), true);
     });
 
     it('should not support upload for unknown adapter', () => {
       ctx.robot.adapterName = 'my-amazing-fancy-super-unknown-thingy';
       const adapter = new Adapter(ctx.robot);
-      expect(function () {
+      assert.throws(function () {
         adapter.uploader;
-      }).to.throw("Upload not supported for 'my-amazing-fancy-super-unknown-thingy'");
-      expect(adapter.site).to.eql('');
-      expect(adapter.isUploadSupported()).to.eql(false);
+      }, /Upload not supported for 'my-amazing-fancy-super-unknown-thingy'/);
+      assert.equal(adapter.site, '');
+      assert.equal(adapter.isUploadSupported(), false);
     });
 
     it('should support unknown adapter with S3 override', () => {
       process.env.HUBOT_GRAFANA_S3_BUCKET = 'graf';
       ctx.robot.adapterName = 'my-amazing-fancy-super-unknown-thingy';
       const adapter = new Adapter(ctx.robot);
-      expect(adapter.uploader).to.be.an.instanceOf(S3Uploader);
-      expect(adapter.site).to.eql('s3');
-      expect(adapter.isUploadSupported()).to.eql(true);
+      assert.ok(adapter.uploader instanceof S3Uploader);
+      assert.equal(adapter.site, 's3');
+      assert.equal(adapter.isUploadSupported(), true);
     });
   });
 
@@ -135,31 +136,31 @@ describe('adapter', () => {
     it('should support hubot-slack adapter', () => {
       ctx.robot.adapterName = 'hubot-slack';
       const adapter = new Adapter(ctx.robot);
-      expect(adapter.responder).to.be.an.instanceOf(SlackResponder);
+      assert.ok(adapter.responder instanceof SlackResponder);
     });
 
     it('should support @hubot-friends/hubot-slack', () => {
       ctx.robot.adapterName = '@hubot-friends/hubot-slack';
       const adapter = new Adapter(ctx.robot);
-      expect(adapter.responder).to.be.an.instanceOf(SlackResponder);
+      assert.ok(adapter.responder instanceof SlackResponder);
     });
 
     it('should support hubot-bearychat', () => {
       ctx.robot.adapterName = 'hubot-bearychat';
       const adapter = new Adapter(ctx.robot);
-      expect(adapter.responder).to.be.an.instanceOf(BearyChatResponder);
+      assert.ok(adapter.responder instanceof BearyChatResponder);
     });
 
     it('should support hubot-hipchat', () => {
       ctx.robot.adapterName = 'hubot-hipchat';
       const adapter = new Adapter(ctx.robot);
-      expect(adapter.responder).to.be.an.instanceOf(HipChatResponder);
+      assert.ok(adapter.responder instanceof HipChatResponder);
     });
 
     it('should support unknown adapter with default responder', () => {
       ctx.robot.adapterName = 'my-amazing-fancy-super-unknown-thingy';
       const adapter = new Adapter(ctx.robot);
-      expect(adapter.responder).to.be.an.instanceOf(Responder);
+      assert.ok(adapter.responder instanceof Responder);
     });
   });
 });

@@ -1,4 +1,5 @@
-const { expect } = require('chai');
+const { describe, it, beforeEach, afterEach } = require('node:test');
+const assert = require('node:assert/strict');
 const { createTestBot, TestBotContext } = require('./common/TestBot');
 
 describe('grafana service', () => {
@@ -42,30 +43,30 @@ describe('grafana service', () => {
     const service = ctx.bot.createService({ robot: ctx.robot });
     const result = await service.process('AAy9r_bmk:cpu server=ww3.example.com now-6h', 2);
 
-    expect(result).to.be.not.null;
-    expect(result).to.be.of.length(2);
+    assert.notEqual(result, null);
+    assert.equal(result.length, 2);
 
-    expect(result[0].grafanaChartLink).to.eql(
+    assert.equal(result[0].grafanaChartLink,
       'https://play.grafana.org/d/AAy9r_bmk/?panelId=3&fullscreen&from=now-6h&to=now&var-server=ww3.example.com'
     );
-    expect(result[0].imageUrl).to.eql(
+    assert.equal(result[0].imageUrl,
       'https://play.grafana.org/render/d-solo/AAy9r_bmk/?panelId=3&width=1000&height=500&from=now-6h&to=now&var-server=ww3.example.com'
     );
-    expect(result[0].title).to.eql('CPU');
+    assert.equal(result[0].title, 'CPU');
 
-    expect(result[1].grafanaChartLink).to.eql(
+    assert.equal(result[1].grafanaChartLink,
       'https://play.grafana.org/d/AAy9r_bmk/?panelId=7&fullscreen&from=now-6h&to=now&var-server=ww3.example.com'
     );
-    expect(result[1].imageUrl).to.eql(
+    assert.equal(result[1].imageUrl,
       'https://play.grafana.org/render/d-solo/AAy9r_bmk/?panelId=7&width=1000&height=500&from=now-6h&to=now&var-server=ww3.example.com'
     );
-    expect(result[1].title).to.eql('CPU');
+    assert.equal(result[1].title, 'CPU');
   });
 
   it('should resolve UID by slug', async () => {
     const service = ctx.bot.createService({ robot: ctx.robot });
     const result = await service.getUidBySlug("the-four-golden-signals");
-    expect(result).to.eql('000000109');
+    assert.equal(result, '000000109');
   });
 
 
