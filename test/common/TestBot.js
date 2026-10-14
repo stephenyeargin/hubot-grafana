@@ -1,5 +1,5 @@
 const { Robot, TextMessage } = require('hubot/es2015');
-const nock = require('nock');
+const { default: nock } = require('nock');
 const grafanaScript = require('../../src/grafana');
 const { Bot } = require('../../src/Bot');
 
