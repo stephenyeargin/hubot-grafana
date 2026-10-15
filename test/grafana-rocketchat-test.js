@@ -54,14 +54,13 @@ describe('rocketchat', () => {
       ctx
         .nock('http://chat.example.com')
         .post('/api/v1/rooms.upload/undefined')
-        .reply(function reply(uri, requestBody) {
-          uploadRequest.set(requestBody, this.req.headers);
+        .reply(async (request) => {
+          uploadRequest.set(await request.text());
           return [200, { success: true }];
         });
 
       await ctx.send('@hubot graf db 97PlYC7Mk:panel-3');
-      const [rawRequestBody] = await uploadRequest;
-      const requestBody = Buffer.from(rawRequestBody, 'hex').toString('utf8');
+      const [requestBody] = await uploadRequest;
 
       // Verify a real multipart body was sent (this is what new FormData(formData)
       // could never actually produce -- it threw before a request was ever made).
