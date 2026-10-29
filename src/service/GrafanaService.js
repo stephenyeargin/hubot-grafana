@@ -4,6 +4,11 @@ const { GrafanaDashboardRequest } = require('./query/GrafanaDashboardRequest');
 // eslint-disable-next-line no-unused-vars -- used only in the @type {GrafanaClient} JSDoc below
 const { GrafanaClient } = require('../grafana-client');
 
+// Query keys a chat user may override. apiEndpoint and orgId are intentionally
+// excluded: they come from operator env vars only and apiEndpoint lands in the
+// request URL path (path-traversal / SSRF risk). See GHSA-j5fr-jm8f-m549.
+const USER_OVERRIDABLE_QUERY_KEYS = ['width', 'height', 'tz', 'kiosk'];
+
 /**
  * Formats the title with the provided template map.
  *
@@ -108,7 +113,7 @@ class GrafanaService {
           // put query stuff into its own dict
           const [partName, partValue] = part.split('=');
 
-          if (partName in request.query) {
+          if (USER_OVERRIDABLE_QUERY_KEYS.includes(partName)) {
             request.query[partName] = partValue;
             continue;
           } else if (partName === 'from') {
