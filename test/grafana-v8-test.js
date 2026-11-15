@@ -155,6 +155,25 @@ describe('grafana v8', () => {
     });
   });
 
+  describe('ask hubot to return a panel from a dashboard without templating', () => {
+    beforeEach(async () => {
+      const fixture = require('./fixtures/v8/dashboard-grafana-play.json');
+      const dashboard = { ...fixture.dashboard, uid: 'no-templating' };
+      delete dashboard.templating;
+      ctx
+        .nock('https://play.grafana.org')
+        .get('/api/dashboards/uid/no-templating')
+        .reply(200, { ...fixture, dashboard });
+    });
+
+    it('hubot should respond with a matching panel', async () => {
+      const response = await ctx.sendAndWaitForResponse('hubot graf db no-templating:panel-3');
+      expect(response).to.eql(
+        'logins: https://play.grafana.org/render/d-solo/no-templating/?panelId=3&width=1000&height=500&from=now-6h&to=now - https://play.grafana.org/d/no-templating/?panelId=3&fullscreen&from=now-6h&to=now'
+      );
+    });
+  });
+
   describe('ask hubot to return a specific panel that does not exist', () => {
     beforeEach(async () => {
       ctx

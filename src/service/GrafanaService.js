@@ -181,8 +181,8 @@ class GrafanaService {
 
     // Support for templated dashboards
     const templateMap = {};
-    this.logger.debug(dashboard.templating.list);
-    if (dashboard.templating.list) {
+    this.logger.debug(dashboard.templating?.list);
+    if (dashboard.templating?.list) {
       for (const template of Array.from(dashboard.templating.list)) {
         this.logger.debug(template);
 
