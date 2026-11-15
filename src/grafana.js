@@ -80,16 +80,32 @@ module.exports = (robot) => {
       return;
     }
 
+    const folders = new Map();
+    for (const dashboard of dashboards) {
+      const folder = dashboard.folderTitle || '';
+      if (!folders.has(folder)) folders.set(folder, []);
+      folders.get(folder).push(dashboard);
+    }
+    const sortedFolders = [...folders.keys()].sort((a, b) => a.localeCompare(b));
+    const grouped = sortedFolders.flatMap((folder) => folders.get(folder));
+
     let remaining = 0;
-    let shownDashboards = dashboards;
-    if (dashboards.length > maxReturnDashboards) {
-      remaining = dashboards.length - maxReturnDashboards;
-      shownDashboards = dashboards.slice(0, maxReturnDashboards - 1);
+    let shownDashboards = grouped;
+    if (grouped.length > maxReturnDashboards) {
+      remaining = grouped.length - maxReturnDashboards;
+      shownDashboards = grouped.slice(0, maxReturnDashboards);
     }
 
     const list = [];
-    for (const dashboard of Array.from(shownDashboards)) {
-      list.push(`- \`${dashboard.uid}\`: ${dashboard.title}`);
+    let currentFolder = '';
+    for (const dashboard of shownDashboards) {
+      const folder = dashboard.folderTitle || '';
+      if (folder && folder !== currentFolder) {
+        list.push(`- ${folder}/`);
+        currentFolder = folder;
+      }
+      const indent = folder ? '  ' : '';
+      list.push(`${indent}- \`${dashboard.uid}\`: ${dashboard.title}`);
     }
 
     if (remaining) {
