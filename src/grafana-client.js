@@ -194,6 +194,12 @@ class GrafanaClient {
     await this.throwIfNotOk(response);
 
     const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.startsWith('image/')) {
+      const error = new Error(`Grafana did not return an image (content-type: ${contentType || 'unknown'}).`);
+      error.status = response.status;
+      throw error;
+    }
+
     const body = await response.arrayBuffer();
 
     return {
