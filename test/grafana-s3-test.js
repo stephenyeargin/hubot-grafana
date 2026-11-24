@@ -63,4 +63,36 @@ describe('s3', () => {
       );
     });
   });
+
+  describe('render returns html instead of an image', () => {
+    /** @type {TestBotContext} */
+    let ctx;
+
+    beforeEach(async () => {
+      process.env.HUBOT_GRAFANA_S3_BUCKET = 'graf';
+
+      ctx = await createTestBot();
+
+      ctx
+        .nock('https://play.grafana.org')
+        .get('/api/dashboards/uid/AAy9r_bmk')
+        .replyWithFile(200, `${__dirname}/fixtures/v8/dashboard-monitoring-default.json`);
+
+      ctx
+        .nock('https://play.grafana.org')
+        .get('/render/d-solo/AAy9r_bmk/')
+        .query(true)
+        .reply(200, '<html><body>Login</body></html>', { 'Content-Type': 'text/html; charset=UTF-8' });
+    });
+
+    afterEach(() => {
+      delete process.env.HUBOT_GRAFANA_S3_BUCKET;
+      ctx?.shutdown();
+    });
+
+    it('should respond with an error instead of uploading', async () => {
+      const response = await ctx.sendAndWaitForResponse('@hubot graf db AAy9r_bmk:cpu server=ww3.example.com now-6h');
+      expect(String(response)).to.contain('Grafana did not return an image (content-type: text/html; charset=UTF-8).');
+    });
+  });
 });

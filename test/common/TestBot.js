@@ -176,7 +176,7 @@ function setupNock(settings) {
   nock('https://play.grafana.org')
     .get('/render/d-solo/97PlYC7Mk/?panelId=3&width=1000&height=500&from=now-6h&to=now')
     .matchHeader('authorization', 'Bearer xxxxxxxxxxxxxxxxxxxxxxxxx')
-    .replyWithFile(200, `${__dirname}/../fixtures/v8/dashboard-grafana-play.png`);
+    .replyWithFile(200, `${__dirname}/../fixtures/v8/dashboard-grafana-play.png`, { 'Content-Type': 'image/png' });
 
   nock('https://graf.s3.us-west-2.amazonaws.com')
     .filteringPath(/[a-z0-9]+\.png/g, 'abdcdef0123456789.png')
